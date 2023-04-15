@@ -1,0 +1,8 @@
+def circle(R: float) -> im:
+    img = im.new('L', (i_size, j_size))
+    for i in range(i_size):
+        for j in range(j_size):
+            x, y = conversion(i, j)
+            if R**2 > x**2 + y**2:
+                img.putpixel((i, j), 255)
+    return img

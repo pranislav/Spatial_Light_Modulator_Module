@@ -1,0 +1,68 @@
+def GD_for_hologram(initial_input: np.array, demanded_output: np.array,\
+        learning_rate: float, tolerance: float, real=False):
+    error_evolution = []
+    input = initial_input
+    error = tolerance + 1
+    i = 0
+    while error > tolerance:
+        med_output = fft(input/abs(input))
+        output = abs(med_output)/max(abs(med_output))
+        output = output**2
+        if real ==True:
+            dEdX = dEdX_real(output, demanded_output, ctv(med_output), ctv(input), True)
+        else:
+            dEdF = fft(med_output * (output - demanded_output))
+            dEdX = np.array(list(map(dEdX_complex, dEdF, input)))
+            i += 1
+        input -= learning_rate * dEdX
+        error = sum((output - demanded_output)**2)
+        if i%1000 == 0: print(error)
+        error_evolution.append(error)
+    return input/abs(input), output, error_evolution
+
+
+
+def GD_for_hologram(initial_input: np.array, demanded_output: np.array,\
+        learning_rate: float, tolerance: float, real=False):
+    error_evolution = []
+    input = initial_input
+    error = tolerance + 1
+    i = 0
+    while error > tolerance:
+        med_output = fft(input/abs(input))
+        output = abs(med_output)/max(abs(med_output))
+        output = output**2
+        if real ==True:
+            # dEdX = dEdX_real(output, demanded_output, ctv(med_output), ctv(input), True)
+            dEdF = d.dEdF_real(output, demanded_output, ctv(med_output))
+        else:
+            dEdF = fft(med_output * (output - demanded_output))
+            dEdX = np.array(list(map(dEdX_complex, dEdF, input)))
+            i += 1
+        dEdX = np.array(list(map(dEdX_complex, dEdF, input)))
+        input -= learning_rate * dEdX
+        error = sum((output - demanded_output)**2)
+        if i%1000 == 0: print(error)
+        error_evolution.append(error)
+    return input/abs(input), output, error_evolution
+
+def GD_for_hologram(initial_input: np.array, demanded_output: np.array,\
+        learning_rate: float, tolerance: float, real=False):
+    error_evolution = []
+    input = initial_input
+    error = tolerance + 1
+    i = 0
+    while error > tolerance:
+        med_output = fft(input/abs(input))
+        output = abs(med_output)/max(abs(med_output))
+        output = output**2
+        dEdC = d.dEdC_real(output, demanded_output, ctv(med_output))
+        # dEdF = t.my_ft(dEdC)
+        dEdF = np.flip(cycl_rot(fft(dEdC)))
+        dEdX = np.array(list(map(dEdX_complex, dEdF, input)))
+        input -= learning_rate * dEdX
+        error = sum((output - demanded_output)**2)
+        if i%1000 == 0: print(error)
+        i += 1
+        error_evolution.append(error)
+    return input/abs(input), output, error_evolution
