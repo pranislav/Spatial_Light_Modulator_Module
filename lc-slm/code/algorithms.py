@@ -85,6 +85,7 @@ def GD(demanded_output: np.array, learning_rate: float, tolerance: float, max_lo
         error = error_f(output, demanded_output**2, space_norm)
         error_evolution.append(error)
         i += 1
+        if i % 180 == 0: learning_rate *= 2
         if i % 10 == 0: print("-", end='')
     printout(error, i, error_evolution, f"learning_rate: {learning_rate}", plot_error)
     phase_for_slm = complex_to_real_phase(input/abs(input))

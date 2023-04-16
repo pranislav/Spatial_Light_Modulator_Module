@@ -8,7 +8,7 @@ import constants as c
 
 # SETTINGS
 # name and type of image which should be projected by SLM
-target_name = "multidecline_row_2"
+target_name = "left_dot_5"
 target_type = "jpg"
 # other settings
 invert = False
@@ -21,7 +21,7 @@ unit = c.u # c.u for one quarter of 1st diff maximum, 1 for radians | ubiquity i
 focal_len = False
 
 # loading image
-target_img = im.open(f"images/{target_name}.{target_type}").convert('L').resize((int(c.slm_width/2), int(c.slm_height/2)))
+target_img = im.open(f"images/{target_name}.{target_type}").convert('L').resize((int(c.slm_width), int(c.slm_height)))
 if invert:
     target_img = PIL.ImageOps.invert(target_img)
 
@@ -31,6 +31,7 @@ def quarter(image: im) -> im:
     when generated hologram for such a transformed image, there will be no overlap
     between different diffraction order of displayed image
     '''
+    # az tu resiznut obrazok, nech neni stvrtinovy, ak sa nepouzije quarter
     ground = im.new("L", (c.slm_width, c.slm_height))
     ground.paste(image)
     return ground
@@ -40,15 +41,17 @@ if quarterize:
 
 target = np.sqrt(np.array(target_img))
 
+# enhance_mask_img = im.open(f"images/{target_name}_mask.jpg")
+
 
 # compouting phase distribution
 if algorithm == "GS":
-    source_phase_array, exp_tar_array = GS(target, tolerance=5, max_loops=200, plot_error=True)
+    source_phase_array, exp_tar_array = GS(target, tolerance=0.5, max_loops=200, plot_error=True)
 if algorithm == "GSp":
     source_phase_array, exp_tar_array = GSp(target, tolerance=0.5, max_loops=200, plot_error=True)
 
 if algorithm == "GD":
-    source_phase_array, exp_tar_array = GD(target, learning_rate=0.05, tolerance=0.005, max_loops=30, plot_error=True)
+    source_phase_array, exp_tar_array = GD(target, learning_rate=0.05, tolerance=0.0005, max_loops=200, plot_error=True)
 if algorithm == "GDU":
     source_phase_array, exp_tar_array = GDU(target, learning_rate=0.5, tolerance=0.5, max_loops=100, plot_error=True)
 if algorithm == "GDUII":
@@ -74,7 +77,7 @@ def u_name(unit):
 # transforming image
 hologram = transform_hologram(source_phase, (x_decline*unit, y_decline*unit), focal_len)
 # hologram.img.show()
-hologram.img.convert("RGB").save(f"holograms/{target_name}_hologram_x={x_decline}{u_name(unit)}_y={y_decline}{u_name(unit)}_lens={focal_len}_alg={algorithm}_invert={invert}.jpg")
+hologram.img.convert("RGB").save(f"holograms/{target_name}_hologram_x={x_decline}{u_name(unit)}_y={y_decline}{u_name(unit)}_lens={focal_len}_alg={algorithm}_invert={invert}.jpg", quality=100)
 
 
 # preview of results: what goes into SLM and what it should look like
