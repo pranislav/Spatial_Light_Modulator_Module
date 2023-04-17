@@ -66,7 +66,8 @@ def GS_pure(target: np.array, tolerance: float, max_loops: int, plot_error: bool
     return phase_for_slm, exp_tar_for_slm
 
 
-def GD(demanded_output: np.array, learning_rate: float, tolerance: float, max_loops, plot_error: bool=False):
+def GD(demanded_output: np.array, learning_rate: float, enhance_mask: np.array,\
+       mask_relevance: float, tolerance: float, max_loops: int, unsettle: bool=False, plot_error: bool=False):
     w, l = demanded_output.shape
     space_norm = w * l
     initial_input = generate_initial_input(l, w)
@@ -79,13 +80,15 @@ def GD(demanded_output: np.array, learning_rate: float, tolerance: float, max_lo
         med_output = fft2(input/abs(input))
         output_unnormed = abs(med_output) **2
         output = output_unnormed / np.amax(output_unnormed) * norm**2 # toto prip. zapocitat do grad. zostupu
-        dEdF = ifft2(med_output * (output - demanded_output**2))
+        mask = 1 + mask_relevance * enhance_mask
+        dEdF = ifft2(mask * med_output * (output - demanded_output**2))
         dEdX = np.array(list(map(dEdX_complex, dEdF, input)))
         input -= learning_rate * dEdX
         error = error_f(output, demanded_output**2, space_norm)
         error_evolution.append(error)
         i += 1
-        if i % 180 == 0: learning_rate *= 2
+        if unsettle and i % int(max_loops / 3) == 0:
+            learning_rate *= 2
         if i % 10 == 0: print("-", end='')
     printout(error, i, error_evolution, f"learning_rate: {learning_rate}", plot_error)
     phase_for_slm = complex_to_real_phase(input/abs(input))

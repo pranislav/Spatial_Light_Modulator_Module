@@ -8,7 +8,7 @@ import constants as c
 
 # SETTINGS
 # name and type of image which should be projected by SLM
-target_name = "left_dot_5"
+target_name = "multidecline_grating_1x2_circle3"
 target_type = "jpg"
 # other settings
 invert = False
@@ -31,7 +31,8 @@ def quarter(image: im) -> im:
     when generated hologram for such a transformed image, there will be no overlap
     between different diffraction order of displayed image
     '''
-    # az tu resiznut obrazok, nech neni stvrtinovy, ak sa nepouzije quarter
+    w, h = image.size
+    image.resize(w / 2, h / 2)
     ground = im.new("L", (c.slm_width, c.slm_height))
     ground.paste(image)
     return ground
@@ -41,7 +42,7 @@ if quarterize:
 
 target = np.sqrt(np.array(target_img))
 
-# enhance_mask_img = im.open(f"images/{target_name}_mask.jpg")
+enhance_mask = np.array(target_img) / 255 # normed to 1 | engance the error to get lower on light areas
 
 
 # compouting phase distribution
@@ -51,7 +52,8 @@ if algorithm == "GSp":
     source_phase_array, exp_tar_array = GSp(target, tolerance=0.5, max_loops=200, plot_error=True)
 
 if algorithm == "GD":
-    source_phase_array, exp_tar_array = GD(target, learning_rate=0.05, tolerance=0.0005, max_loops=200, plot_error=True)
+    source_phase_array, exp_tar_array = GD(target, learning_rate=0.05, enhance_mask=enhance_mask,\
+                                           mask_relevance=10, tolerance=0.0005, max_loops=200, unsettle=False, plot_error=True)
 if algorithm == "GDU":
     source_phase_array, exp_tar_array = GDU(target, learning_rate=0.5, tolerance=0.5, max_loops=100, plot_error=True)
 if algorithm == "GDUII":
