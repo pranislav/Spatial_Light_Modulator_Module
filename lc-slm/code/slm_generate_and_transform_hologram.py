@@ -8,7 +8,7 @@ import constants as c
 
 # SETTINGS
 # name and type of image which should be projected by SLM
-target_name = "multidecline_grating_1x2_circle3"
+target_name = "1over2_left_dot_1" # "multidecline_grating_2x2_circle5"
 target_type = "jpg"
 # other settings
 invert = False
@@ -19,6 +19,9 @@ x_decline = 0
 y_decline = 0
 unit = c.u # c.u for one quarter of 1st diff maximum, 1 for radians | ubiquity in filename - units not in the name
 focal_len = False
+# for GD:
+mask_relevance = 10
+unsettle = 5
 
 # loading image
 target_img = im.open(f"images/{target_name}.{target_type}").convert('L').resize((int(c.slm_width), int(c.slm_height)))
@@ -47,13 +50,13 @@ enhance_mask = np.array(target_img) / 255 # normed to 1 | engance the error to g
 
 # compouting phase distribution
 if algorithm == "GS":
-    source_phase_array, exp_tar_array = GS(target, tolerance=0.5, max_loops=200, plot_error=True)
+    source_phase_array, exp_tar_array = GS(target, tolerance=0.005, max_loops=200, plot_error=True)
 if algorithm == "GSp":
     source_phase_array, exp_tar_array = GSp(target, tolerance=0.5, max_loops=200, plot_error=True)
 
 if algorithm == "GD":
-    source_phase_array, exp_tar_array = GD(target, learning_rate=0.05, enhance_mask=enhance_mask,\
-                                           mask_relevance=10, tolerance=0.0005, max_loops=200, unsettle=False, plot_error=True)
+    source_phase_array, exp_tar_array = GD(target, learning_rate=0.5, enhance_mask=enhance_mask,\
+                                           mask_relevance=mask_relevance, tolerance=0.000001, max_loops=500, unsettle=unsettle, plot_error=True)
 if algorithm == "GDU":
     source_phase_array, exp_tar_array = GDU(target, learning_rate=0.5, tolerance=0.5, max_loops=100, plot_error=True)
 if algorithm == "GDUII":
@@ -79,8 +82,10 @@ def u_name(unit):
 # transforming image
 hologram = transform_hologram(source_phase, (x_decline*unit, y_decline*unit), focal_len)
 # hologram.img.show()
-hologram.img.convert("RGB").save(f"holograms/{target_name}_hologram_x={x_decline}{u_name(unit)}_y={y_decline}{u_name(unit)}_lens={focal_len}_alg={algorithm}_invert={invert}.jpg", quality=100)
-
+if algorithm == "GD":
+    hologram.img.convert("RGB").save(f"holograms/{target_name}_hologram_x={x_decline}{u_name(unit)}_y={y_decline}{u_name(unit)}_lens={focal_len}_alg={algorithm}_invert={invert}_mask_relevance={mask_relevance}_unsettle={unsettle}.jpg", quality=100)
+else:
+    hologram.img.convert("RGB").save(f"holograms/{target_name}_hologram_x={x_decline}{u_name(unit)}_y={y_decline}{u_name(unit)}_lens={focal_len}_alg={algorithm}_invert={invert}.jpg", quality=100)
 
 # preview of results: what goes into SLM and what it should look like
 source_phase.show()

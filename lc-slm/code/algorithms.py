@@ -87,7 +87,7 @@ def GD(demanded_output: np.array, learning_rate: float, enhance_mask: np.array,\
         error = error_f(output, demanded_output**2, space_norm)
         error_evolution.append(error)
         i += 1
-        if unsettle and i % int(max_loops / 3) == 0:
+        if unsettle and i % int(max_loops / unsettle) == 0:
             learning_rate *= 2
         if i % 10 == 0: print("-", end='')
     printout(error, i, error_evolution, f"learning_rate: {learning_rate}", plot_error)
