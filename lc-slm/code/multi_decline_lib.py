@@ -23,7 +23,7 @@ def grating(x_num: int, y_num: int) -> list[tuple]:
     return coordinates
 
 def fract_position(x_fract, y_fract):
-    return [int(c.slm_width / x_fract), int(c.slm_height / y_fract)]
+    return [(int(c.slm_width / x_fract), int(c.slm_height / y_fract))]
 
 def dec_position(x_dec, y_dec):
     return [(int(c.slm_width * x_dec), int(c.slm_height * y_dec))]
@@ -32,10 +32,9 @@ def dec_position(x_dec, y_dec):
 # outdated, not compatible; use more general function 'ellipse'
 def circle(target_img: im, coor: tuple[int], radius: float, color: int) -> None:
     x_coor, y_coor = coor
-    w = c.slm_width
-    h = c.slm_height
-    for i in range(h):
-        for j in range(w):
+    w, h = target_img.size
+    for i in range(w):
+        for j in range(h):
             if (i - x_coor)**2 + (j - y_coor)**2 < radius**2:
                 target_img.putpixel((i, j), color)
     return target_img
@@ -44,19 +43,20 @@ def circle(target_img: im, coor: tuple[int], radius: float, color: int) -> None:
 def ellipse(target_img: im, coor: tuple[int], x_d: float, y_d: float, color: int) -> None:
     x_coor, y_coor = coor
     w, h = target_img.size
-    for i in range(h):
-        for j in range(w):
+    for i in range(w):
+        for j in range(h):
             if ((i - x_coor) / x_d)**2 + ((j - y_coor) / y_d)**2 < 1:
                 target_img.putpixel((i, j), color)
     return target_img
+
 
 
 # outdated, not compatible; use more general function 'rectangle'
 def square(target_img: im, coor: tuple[int], side: float, color: int):
     x_coor, y_coor = coor
     w, h = target_img.size
-    for i in range(h):
-        for j in range(w):
+    for i in range(w):
+        for j in range(h):
             x_cond = (x_coor - side // 2) < i <= (x_coor + side // 2)
             y_cond = (y_coor - side // 2) < j <= (y_coor + side // 2)
             if x_cond and y_cond:
@@ -65,11 +65,11 @@ def square(target_img: im, coor: tuple[int], side: float, color: int):
 
 def rectangle(target_img: im, coor: tuple[int], side_x: float, side_y: float, color: int):
     x_coor, y_coor = coor
-    w, h = target_img.size
-    for i in range(h):
-        for j in range(w):
-            x_cond = (x_coor - side_x // 2) < i <= (x_coor + side_x // 2)
-            y_cond = (y_coor - side_y // 2) < j <= (y_coor + side_y // 2)
+    w, h = target_img.size # naopak to tu bolo!! a kto vie, kde este je | nie, daco ine muselo byt zle, lebo pri centrovani som nemohol vyjst z rangeu pri prehodenych suradniciach
+    for i in range(w):
+        for j in range(h):
+            x_cond = (x_coor - side_x // 2) < i <= (x_coor + side_x // 2) or i == x_coor
+            y_cond = (y_coor - side_y // 2) < j <= (y_coor + side_y // 2) or j == y_coor
             if x_cond and y_cond:
                 target_img.putpixel((i, j), color)
     return target_img
