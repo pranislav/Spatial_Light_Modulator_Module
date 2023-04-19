@@ -22,7 +22,7 @@ y_decline = 0
 unit = c.u # c.u for one quarter of 1st diff maximum, 1 for radians | ubiquity in filename - units not in the name
 focal_len = False
 # for GD:
-mask_relevance = 5
+mask_relevance = 10
 unsettle = 0
 learning_rate = 0.5
 tolerance = 0.001
@@ -54,28 +54,27 @@ target = np.sqrt(np.array(target_img))
 enhance_mask = np.array(target_img) / 255 # normed to 1 | engance the error to get lower on light areas
 
 
-gif_address = f"holograms/gif_{target_name}"
-if gif and not os.path.exists(gif_address):
-        os.mkdir(gif_address)
+# gif_source_address = f"holograms/gif_{target_name}"
+# if gif and not os.path.exists(gif_source_address):
+#         os.mkdir(gif_source_address)
 
 # compouting phase distribution
 if algorithm == "GS":
-    source_phase_array, exp_tar_array = GS(target, tolerance=0.005, max_loops=200, plot_error=True)
+    source_phase_array, exp_tar_array, loops = GS(target, tolerance, max_loops, plot_error=True)
 if algorithm == "GSp":
-    source_phase_array, exp_tar_array = GSp(target, tolerance=0.5, max_loops=200, plot_error=True)
+    source_phase_array, exp_tar_array = GSp(target, tolerance, max_loops, plot_error=True)
 
 if algorithm == "GD":
-    source_phase_array, exp_tar_array = GD(target, learning_rate, enhance_mask,\
-                                           mask_relevance, tolerance, max_loops, unsettle, plot_error=True, gif=gif, gif_address=gif_address)
+    source_phase_array, exp_tar_array, loops = GD(target, learning_rate, enhance_mask,\
+                                           mask_relevance, tolerance, max_loops, unsettle, plot_error=True, gif=gif, gif_source_address="holograms/gif_source")
 if algorithm == "GDU":
     source_phase_array, exp_tar_array = GDU(target, learning_rate=0.5, tolerance=0.5, max_loops=100, plot_error=True)
 if algorithm == "GDUII":
     source_phase_array, exp_tar_array = GDUII(target, learning_rate=100, tolerance=0.5, calib=2, angle=0, max_loops=1000, plot_error=True)
 
 
-source_phase = im.fromarray(source_phase_array, mode='L') # this goes into SLM
+source_phase = im.fromarray(source_phase_array) # this goes into SLM
 expected_target = im.fromarray(exp_tar_array)
-source_phase.show()
 
 
 def transform_hologram(hologram, angle, focal_len):
@@ -87,21 +86,32 @@ def transform_hologram(hologram, angle, focal_len):
     else:
         return sc.Screen(hologram)
 
-
-if gif:
-    create_gif(gif_address, f"{gif_address}.gif")
-
-
-def u_name(unit):
-    return "u" if unit==c.u else "rad"
-
 # transforming image
 hologram = transform_hologram(source_phase, (x_decline*unit, y_decline*unit), focal_len)
-hologram.img.show()
-if algorithm == "GD":
-    hologram.img.convert("RGB").save(f"holograms/{target_name}_hologram_x={x_decline}{u_name(unit)}_y={y_decline}{u_name(unit)}_lens={focal_len}_alg={algorithm}_invert={invert}_mask_relevance={mask_relevance}_unsettle={unsettle}.jpg", quality=100)
+
+
+# name of the hologram and saving
+are_transforms = x_decline or y_decline or focal_len
+if are_transforms:
+    def u_name(unit):
+        return "u" if unit==c.u else "rad"
+    transforms = f"x={x_decline}{u_name(unit)}_y={y_decline}{u_name(unit)}_lens={focal_len}"
 else:
-    hologram.img.convert("RGB").save(f"holograms/{target_name}_hologram_x={x_decline}{u_name(unit)}_y={y_decline}{u_name(unit)}_lens={focal_len}_alg={algorithm}_invert={invert}.jpg", quality=100)
+    transforms = ""
+
+if algorithm == "GD":
+    alg_params = f"_leaning_rate={learning_rate}_mask_relevance={mask_relevance}_unsettle={unsettle}"
+else:
+    alg_params = ""
+
+general_params = f"loops={loops}"
+
+hologram_name = f"{target_name}_inverted={invert}_{transforms}_hologram_alg={algorithm}_{general_params}_{alg_params}"
+hologram.img.convert("RGB").save(f"holograms/{hologram_name}.jpg", quality=100)
+
+if gif:
+    create_gif("holograms/gif_source", f"holograms/gif_{hologram_name}.gif")
+
 
 # preview of results: what goes into SLM and what it should look like
 # source_phase.show()
