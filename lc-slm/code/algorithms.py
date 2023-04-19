@@ -2,6 +2,7 @@ import numpy as np
 from scipy.fft import fft2, ifft2, fftshift, ifftshift
 import matplotlib.pyplot as plt
 from random import random
+import PIL.Image as im
 
 
 def GS(target: np.array, tolerance: float, max_loops: int, plot_error: bool=False) -> np.array:
@@ -67,7 +68,7 @@ def GS_pure(target: np.array, tolerance: float, max_loops: int, plot_error: bool
 
 
 def GD(demanded_output: np.array, learning_rate: float, enhance_mask: np.array,\
-       mask_relevance: float, tolerance: float, max_loops: int, unsettle: bool=False, plot_error: bool=False):
+       mask_relevance: float, tolerance: float, max_loops: int, unsettle: bool=False, plot_error: bool=False, gif : int=0, gif_address : str=""):
     w, l = demanded_output.shape
     space_norm = w * l
     initial_input = generate_initial_input(l, w)
@@ -86,6 +87,9 @@ def GD(demanded_output: np.array, learning_rate: float, enhance_mask: np.array,\
         input -= learning_rate * dEdX
         error = error_f(output, demanded_output**2, space_norm)
         error_evolution.append(error)
+        if gif and i % gif == 0:
+            img = im.fromarray(complex_to_real_phase(input/abs(input)))
+            img.convert("RGB").save(gif_address + f"/{i // gif}.jpg")
         i += 1
         if unsettle and i % int(max_loops / unsettle) == 0:
             learning_rate *= 2
