@@ -3,6 +3,7 @@ from scipy.fft import fft2, ifft2, fftshift, ifftshift
 import matplotlib.pyplot as plt
 from random import random
 import PIL.Image as im
+from structs import gif_struct
 
 
 def GS(target: np.array, tolerance: float, max_loops: int, plot_error: bool=False) -> np.array:
@@ -68,7 +69,7 @@ def GS_without_fftshift(target: np.array, tolerance: float, max_loops: int, plot
 
 
 def GD(demanded_output: np.array, learning_rate: float, enhance_mask: np.array,\
-       mask_relevance: float, tolerance: float, max_loops: int, unsettle: bool=False, plot_error: bool=False, gif : int=0, gif_source_address : str=""):
+       mask_relevance: float, tolerance: float, max_loops: int, unsettle, gif_info: gif_struct, plot_error: bool=False):
     w, l = demanded_output.shape
     space_norm = w * l
     initial_input = generate_initial_input(l, w)
@@ -76,6 +77,8 @@ def GD(demanded_output: np.array, learning_rate: float, enhance_mask: np.array,\
     norm = np.amax(demanded_output)
     input = initial_input
     error = tolerance + 1
+    skip_frames = gif_info.skip_frames
+    do_gif = gif_info.type
     i = 0
     while error > tolerance and i < max_loops:
         med_output = fft2(input/abs(input))
@@ -87,9 +90,12 @@ def GD(demanded_output: np.array, learning_rate: float, enhance_mask: np.array,\
         input -= learning_rate * dEdX
         error = error_f(output, demanded_output**2, space_norm)
         error_evolution.append(error)
-        if gif and i % gif == 0:
-            img = im.fromarray(complex_to_real_phase(input/abs(input)))
-            img.convert("RGB").save(gif_source_address + f"/{i // gif}.jpg")
+        if do_gif and i % skip_frames == 0:
+            if do_gif == 'h':
+                img = im.fromarray(complex_to_real_phase(input/abs(input)))
+            if do_gif == 'i':
+                img = im.fromarray(output)
+            img.convert("RGB").save(f"{gif_info.source_address}/{i // skip_frames}.jpg")
         i += 1
         if unsettle and i % int(max_loops / unsettle) == 0:
             learning_rate *= 2

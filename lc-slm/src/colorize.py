@@ -4,7 +4,7 @@ from PIL import ImageOps
 
 
 def trippy_coloring(img_path: str) -> None:
-    clut_img = Image.open('images/my_clut.png').resize((256, 1))
+    clut_img = im.open('images/my_clut.png').resize((256, 1))
 
     clut_lst = [[] for _ in range(256)]
     for i in range(256):
@@ -14,7 +14,7 @@ def trippy_coloring(img_path: str) -> None:
 
     clut = np.array(clut_lst).reshape(-1, 3).T.flatten()
 
-    img = Image.open(img_path)
+    img = im.open(img_path)
     img = img.point(clut)
 
     img.show()
@@ -22,7 +22,7 @@ def trippy_coloring(img_path: str) -> None:
 # trippy_coloring("holograms/1over2_left_dot_5_hologram_x=0u_y=0u_lens=False_alg=GD_invert=False_mask_relevance=0_unsettle=3.jpg")
 
 def dipolar_coloring(img_path: str, black: tuple[int], white: tuple[int]) -> None:
-    img = Image.open(img_path).convert('L')
+    img = im.open(img_path).convert('L')
     img_out = ImageOps.colorize(img, black, white)
     img_out.show()
     

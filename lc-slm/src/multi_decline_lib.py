@@ -73,3 +73,6 @@ def rectangle(target_img: im, coor: tuple[int], side_x: float, side_y: float, co
             if x_cond and y_cond:
                 target_img.putpixel((i, j), color)
     return target_img
+
+def user_defined(x, y):
+    pass
