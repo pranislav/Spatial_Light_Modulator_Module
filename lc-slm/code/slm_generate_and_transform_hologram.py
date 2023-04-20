@@ -1,4 +1,4 @@
-from algorithms import GS, GD, GD_uniphase as GDU, GS_pure as GSp, GD_uniphaseII as GDUII
+from algorithms import GS, GD
 import numpy as np
 from PIL import Image as im
 import PIL.ImageOps
@@ -10,10 +10,12 @@ from create_gif import create_gif
 
 # SETTINGS
 # name and type of image which should be projected by SLM
-target_name = "multidecline_fract_position_3x2_rectangle_5x5" # "multidecline_grating_2x2_circle5"
-target_type = "jpg"
+target_name = "duck" # "multidecline_grating_2x2_circle5"
+target_type = "png"
+save_result = False
+preview = True
 # other settings
-invert = False
+invert = True
 quarterize = False
 algorithm = "GD"    # GD for gradient descent, GS for Gerchberg-Saxton
 # transform parameters
@@ -22,12 +24,12 @@ y_decline = 0
 unit = c.u # c.u for one quarter of 1st diff maximum, 1 for radians | ubiquity in filename - units not in the name
 focal_len = False
 # for GD:
-mask_relevance = 10
+mask_relevance = 0
 unsettle = 0
 learning_rate = 0.5
 tolerance = 0.001
 max_loops = 150
-gif = 5
+gif = 0
 
 # loading image
 target_img = im.open(f"images/{target_name}.{target_type}").convert('L').resize((int(c.slm_width), int(c.slm_height)))
@@ -61,16 +63,10 @@ enhance_mask = np.array(target_img) / 255 # normed to 1 | engance the error to g
 # compouting phase distribution
 if algorithm == "GS":
     source_phase_array, exp_tar_array, loops = GS(target, tolerance, max_loops, plot_error=True)
-if algorithm == "GSp":
-    source_phase_array, exp_tar_array = GSp(target, tolerance, max_loops, plot_error=True)
 
 if algorithm == "GD":
     source_phase_array, exp_tar_array, loops = GD(target, learning_rate, enhance_mask,\
                                            mask_relevance, tolerance, max_loops, unsettle, plot_error=True, gif=gif, gif_source_address="holograms/gif_source")
-if algorithm == "GDU":
-    source_phase_array, exp_tar_array = GDU(target, learning_rate=0.5, tolerance=0.5, max_loops=100, plot_error=True)
-if algorithm == "GDUII":
-    source_phase_array, exp_tar_array = GDUII(target, learning_rate=100, tolerance=0.5, calib=2, angle=0, max_loops=1000, plot_error=True)
 
 
 source_phase = im.fromarray(source_phase_array) # this goes into SLM
@@ -106,13 +102,15 @@ else:
 
 general_params = f"loops={loops}"
 
-hologram_name = f"{target_name}_inverted={invert}_{transforms}_hologram_alg={algorithm}_{general_params}_{alg_params}"
-hologram.img.convert("RGB").save(f"holograms/{hologram_name}.jpg", quality=100)
+if save_result:
+    hologram_name = f"{target_name}_inverted={invert}_{transforms}_hologram_alg={algorithm}_{general_params}_{alg_params}"
+    hologram.img.convert("RGB").save(f"holograms/{hologram_name}.jpg", quality=100)
 
 if gif:
     create_gif("holograms/gif_source", f"holograms/gif_{hologram_name}.gif")
 
 
 # preview of results: what goes into SLM and what it should look like
-# source_phase.show()
-# expected_target.show()
+if preview:
+    source_phase.show()
+    expected_target.show()
