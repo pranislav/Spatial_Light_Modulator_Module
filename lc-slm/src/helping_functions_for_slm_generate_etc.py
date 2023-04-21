@@ -11,15 +11,15 @@ def quarter(image: im) -> im:
     between different diffraction order of displayed image
     '''
     w, h = image.size
-    image.resize((w // 2, h // 2))
+    resized = image.resize((w // 2, h // 2))
     ground = im.new("L", (w, h))
-    ground.paste(image)
+    ground.paste(resized)
     return ground
 
 
 def transform_hologram(hologram, angle, focal_len):
-    if angle:
-        x_angle, y_angle = angle
+    x_angle, y_angle = angle
+    if x_angle or y_angle:
         return sc.Screen(hologram).decline('x', x_angle).decline('y', y_angle)
     if focal_len:
         return sc.Screen(hologram).lens(focal_len)

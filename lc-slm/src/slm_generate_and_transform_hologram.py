@@ -12,7 +12,7 @@ import os
 
 # SETTINGS
 # name and type of image which should be projected by SLM
-target_name = "multidecline_user_defined_half_and_third_rectangle_5x5"
+target_name = "multidecline_fract_position_3x3_ellipse_4x4"
 target_type = "jpg"
 # ...
 save_result = True
@@ -20,10 +20,10 @@ preview = False
 # other settings
 invert = False
 quarterize = False # original image is reduced to quarter and pasted to black image of its original size | helpful when imaging - there is no overlap between diffraction maxima of different order
-algorithm = "GD"    # GD for gradient descent, GS for Gerchberg-Saxton
+algorithm = "GS"    # GD for gradient descent, GS for Gerchberg-Saxton
 # stopping parameters
 tolerance = 0.001 # algorithm stops when error descends under tolerance
-max_loops = 150 # algorithm performs no more than max_loops loops no matter what error it is
+max_loops = 60 # algorithm performs no more than max_loops loops no matter what error it is
 # transform parameters
 x_decline = 0
 y_decline = 0
@@ -35,7 +35,7 @@ mask_relevance = 10 # very helpful when target is predominantly black (multidecl
 unsettle = 3 # learning rate is unsettle times doubled. it may improve algorithm performance, and it also may cause peaks in error evolution
 # gif creation
 gif_target = "h" # "h" for hologram, "i" for image (result) and empty string for no gif
-gif_skip = 5 # each gif_skip-th frame will be in gif
+gif_skip = 1 # each gif_skip-th frame will be in gif
 
 
 
@@ -65,7 +65,7 @@ if gif_target:
 
 # compouting phase distribution
 if algorithm == "GS":
-    source_phase_array, exp_tar_array, loops = GS(target, tolerance, max_loops, plot_error=True)
+    source_phase_array, exp_tar_array, loops = GS(target, tolerance, max_loops, gif, plot_error=True)
 
 if algorithm == "GD":
     source_phase_array, exp_tar_array, loops = GD(target, learning_rate, enhance_mask,\
@@ -78,7 +78,6 @@ expected_target = im.fromarray(exp_tar_array)
 
 # transforming image
 hologram = hf.transform_hologram(source_phase, (x_decline*unit, y_decline*unit), focal_len)
-
 
 # name of the hologram and saving
 are_transforms = x_decline or y_decline or focal_len
@@ -94,10 +93,11 @@ if algorithm == "GD":
 else:
     alg_params = ""
 
+target_transforms = f"inverted={invert}_quarter={quarterize}"
 general_params = f"loops={loops}"
 
 if save_result:
-    hologram_name = f"{target_name}_inverted={invert}_{transforms}_hologram_alg={algorithm}_{general_params}_{alg_params}"
+    hologram_name = f"{target_name}_{target_transforms}_{transforms}_hologram_alg={algorithm}_{general_params}_{alg_params}"
     hologram.img.convert("RGB").save(f"holograms/{hologram_name}.jpg", quality=100)
 
 if gif_target:

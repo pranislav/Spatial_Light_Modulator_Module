@@ -6,7 +6,7 @@ import PIL.Image as im
 from structs import gif_struct
 
 
-def GS(target: np.array, tolerance: float, max_loops: int, plot_error: bool=False) -> np.array:
+def GS(target: np.array, tolerance: float, max_loops: int, gif_info: gif_struct, plot_error: bool=False) -> np.array:
     '''classical Gerchberg-Saxton algorithm
     produces input for SLM for creating 'target' image
     '''
@@ -15,10 +15,12 @@ def GS(target: np.array, tolerance: float, max_loops: int, plot_error: bool=Fals
     space_norm = w * l
     error = tolerance + 1
     error_evolution = []
+    do_gif = gif_info.type
+    skip_frames = gif_info.skip_frames
     n = 0
     A = ifft2(target)
+    im.fromarray((np.angle(A) + np.pi) * 255 / (2*np.pi)).show()
     while error > tolerance and n < max_loops:
-        n+=1
         B = A/abs(A) # our source amplitude is 1 everywhere
         C = fftshift(fft2(B))
         D = np.abs(target) * C/abs(C)
@@ -28,10 +30,19 @@ def GS(target: np.array, tolerance: float, max_loops: int, plot_error: bool=Fals
         exp_tar *= scale
         error = error_f(exp_tar**2, target**2, space_norm)
         error_evolution.append(error)
+        if do_gif and n % skip_frames == 0:
+            if do_gif == 'h':
+                img = im.fromarray((np.angle(A) + np.pi) * 255 / (2*np.pi))
+            if do_gif == 'i':
+                exp_tar **= 2
+                phase_for_slm = exp_tar * 255/np.amax(exp_tar)
+                img = im.fromarray(phase_for_slm)
+            img.convert("RGB").save(f"{gif_info.source_address}/{n // skip_frames}.jpg")
+        n+=1
         if n % 10 == 0: print("-", end='')
     print()
     printout(error, n, error_evolution, "asdf", plot_error)
-    phase_for_slm = np.angle(A) * 255 / (2*np.pi) # converts phase to color value, input for SLM
+    phase_for_slm = (np.angle(A) + np.pi) * 255 / (2*np.pi) # converts phase to color value, input for SLM
     exp_tar = exp_tar**2
     exp_tar_for_slm = exp_tar * 255/np.amax(exp_tar) # what the outcome from SLM should look like
     return phase_for_slm, exp_tar_for_slm, n
