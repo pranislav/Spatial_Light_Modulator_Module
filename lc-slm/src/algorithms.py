@@ -19,7 +19,6 @@ def GS(target: np.array, tolerance: float, max_loops: int, gif_info: gif_struct,
     skip_frames = gif_info.skip_frames
     n = 0
     A = ifft2(target)
-    im.fromarray((np.angle(A) + np.pi) * 255 / (2*np.pi)).show()
     while error > tolerance and n < max_loops:
         B = A/abs(A) # our source amplitude is 1 everywhere
         C = fftshift(fft2(B))

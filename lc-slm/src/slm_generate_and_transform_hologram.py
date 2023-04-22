@@ -6,13 +6,12 @@ import slm_screen as sc
 import constants as c
 from structs import gif_struct
 import helping_functions_for_slm_generate_etc as hf
-import glob
-import os
+
 
 
 # SETTINGS
 # name and type of image which should be projected by SLM
-target_name = "multidecline_fract_position_3x3_ellipse_4x4"
+target_name = "multidecline_fract_position_4x4_ellipse_4x4"
 target_type = "jpg"
 # ...
 save_result = True
@@ -34,7 +33,7 @@ learning_rate = 0.5 # how far our solution jump in direction of the gradient. To
 mask_relevance = 10 # very helpful when target is predominantly black (multidecline dots)
 unsettle = 3 # learning rate is unsettle times doubled. it may improve algorithm performance, and it also may cause peaks in error evolution
 # gif creation
-gif_target = "h" # "h" for hologram, "i" for image (result) and empty string for no gif
+gif_target = "" # "h" for hologram, "i" for image (result) and empty string for no gif
 gif_skip = 1 # each gif_skip-th frame will be in gif
 
 
@@ -50,17 +49,16 @@ target = np.sqrt(np.array(target_img))
 
 enhance_mask = np.array(target_img) / 255 # normed to 1 | engance the error to get lower on light areas
 
+# creating gif data structure (primarily for GD arguments reducing)
+gif = gif_struct()
+gif.type = gif_target
+gif.skip_frames = gif_skip
+
 if gif_target:
-    # creating gif data structure (primarily for GD arguments reducing)
-    gif = gif_struct()
-    gif.type = gif_target
-    gif.skip_frames = gif_skip
     directory = "images" if gif_target == "i" else "holograms"
     gif.source_address = f"{directory}/gif_source"
     # making place for gif images
-    files = glob.glob(f"{gif.source_address}/*")
-    for file in files:
-        os.remove(file)
+    hf.remove_files_in_dir(gif.source_address)
 
 
 # compouting phase distribution
