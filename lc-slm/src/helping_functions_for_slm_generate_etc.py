@@ -21,12 +21,14 @@ def quarter(image: im) -> im:
 
 def transform_hologram(hologram, angle, focal_len):
     x_angle, y_angle = angle
-    if x_angle or y_angle:
-        return sc.Screen(hologram).decline('x', x_angle).decline('y', y_angle)
+    hologram_screen = sc.Screen(hologram)
+    if x_angle:
+        hologram_screen.decline('x', x_angle)
+    if y_angle:
+        hologram_screen.decline('y', y_angle)
     if focal_len:
-        return sc.Screen(hologram).lens(focal_len)
-    else:
-        return sc.Screen(hologram)
+        hologram_screen.lens(focal_len)
+    return hologram_screen
     
 
 def create_gif(img_dir, outgif_path):

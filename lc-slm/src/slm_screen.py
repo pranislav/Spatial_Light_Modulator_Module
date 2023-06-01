@@ -1,3 +1,4 @@
+# TODO: change from the root. this is too expensive. no getpixel, putpixel, work with arrays and convert to image just at the end
 '''slm - module for work with Spatial Light Modulator
 
 this module primarly provides functions which generate images

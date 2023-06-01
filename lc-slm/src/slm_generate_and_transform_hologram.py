@@ -1,3 +1,5 @@
+# TODO: there is a problem with plotting error
+
 from algorithms import GS, GD
 import numpy as np
 from PIL import Image as im
@@ -11,7 +13,7 @@ import helping_functions_for_slm_generate_etc as hf
 
 # SETTINGS
 # name and type of image which should be projected by SLM
-target_name = "multidecline_fract_position_4x4_ellipse_4x4"
+target_name = "multidecline_grating_1x1_ellipse_4x4"
 target_type = "jpg"
 # ...
 save_result = True
@@ -27,14 +29,14 @@ max_loops = 60 # algorithm performs no more than max_loops loops no matter what 
 x_decline = 0
 y_decline = 0
 unit = c.u # c.u for one quarter of 1st diff maximum, 1 for radians | ubiquity in filename - units not in the name
-focal_len = False
+focal_len = 0.6
 # for GD:
 learning_rate = 0.5 # how far our solution jump in direction of the gradient. Too low - slow convergence; too high - oscilations or even none reasonable improvement at all
 mask_relevance = 10 # very helpful when target is predominantly black (multidecline dots)
 unsettle = 3 # learning rate is unsettle times doubled. it may improve algorithm performance, and it also may cause peaks in error evolution
 # gif creation
 gif_target = "" # "h" for hologram, "i" for image (result) and empty string for no gif
-gif_skip = 1 # each gif_skip-th frame will be in gif
+gif_skip = 2 # each gif_skip-th frame will be in gif
 
 
 
@@ -63,27 +65,25 @@ if gif_target:
 
 # compouting phase distribution
 if algorithm == "GS":
-    source_phase_array, exp_tar_array, loops = GS(target, tolerance, max_loops, gif, plot_error=True)
+    source_phase_array, exp_tar_array, loops = GS(target, tolerance, max_loops, gif, plot_error=False)
 
 if algorithm == "GD":
     source_phase_array, exp_tar_array, loops = GD(target, learning_rate, enhance_mask,\
-                    mask_relevance, tolerance, max_loops, unsettle, gif, plot_error=True)
+                    mask_relevance, tolerance, max_loops, unsettle, gif, plot_error=False)
 
 
 source_phase = im.fromarray(source_phase_array) # this goes into SLM
 expected_target = im.fromarray(exp_tar_array)
 
 
-# transforming image
-hologram = hf.transform_hologram(source_phase, (x_decline*unit, y_decline*unit), focal_len)
-
-# name of the hologram and saving
 are_transforms = x_decline or y_decline or focal_len
 if are_transforms:
+    hologram = hf.transform_hologram(source_phase, (x_decline*unit, y_decline*unit), focal_len)
     def u_name(unit):
         return "u" if unit==c.u else "rad"
     transforms = f"x={x_decline}{u_name(unit)}_y={y_decline}{u_name(unit)}_lens={focal_len}"
 else:
+    hologram = sc.Screen(source_phase)
     transforms = ""
 
 if algorithm == "GD":
