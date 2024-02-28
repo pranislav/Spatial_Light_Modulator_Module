@@ -1,6 +1,7 @@
 from __future__ import annotations
 import PIL.Image as im
 import constants as c
+import os
 
 white = 255
 
@@ -10,6 +11,21 @@ def multi_decline_img(coordinates: list[tuple], object: function, size_x: float,
         object(img, point, size_x, size_y, white)
     return img
 
+
+trap_radius = 10
+
+'''creates a sequence of images of multiple moving points
+from given lists of coordinates
+and saves them into a file'''
+def create_sequence_dots(list_of_position_lists: list[list[tuple]], name: str):
+    if not os.path.exists(f"images/moving_traps/{name}"):
+        os.makedirs(f"images/moving_traps/{name}")
+    for i, position_list in enumerate(list_of_position_lists):
+        img = multi_decline_img(position_list, ellipse, trap_radius, trap_radius)
+        img.save(f"images/moving_traps/{name}/{i}.png", quality=100)
+
+
+# coordinate generators --------------------------------------------
 
 def grating(x_num: int, y_num: int) -> list[tuple]:
     coordinates = []
@@ -28,6 +44,11 @@ def fract_position(x_fract, y_fract):
 def dec_position(x_dec, y_dec):
     return [(int(c.slm_width * x_dec), int(c.slm_height * y_dec))]
 
+def user_defined(x, y):
+    pass
+
+
+# objects --------------------------------------------
 
 # outdated, not compatible; use more general function 'ellipse'
 def circle(target_img: im, coor: tuple[int], radius: float, color: int) -> None:
@@ -73,6 +94,3 @@ def rectangle(target_img: im, coor: tuple[int], side_x: float, side_y: float, co
             if x_cond and y_cond:
                 target_img.putpixel((i, j), color)
     return target_img
-
-def user_defined(x, y):
-    pass
