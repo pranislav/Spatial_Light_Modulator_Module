@@ -13,15 +13,16 @@ import helping_functions_for_slm_generate_etc as hf
 
 # SETTINGS
 # name and type of image which should be projected by SLM
-target_name = "multidecline_grating_1x1_ellipse_4x4"
+target_name = "multidecline_grating_2x1_ellipse_4x4"
 target_type = "jpg"
 # ...
-save_result = True
-preview = False
+save_result = False
+preview = True
+plot_error = True
 # other settings
 invert = False
-quarterize = False # original image is reduced to quarter and pasted to black image of its original size | helpful when imaging - there is no overlap between diffraction maxima of different order
-algorithm = "GS"    # GD for gradient descent, GS for Gerchberg-Saxton
+quarterize = True # original image is reduced to quarter and pasted to black image of its original size | helpful when imaging - there is no overlap between diffraction maxima of different order
+algorithm = "GD"    # GD for gradient descent, GS for Gerchberg-Saxton
 # stopping parameters
 tolerance = 0.001 # algorithm stops when error descends under tolerance
 max_loops = 60 # algorithm performs no more than max_loops loops no matter what error it is
@@ -29,11 +30,11 @@ max_loops = 60 # algorithm performs no more than max_loops loops no matter what 
 x_decline = 0
 y_decline = 0
 unit = c.u # c.u for one quarter of 1st diff maximum, 1 for radians | ubiquity in filename - units not in the name
-focal_len = 0.6
+focal_len = False
 # for GD:
-learning_rate = 0.5 # how far our solution jump in direction of the gradient. Too low - slow convergence; too high - oscilations or even none reasonable improvement at all
-mask_relevance = 10 # very helpful when target is predominantly black (multidecline dots)
-unsettle = 3 # learning rate is unsettle times doubled. it may improve algorithm performance, and it also may cause peaks in error evolution
+learning_rate = 0.005 # how far our solution jump in direction of the gradient. Too low - slow convergence; too high - oscilations or even none reasonable improvement at all
+mask_relevance = 100 # very helpful when target is predominantly black (multidecline dots)
+unsettle = 0 # learning rate is (unsettle - 1) times doubled. it may improve algorithm performance, and it also may cause peaks in error evolution
 # gif creation
 gif_target = "" # "h" for hologram, "i" for image (result) and empty string for no gif
 gif_skip = 2 # each gif_skip-th frame will be in gif
@@ -49,7 +50,7 @@ if quarterize:
 target = np.sqrt(np.array(target_img))
 
 
-enhance_mask = np.array(target_img) / 255 # normed to 1 | engance the error to get lower on light areas
+enhance_mask = np.array(target_img) / 255 # normed to 1 | enhance the error to get lower on light areas
 
 # creating gif data structure (primarily for GD arguments reducing)
 gif = gif_struct()
@@ -65,11 +66,11 @@ if gif_target:
 
 # compouting phase distribution
 if algorithm == "GS":
-    source_phase_array, exp_tar_array, loops = GS(target, tolerance, max_loops, gif, plot_error=False)
+    source_phase_array, exp_tar_array, loops = GS(target, tolerance, max_loops, gif, plot_error)
 
 if algorithm == "GD":
     source_phase_array, exp_tar_array, loops = GD(target, learning_rate, enhance_mask,\
-                    mask_relevance, tolerance, max_loops, unsettle, gif, plot_error=False)
+                    mask_relevance, tolerance, max_loops, unsettle, gif, plot_error)
 
 
 source_phase = im.fromarray(source_phase_array) # this goes into SLM
@@ -96,7 +97,7 @@ general_params = f"loops={loops}"
 
 if save_result:
     hologram_name = f"{target_name}_{target_transforms}_{transforms}_hologram_alg={algorithm}_{general_params}_{alg_params}"
-    hologram.img.convert("RGB").save(f"holograms/{hologram_name}.jpg", quality=100)
+    hologram.img.convert("RGB").save(f"holograms/{hologram_name}.png", quality=100)
 
 if gif_target:
     hf.create_gif(gif.source_address, f"{directory}/gif_{hologram_name}.gif")

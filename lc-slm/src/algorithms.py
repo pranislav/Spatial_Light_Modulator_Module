@@ -143,3 +143,32 @@ def dEdX_complex(dEdF, x):
     re_res = rE * (1/ax - rx**2 / ax**3) + iE * (- (rx*ix) / ax**3)
     im_res = rE * (- (rx*ix) / ax**3) + iE * (1/ax - ix**2 / ax**3)
     return re_res + 1j * im_res
+
+def GD_for_moving_traps(demanded_output: np.array, initial_input: np.array, learning_rate: float=0.005,
+       mask_relevance: float=10, tolerance: float=0.001, max_loops: int=50, unsettle=0):
+    w, l = demanded_output.shape
+    space_norm = w * l
+    error_evolution = []
+    norm = np.amax(demanded_output)
+    input = initial_input
+    error = tolerance + 1
+    i = 0
+    while error > tolerance and i < max_loops:
+        med_output = fft2(input/abs(input))
+        output_unnormed = abs(med_output) **2
+        output = output_unnormed / np.amax(output_unnormed) * norm**2 # toto prip. zapocitat do grad. zostupu
+        mask = 1 + mask_relevance * demanded_output/255
+        dEdF = ifft2(mask * med_output * (output - demanded_output**2))
+        dEdX = np.array(list(map(dEdX_complex, dEdF, input)))
+        input -= learning_rate * dEdX
+        error = error_f(output, demanded_output**2, space_norm)
+        error_evolution.append(error)
+        i += 1
+        if unsettle and i % int(max_loops / unsettle) == 0:
+            learning_rate *= 2
+        if i % 10 == 0: print("-", end='')
+    print()
+    phase_for_slm = complex_to_real_phase(input/abs(input))
+    exp_tar_for_slm = output
+    init_input_for_next = input
+    return phase_for_slm, init_input_for_next, error_evolution
