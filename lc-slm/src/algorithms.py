@@ -90,6 +90,7 @@ def GD(demanded_output: np.array, learning_rate: float, enhance_mask: np.array,\
     skip_frames = gif_info.skip_frames
     do_gif = gif_info.type
     i = 0
+    print("computing hologram (one bar for 10 loops)", ' ')
     while error > tolerance and i < max_loops:
         med_output = fft2(input/abs(input))
         output_unnormed = abs(med_output) **2
@@ -111,7 +112,7 @@ def GD(demanded_output: np.array, learning_rate: float, enhance_mask: np.array,\
             learning_rate *= 2
         if i % 10 == 0: print("-", end='')
     printout(error, i, error_evolution, f"learning_rate: {learning_rate}", plot_error)
-    phase_for_slm = complex_to_real_phase(input/abs(input))
+    phase_for_slm = complex_to_real_phase(input)
     exp_tar_for_slm = output
     return phase_for_slm, exp_tar_for_slm, i
 
@@ -168,7 +169,7 @@ def GD_for_moving_traps(demanded_output: np.array, initial_input: np.array, lear
             learning_rate *= 2
         if i % 10 == 0: print("-", end='')
     print()
-    phase_for_slm = complex_to_real_phase(input/abs(input))
+    phase_for_slm = complex_to_real_phase(input)
     exp_tar_for_slm = output
     init_input_for_next = input
-    return phase_for_slm, init_input_for_next, error_evolution
+    return phase_for_slm, init_input_for_next, exp_tar_for_slm, error_evolution
