@@ -5,6 +5,7 @@ from algorithms import GD_for_moving_traps, generate_initial_input
 from PIL import Image as im
 from helping_functions_for_slm_generate_etc import remove_files_in_dir, create_gif
 from constants import slm_width as w, slm_height as h
+import copy
 
 
 def generate_hologram_gif(source_dir: str, preview: bool=False, learning_rate: float=0.002,
@@ -22,16 +23,16 @@ def generate_hologram_gif(source_dir: str, preview: bool=False, learning_rate: f
     for i, file in enumerate(os.listdir(source_dir)):
         img = im.open(f"{source_dir}/{file}")
         target = np.sqrt(np.array(img))
-        print(f"creating hologram for {i}. trap: ", '')
-        hologram, initial_guess, exp_tar, err_evl = GD_for_moving_traps(target, initial_guess, learning_rate, mask_relevance, tolerance, max_loops, unsettle)
+        print(f"creating {i}. hologram: ", '')
+        hologram, _, exp_tar, err_evl = GD_for_moving_traps(target, copy.deepcopy(initial_guess), learning_rate, mask_relevance, tolerance, max_loops, unsettle)
         hologram_img = im.fromarray(hologram)
         hologram_img.convert("RGB").save(f"{dest_dir_holograms}/{i}.png", quality=100) # do i need quality if saving as png?
         err_evl_list.append(err_evl)
-        tolerance = err_evl[-1]
+        # tolerance = err_evl[-1]
         if preview:
             exp_tar_img = im.fromarray(exp_tar)
             exp_tar_img.convert("RGB").save(f"{dest_dir_preview}/exp_tar_{i}.png", quality=100)
-        # if i == 2: break
+        # if i == 20: break
     plot_err_evl(err_evl_list)
     name = f"{os.path.basename(source_dir)}_lr={learning_rate:.2}_mr={mask_relevance}_tol={tolerance:.2}_loops={max_loops}_unsettle={unsettle}"
     create_gif(dest_dir_holograms, f"holograms/{name}.gif")

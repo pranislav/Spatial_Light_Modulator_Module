@@ -1,14 +1,14 @@
-from hologram_gif_generator import generate_hologram_gif
+from hologram_gif_lib import generate_hologram_gif
 
 # params for GD algorithm
-learning_rate = 0.002
-mask_relevance = 10
-tolerance = 0.001
+learning_rate = 0.005
+mask_relevance = 100
+tolerance = 0.0001
 max_loops = 20
 unsettle = 0
 
 # params for generator
-source_path = "images/moving_traps/moving_traps_4"
+source_path = "images/moving_traps/two_circulating_traps_quarterize_radius1px"
 preview = True
 
 generate_hologram_gif(source_path, preview, learning_rate,

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import numpy as np
 import PIL.Image as im
 import constants as c
 import os
@@ -12,17 +13,18 @@ def multi_decline_img(coordinates: list[tuple], object: function, size_x: float,
     return img
 
 
-trap_radius = 10
+# trap_radius = 10
 
 '''creates a sequence of images of multiple moving points
 from given lists of coordinates
 and saves them into a file'''
-def create_sequence_dots(list_of_position_lists: list[list[tuple]], name: str):
+def create_sequence_dots(list_of_position_lists: list[list[tuple]], name: str, trap_radius: int=5):
+    name = f"{name}_radius{trap_radius}"
     if not os.path.exists(f"images/moving_traps/{name}"):
         os.makedirs(f"images/moving_traps/{name}")
     for i, position_list in enumerate(list_of_position_lists):
-        img = multi_decline_img(position_list, ellipse, trap_radius, trap_radius)
-        img.save(f"images/moving_traps/{name}/{i}.png", quality=100)
+        img = multi_decline_img(position_list, dot, trap_radius, trap_radius)
+        img.save(f"images/moving_traps/{name}/{i}.png")
 
 
 # coordinate generators --------------------------------------------
@@ -61,6 +63,16 @@ def circle(target_img: im, coor: tuple[int], radius: float, color: int) -> None:
     return target_img
 
 
+def ellipse_arr(target_img: im, coor: tuple[int], x_d: float, y_d: float, color: int) -> None:
+    x_coor, y_coor = coor
+    w, h = target_img.size
+    target_arr = np.array(target_img)
+    for i in range(w):
+        for j in range(h):
+            if ((i - x_coor) / x_d)**2 + ((j - y_coor) / y_d)**2 < 1:
+                target_arr[j, i] = color
+    return im.fromarray(target_arr)
+
 def ellipse(target_img: im, coor: tuple[int], x_d: float, y_d: float, color: int) -> None:
     x_coor, y_coor = coor
     w, h = target_img.size
@@ -70,6 +82,15 @@ def ellipse(target_img: im, coor: tuple[int], x_d: float, y_d: float, color: int
                 target_img.putpixel((i, j), color)
     return target_img
 
+def dot(target_img: im, coor: tuple[int], ___, __, color: int) -> None:
+    # target_arr = np.array(target_img)
+    # target_arr[0,0] = 100
+    # print(target_arr)
+    # return im.fromarray(target_arr)
+    x_coor = round(coor[0])
+    y_coor = round(coor[1])
+    target_img.putpixel((x_coor, y_coor), color)
+    return target_img
 
 
 # outdated, not compatible; use more general function 'rectangle'

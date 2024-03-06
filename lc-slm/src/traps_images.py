@@ -1,9 +1,9 @@
-from create_list_of_positions import create_list_of_position_lists, my_parametrization
-from multi_decline_lib import create_sequence_dots, multi_decline_img, ellipse
+from create_list_of_positions import create_list_of_position_lists, two_circulating_dots_quarterized
+from multi_decline_lib import create_sequence_dots
 
-number_of_frames = 10
+number_of_frames = 360
 
-list_of_position_lists = create_list_of_position_lists(my_parametrization, number_of_frames)
+list_of_position_lists = create_list_of_position_lists(two_circulating_dots_quarterized, number_of_frames, 1)
 # print(list_of_position_lists)
 
-create_sequence_dots(list_of_position_lists, "moving_traps_4")
+create_sequence_dots(list_of_position_lists, "two_circulating_traps_quarterize", "1px")
