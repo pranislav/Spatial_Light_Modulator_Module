@@ -2,7 +2,7 @@ from __future__ import annotations
 from PIL import Image as im
 from functools import partial
 import numpy as np
-from dmd.incident_angle import the_angle
+from incident_angle import the_angle
 from dmd_constants import a, i_size, j_size, wavelength
 
 
