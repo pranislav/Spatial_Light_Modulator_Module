@@ -4,6 +4,13 @@ import matplotlib.pyplot as plt
 from random import random
 import PIL.Image as im
 from structs import gif_struct
+from typing import List, Tuple
+from cmath import phase
+
+
+def is_zero(a: np.array) -> List[Tuple[int, int]]:
+    '''returns list of coordinates of zeros in a'''
+    return [(i, j) for i in range(len(a)) for j in range(len(a[0])) if a[i][j] == 0]
 
 
 def GS(target: np.array, tolerance: float, max_loops: int, gif_info: gif_struct, plot_error: bool=False) -> np.array:
@@ -20,9 +27,9 @@ def GS(target: np.array, tolerance: float, max_loops: int, gif_info: gif_struct,
     n = 0
     A = ifft2(target)
     while error > tolerance and n < max_loops:
-        B = A/abs(A) # our source amplitude is 1 everywhere
+        B = np.exp(1j * np.angle(A))
         C = fftshift(fft2(B))
-        D = np.abs(target) * C/abs(C)
+        D = np.abs(target) * np.exp(1j * np.angle(C))
         A = (ifft2(ifftshift(D)))
         exp_tar = np.abs(C) # np.abs(fftshift(fft2(A/abs(A))))
         scale = np.sqrt(255)/exp_tar.max()
@@ -46,6 +53,35 @@ def GS(target: np.array, tolerance: float, max_loops: int, gif_info: gif_struct,
     exp_tar_for_slm = exp_tar * 255/np.amax(exp_tar) # what the outcome from SLM should look like
     return phase_for_slm, exp_tar_for_slm, n
 
+
+def GS_for_moving_traps(target: np.array, tolerance: float, max_loops: int) -> np.array:
+    '''GS adapted for creeating holograms for moving traps
+    '''
+
+    w, l = target.shape
+    space_norm = w * l
+    error = tolerance + 1
+    error_evolution = []
+    n = 0
+    A = ifft2(target)
+    # print(is_zero(A))
+    while error > tolerance and n < max_loops:
+        B = np.exp(1j * np.angle(A)) # our source amplitude is 1 everywhere
+        C = fftshift(fft2(B))
+        D = np.abs(target) * np.exp(1j * np.angle(C))
+        A = (ifft2(ifftshift(D)))
+        exp_tar = np.abs(C) # np.abs(fftshift(fft2(A/abs(A))))
+        scale = np.sqrt(255)/exp_tar.max()
+        exp_tar *= scale
+        error = error_f(exp_tar**2, target**2, space_norm)
+        error_evolution.append(error)
+        n+=1
+        if n % 10 == 0: print("-", end='')
+    print()
+    phase_for_slm = (np.angle(A) + np.pi) * 255 / (2*np.pi) # converts phase to color value, input for SLM
+    exp_tar = exp_tar**2
+    exp_tar_for_slm = exp_tar * 255/np.amax(exp_tar) # what the outcome from SLM should look like
+    return phase_for_slm, exp_tar_for_slm, error_evolution
 
 def GS_without_fftshift(target: np.array, tolerance: float, max_loops: int, plot_error: bool=False) -> np.array:
     '''classical Gerchberg-Saxton algorithm

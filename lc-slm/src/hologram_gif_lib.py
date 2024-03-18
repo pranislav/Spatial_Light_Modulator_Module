@@ -1,14 +1,14 @@
 import numpy as np
 import os
 import matplotlib.pyplot as plt
-from algorithms import GD_for_moving_traps, generate_initial_input
+from algorithms import GD_for_moving_traps, generate_initial_input, GS_for_moving_traps
 from PIL import Image as im
 from helping_functions_for_slm_generate_etc import remove_files_in_dir, create_gif
 from constants import slm_width as w, slm_height as h
 import copy
 
 
-def generate_hologram_gif(source_dir: str, preview: bool=False, learning_rate: float=0.002,
+def generate_hologram_gif(source_dir: str, alg: str, preview: bool=False, learning_rate: float=0.002,
        mask_relevance: float=10, tolerance: float=0.001, max_loops: int=10, unsettle=0):
     '''transforms sequence of images of traps into
     a gif of holograms corresponding to those traps'''
@@ -24,17 +24,23 @@ def generate_hologram_gif(source_dir: str, preview: bool=False, learning_rate: f
         img = im.open(f"{source_dir}/{file}")
         target = np.sqrt(np.array(img))
         print(f"creating {i}. hologram: ", '')
-        hologram, _, exp_tar, err_evl = GD_for_moving_traps(target, copy.deepcopy(initial_guess), learning_rate, mask_relevance, tolerance, max_loops, unsettle)
-        hologram_img = im.fromarray(hologram)
-        hologram_img.convert("RGB").save(f"{dest_dir_holograms}/{i}.png", quality=100) # do i need quality if saving as png?
+        if alg == "GS":
+            hologram, exp_tar, err_evl = GS_for_moving_traps(target, tolerance, max_loops)
+        else:
+            hologram, _, exp_tar, err_evl = GD_for_moving_traps(target, copy.deepcopy(initial_guess), learning_rate, mask_relevance, tolerance, max_loops, unsettle)
         err_evl_list.append(err_evl)
+        hologram_img = im.fromarray(hologram)
+        hologram_img.convert("RGB").save(f"{dest_dir_holograms}/{i}.png")
         # tolerance = err_evl[-1]
         if preview:
             exp_tar_img = im.fromarray(exp_tar)
             exp_tar_img.convert("RGB").save(f"{dest_dir_preview}/exp_tar_{i}.png", quality=100)
-        # if i == 20: break
+        # if i == 5: break
     plot_err_evl(err_evl_list)
-    name = f"{os.path.basename(source_dir)}_lr={learning_rate:.2}_mr={mask_relevance}_tol={tolerance:.2}_loops={max_loops}_unsettle={unsettle}"
+    if alg == "GS":
+        name = f"{os.path.basename(source_dir)}_GS"
+    else:
+        name = f"{os.path.basename(source_dir)}_lr={learning_rate:.2}_mr={mask_relevance}_tol={tolerance:.2}_loops={max_loops}_unsettle={unsettle}"
     create_gif(dest_dir_holograms, f"holograms/{name}.gif")
     if preview:
         create_gif(dest_dir_preview, f"images/{name}_exp_tar.gif")
