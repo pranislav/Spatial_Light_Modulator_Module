@@ -13,7 +13,7 @@ import helping_functions_for_slm_generate_etc as hf
 
 # SETTINGS
 # name and type of image which should be projected by SLM
-target_name = "moving_traps/two_circulating_traps_radius1px/3" # "multidecline_user_defined_5432_dot_2x2"
+target_name = "multidecline_grating_2x2_dot" # "moving_traps/two_circulating_traps_radius1px/3" # "multidecline_user_defined_5432_dot_2x2"
 target_type = "png"
 # ...
 save_result = True
@@ -21,11 +21,11 @@ preview = False
 plot_error = True
 # other settings
 invert = False
-quarterize = False # original image is reduced to quarter and pasted to black image of its original size | helpful when imaging - there is no overlap between diffraction maxima of different order
+quarterize = True # original image is reduced to quarter and pasted to black image of its original size | helpful when imaging - there is no overlap between diffraction maxima of different order
 algorithm = "GD"    # GD for gradient descent, GS for Gerchberg-Saxton
 # stopping parameters
 tolerance = 0.001 # algorithm stops when error descends under tolerance
-max_loops = 20 # algorithm performs no more than max_loops loops no matter what error it is
+max_loops = 50 # algorithm performs no more than max_loops loops no matter what error it is
 # transform parameters
 x_decline = 0
 y_decline = 0
@@ -97,8 +97,8 @@ general_params = f"loops={loops}"
 
 if save_result:
     hologram_name = f"{target_name}_{target_transforms}_{transforms}_hologram_alg={algorithm}_{general_params}_{alg_params}"
-    hologram.img.convert("RGB").save(f"holograms/duh.png")
-    expected_target.convert("RGB").save(f"images/duh_exp_tar.png")
+    hologram.img.convert("RGB").save(f"holograms/{hologram_name}.png")
+    expected_target.convert("RGB").save(f"images/{hologram_name}_exp_tar.png")
 
 if gif_target:
     hf.create_gif(gif.source_address, f"{directory}/gif_{hologram_name}.gif")
