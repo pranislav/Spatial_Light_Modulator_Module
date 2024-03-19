@@ -1,10 +1,11 @@
 import dmd
-from dmd_constants import gamma, wavelength, b
+from dmd_constants import gamma, wavelength, mirror_side_spacing as b
 import numpy as np
 
 beta = dmd.alpha + 2*gamma
 u = wavelength/b # unit: 1 diffraction maximum (approx for small angles)
 
 # dmd.lens_plus_decline_x_img(1, beta).show()
-dmd.decline_x_img(beta + u).show()
+# dmd.decline_x_img(beta + u).show()
 # dmd.my_scan(127).show()
+dmd.circle_img(15*b).show()

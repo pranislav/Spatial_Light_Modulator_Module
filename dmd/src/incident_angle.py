@@ -1,9 +1,11 @@
 '''computes optimal angle between
-axis normal to DMD plane and incident laser ray
+axis normal to DMD plane and incident laser ray.
+the optimal angle is alpha for which holds:
+same_phase_distance(alpha) = n * wavelength/a, where n is int
 '''
 
 import numpy as np
-from dmd_constants import wavelength, a
+from dmd_constants import wavelength, diagonal_spacing as a, pixel_on_angle
 from functools import partial
 import matplotlib.pyplot as plt
 
@@ -12,12 +14,8 @@ resolution = 1000
 alpha = np.array([np.pi * i/resolution for i in range(-resolution//2, resolution//2)])
 
 
-def optimal_angle(alpha: float) -> float:
-    '''the optimal angle is alpha for which holds:
-    optimal_angle(alpha) = n * wavelength/a, where n is int
-    '''
-    gamma = 12* 2*np.pi/360
-    return np.sin(alpha + 2*gamma) - np.sin(alpha)
+def same_phase_distance(alpha: float) -> float:
+    return np.sin(alpha + 2 * pixel_on_angle) - np.sin(alpha)
 
 
 def halving(func: callable, offset, x_max: float, x_min: float,\
@@ -34,28 +32,34 @@ def halving(func: callable, offset, x_max: float, x_min: float,\
         return halving(func, offset, x_max, x_med, (x_max + x_med)/2, resolution)
 
 
-# plotting
-
-# horisontal lines
-fmax = max(optimal_angle(alpha))
-fmin = min(optimal_angle(alpha))
-y_max = int(fmax * (a/wavelength))
-y_min = int(fmin * (a/wavelength))
-step = wavelength/a
-hlines_list = [n * step for n in range(y_min, y_max+1)]
-
-plt.plot(alpha, optimal_angle(alpha))
-plt.hlines(hlines_list, -np.pi/2, np.pi/2, color='k')
-for n in range(y_min, y_max+1):
-    plt.text(0, (n + 0.1) * step, f"n = {n}")
-plt.show()
+def make_horisontal_lines():
+    fmax = max(same_phase_distance(alpha))
+    fmin = min(same_phase_distance(alpha))
+    y_max = int(fmax * (a/wavelength))
+    y_min = int(fmin * (a/wavelength))
+    step = wavelength/a
+    hlines_list = [n * step for n in range(y_min, y_max+1)]
+    return hlines_list, y_min, y_max, step
 
 
-# finding and printing optimal angle
+def plot_same_phase_distance():
+    hlines_list, y_min, y_max, step = make_horisontal_lines()
+    plt.plot(alpha, same_phase_distance(alpha))
+    plt.hlines(hlines_list, -np.pi/2, np.pi/2, color='k')
+    for n in range(y_min, y_max+1):
+        plt.text(0, (n + 0.1) * step, f"n = {n}")
+    plt.show()
 
-# n = int(input("choose n: "))
-angle = halving(optimal_angle, n*wavelength/a, 0, np.pi/2, 1, 0.0001)
-print(f"optimal angle of order {n} is {angle} rad")
 
-# the_angle = partial(halving, func=optimal_angle, x_max=0, x_min=np.pi/2, x_med=1, resolution=0.001)
-the_angle = halving(optimal_angle, 8*wavelength/a, 0, np.pi/2, 1, 0.0001)
+def optimal_angle_user_defined_order():
+    n = int(input("choose order of optimal angle: "))
+    angle = halving(same_phase_distance, n*wavelength/a, 0, np.pi/2, 1, 0.0001)
+    print(f"optimal angle of order {n} is {angle} rad")
+
+
+plot_same_phase_distance()
+
+
+first_positive_angle_order = 8
+fpao = first_positive_angle_order
+the_angle = halving(same_phase_distance, fpao * wavelength/a, 0, np.pi/2, 1, 0.0001)

@@ -3,7 +3,7 @@ from PIL import Image as im
 from functools import partial
 import numpy as np
 from incident_angle import the_angle
-from dmd_constants import a, i_size, j_size, wavelength
+from dmd_constants import diagonal_spacing as a, i_size, j_size, wavelength
 
 
 # alpha = 0.0 # np.pi/4 # rad
