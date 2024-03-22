@@ -57,7 +57,7 @@ def optimal_angle_user_defined_order():
     print(f"optimal angle of order {n} is {angle} rad")
 
 
-plot_same_phase_distance()
+# plot_same_phase_distance()
 
 
 first_positive_angle_order = 8
