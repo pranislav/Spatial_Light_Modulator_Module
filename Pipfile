@@ -9,8 +9,10 @@ matplotlib = "*"
 scipy = "*"
 imageio = "*"
 opencv-python = "*"
+pylablib = "*"
 
 [dev-packages]
+ipykernel = "*"
 
 [requires]
 python_version = "3.11"

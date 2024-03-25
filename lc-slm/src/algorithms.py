@@ -8,6 +8,7 @@ from typing import List, Tuple
 from cmath import phase
 
 
+# function just for debugging old GS
 def is_zero(a: np.array) -> List[Tuple[int, int]]:
     '''returns list of coordinates of zeros in a'''
     return [(i, j) for i in range(len(a)) for j in range(len(a[0])) if a[i][j] == 0]
