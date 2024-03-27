@@ -19,43 +19,53 @@ measuring intensity at the end of the optical path with a camera
 '''
 
 from calibration_lib import *
-import constants as c
 import numpy as np
 import sys
-from PIL import Image as im
-import subprocess
+import os
 from pylablib.devices import uc480
+from random import randint
 
 
-def main(path_to_holograms: str, subdomain_size: int, precision: int):
+def main(path_to_holograms: str):
+    subdomain_size = get_subdomain_size(f"{path_to_holograms}/0/0/0.png")
+    precision = get_precision(f"{path_to_holograms}/0/0")
     cam = uc480.UC480Camera()
+    window = create_tk_window()
     H, W = get_number_of_subdomains(subdomain_size)
-    phase_step = 2 * np.pi() / precision
+    path_to_random_hologram = f"{path_to_holograms}/{randint(H)}/{randint(W)}/{randint(precision)}"
+    set_exposure_wrt_reference_img(cam, window, path_to_random_hologram)
+    phase_step = 256 / precision
     phase_mask = np.zeros((H, W))
     for i in H:
         for j in W:
             intensity = 0
             for k in precision:
-                subprocess.run(f"{path_to_holograms}/{i}/{j}/{k}.png") # displays hologram on an external dispaly (SLM)
-                img = cam.snap()
-                if get_intensity(img) > intensity:
-                    intensity = get_intensity(img)
+                display_image_on_external_screen(window, f"{path_to_holograms}/{i}/{j}/{k}.png") # displays hologram on an external dispaly (SLM)
+                frame = cam.snap()
+                if get_intensity_naive(frame) > intensity:
+                    intensity = get_intensity_naive(frame)
+                    if intensity == 255: print("maximal intensity was reached, consider adjusting exposure time")
                     phase_mask[i, j] = k * phase_step
-    create_phase_mask(phase_mask, path_to_holograms)
-
+    name = os.path.basename(path_to_holograms)
+    create_phase_mask(phase_mask, subdomain_size, name)
 
 
 if __name__ == "__main__":
-    # Check if the number of arguments is correct
-    if len(sys.argv) < 2 or len(sys.argv) > 4:
-        print("Usage: python calibration.py <path_to_holograms> [subdomain_size] [precision]")
+    if len(sys.argv) != 2:
+        print("usage: python calibration.py <path_to_holograms>")
         sys.exit(1)
+
+# if __name__ == "__main__":
+#     # Check if the number of arguments is correct
+#     if len(sys.argv) < 2 or len(sys.argv) > 4:
+#         print("Usage: python calibration.py <path_to_holograms> [subdomain_size] [precision]")
+#         sys.exit(1)
     
     # Get command line arguments
     path_to_holograms = sys.argv[1]
-    subdomain_size = sys.argv[2] if len(sys.argv) >= 3 else 8
-    precision = sys.argv[3] if len(sys.argv) == 4 else 8
+    # subdomain_size = sys.argv[2] if len(sys.argv) >= 3 else 8
+    # precision = sys.argv[3] if len(sys.argv) == 4 else 8
     
     # Call main function with the parameters
-    main(path_to_holograms, subdomain_size, precision)
+    main(path_to_holograms)
 
