@@ -1,4 +1,6 @@
 # TODO: change from the root. this is too expensive. no getpixel, putpixel, work with arrays and convert to image just at the end
+# also, that cf thing is confusing, moreover, i divide it bu pi and right then multiply by it
+# also, x_decline and y_decline can be done in one function (yes, function, forget about your classy class) - get inspired with holograms_for_calibration
 '''slm - module for work with Spatial Light Modulator
 
 this module primarly provides functions which generate images
@@ -52,7 +54,7 @@ class Screen:
                 step = i if axis == 'x' else j
                 phase_shift = 2*pi*a*np.sin(angle) / c.wavelength * step
                 shade = int(
-                    (self.img.getpixel((i, j)) + phase_shift * cf) % 255)
+                    (self.img.getpixel((i, j)) + phase_shift * cf) % 256)
                 self.img.putpixel((i, j), shade)
         return self
 
