@@ -4,23 +4,7 @@ from PIL import Image as im, ImageTk
 from screeninfo import get_monitors
 import numpy as np
 import os
-
-
-def get_subdomain_size(path_to_hologram):
-    pass # TODO
-
-def get_precision(path):
-    pass # TODO: return number of files in dir at path
-
-def get_number_of_subdomains(subdomain_size):
-    if c.slm_height % subdomain_size != 0 or c.slm_width % subdomain_size != 0:
-        print(f"some of the SLM pixels won't be covered, you better choose number which divides {c.slm_height} and {c.slm_width}")
-    return c.slm_height//subdomain_size, c.slm_width//subdomain_size
-
-
-def get_intensity_naive(img):
-    '''returns maximal value on the img'''
-    return max(img.flatten())
+import sys
 
 
 def create_phase_mask(phase_mask, subdomain_size, name):
@@ -34,22 +18,74 @@ def create_phase_mask(phase_mask, subdomain_size, name):
             for j in range(w):
                 for p in range(ss):
                     phase_mask_img.putpixel((ss * i + k, ss* j + p), int(phase_mask[i, j]))
-    dest_dir = "lc-slm/holograms/calibrtion_phase_masks"
+    dest_dir = "lc-slm/holograms_for_calibration/calibrtion_phase_masks"
     if not os.path.exists(dest_dir): os.makedirs(dest_dir)
     phase_mask_img.save(f"{dest_dir}/{name}_phase_mask.png")
 
-a = np.random.randint(0, 256, (100, 80))
-create_phase_mask(a, 8, "lc-slm/images/create_phase_mask_demo")
 
+# ---------- getters ------------ #
+
+def get_path_to_reference_hologram(path):
+    file_list = [_ for _ in filter(could_be_file, os.listdir(path))]
+    if len(file_list) > 1:
+        print("found multiple files while looking for reference hologram")
+        sys.exit(1)
+    return f"{path}/{file_list[0]}"
+
+def could_be_file(basename):
+    _, ext = os.path.splitext(basename)
+    return bool(ext)
+
+def get_reference_position(path_to_reference_hologram):
+    name = os.path.basename(path_to_reference_hologram)
+    wout_ext, _ = os.path.splitext(name)
+    return eval(wout_ext)
+    
+
+def get_subdomain_size(path):
+    '''finds out subdomain size based on system of saving holograms'''
+    dir_count = 0
+    for item in os.listdir(path):
+        item_path = os.path.join(path, item)
+        if os.path.isdir(item_path):
+            dir_count += 1
+    return c.slm_height // dir_count
+
+
+def get_precision(path):
+    '''finds out precision based on system of number of holograms for one subdomain'''
+    file_count = 0
+    for item in os.listdir(path):
+        item_path = os.path.join(path, item)
+        if os.path.isfile(item_path):
+            file_count += 1
+    return file_count
+
+
+def get_number_of_subdomains(subdomain_size):
+    if c.slm_height % subdomain_size != 0 or c.slm_width % subdomain_size != 0:
+        print(f"some of the SLM pixels won't be covered, you better choose number which divides {c.slm_height} and {c.slm_width}")
+    return c.slm_height//subdomain_size, c.slm_width//subdomain_size
+
+
+def get_intensity_naive(img_arr: np.array):
+    '''returns maximal value on the img'''
+    return max(img_arr.flatten())
+
+def get_intensity_coordinates(img_arr: np.array, coordinates: tuple):
+    return img_arr[coordinates]
+
+
+# ---------- functions for work with camera ----------- #
 
 def set_exposure(cam):
     '''set exposure time such that maximal signal value is
     in interval (max_val_lower, max_val_upper)
     '''
-    max_val_lower = 200
-    max_val_upper = 220
-    step = 1e-3
-    expo = 1e-3
+    max_val_upper = 256 // 2 # in fully-constructive interference the value of intensity should be twice as high 
+    max_val_lower = max_val_upper - 20
+    step = 10e-3
+    expo = -10e-3
     max_val = - expo
     while max_val < max_val_lower or max_val > max_val_upper:
         if max_val < max_val_lower:
@@ -58,6 +94,7 @@ def set_exposure(cam):
             step /= 2
             expo -= step
         cam.set_exposure(expo)
+        print(expo)
         frame = cam.snap()
         max_val = max(frame.flatten())
     
@@ -65,6 +102,25 @@ def set_exposure(cam):
 def set_exposure_wrt_reference_img(cam, window, hologram_path):
     display_image_on_external_screen(window, hologram_path)
     set_exposure(cam)
+
+
+def get_highest_intensity_coordinates(cam, window, hologram_path):
+    display_image_on_external_screen(window, hologram_path)
+    img = cam.snap()
+    return find_highest_value_coordinates(img)
+
+
+def find_highest_value_coordinates(arr):
+    max_value = arr[0][0]
+    max_i = 0
+    max_j = 0
+    for i in range(len(arr)):
+        for j in range(len(arr[i])):
+            if arr[i][j] > max_value:
+                max_value = arr[i][j]
+                max_i = i
+                max_j = j
+    return max_i, max_j
 
 
 # ----------- displaying on external screen ----------- #
@@ -86,7 +142,6 @@ def create_tk_window():
 
     return window
 
-image_path = "lc-slm/images/example_image.jpg"
 
 def display_image_on_external_screen(window, image_path):
     """
