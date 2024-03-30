@@ -12,13 +12,13 @@ def create_phase_mask(phase_mask, subdomain_size, name):
     '''
     h, w = phase_mask.shape
     ss = subdomain_size
-    phase_mask_img = im.new("L", (h * ss, w * ss))
+    phase_mask_img = im.new("L", (w * ss, h * ss))
     for i in range(h):
         for k in range(ss):
             for j in range(w):
                 for p in range(ss):
                     phase_mask_img.putpixel((ss * i + k, ss* j + p), int(phase_mask[i, j]))
-    dest_dir = "lc-slm/holograms_for_calibration/calibrtion_phase_masks"
+    dest_dir = "lc-slm/holograms_for_calibration/calibration_phase_masks"
     if not os.path.exists(dest_dir): os.makedirs(dest_dir)
     phase_mask_img.save(f"{dest_dir}/{name}_phase_mask.png")
 
