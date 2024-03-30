@@ -23,6 +23,15 @@ def create_phase_mask(phase_mask, subdomain_size, name):
     phase_mask_img.save(f"{dest_dir}/{name}_phase_mask.png")
 
 
+def mask_hologram(path_to_hologram, path_to_mask):
+    hologram_im = im.open(path_to_hologram)
+    mask_im = im.open(path_to_mask)
+    hologram_arr = np.array(hologram_im)
+    mask_arr = np.array(mask_im)
+    masked_hologram = hologram_arr + mask_arr
+    return im.fromarray(masked_hologram)
+
+
 # ---------- getters ------------ #
 
 def get_path_to_reference_hologram(path):
@@ -172,4 +181,28 @@ def display_image_on_external_screen(window, image_path):
     window.update()
 
 
+def display_image_on_external_screen_img(window, image):
+    """
+    Display an image on an external screen without borders or decorations.
+    DIffers from the other function by datatype of the second argument
 
+    Parameters:
+    - image (Image object): The path to the image file to be displayed.
+
+    Returns:
+    None
+    """
+
+    # Destroy the existing window if it exists
+    for widget in window.winfo_children():
+            widget.destroy()
+
+    # Create a Tkinter PhotoImage object
+    photo = ImageTk.PhotoImage(image)
+
+    # Create a label to display the image
+    label = tk.Label(window, image=photo)
+    label.pack()
+
+    # Update the window to display the new image
+    window.update()

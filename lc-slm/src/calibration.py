@@ -66,5 +66,5 @@ if __name__ == "__main__":
 # calibration_name = "home_trial"
     
     # Call main function with the parameters
-main(path_to_holograms, calibration_name)
+    main(path_to_holograms, calibration_name)
 
