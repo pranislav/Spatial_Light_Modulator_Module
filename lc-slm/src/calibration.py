@@ -38,7 +38,6 @@ def main(path_to_holograms: str, calibration_name: str):
     phase_mask = np.zeros((H, W))
     i_0, j_0 = get_reference_position(path_to_reference_hologram)
     for i in range(H):
-        print(i, ' ')
         for j in range(W):
             if i == i_0 and j == j_0: continue
             intensity = 0

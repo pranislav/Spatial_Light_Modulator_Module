@@ -148,6 +148,8 @@ def create_tk_window():
     window = tk.Tk()
     window.overrideredirect(True)
     window.geometry(f"{SCREEN_WIDTH}x{SCREEN_HEIGHT}+{monitor.x}+{monitor.y}")
+    # window.geometry(f"{c.slm_width}x{c.slm_height}+{monitor.x}+{monitor.y}")
+
 
     return window
 
@@ -176,6 +178,7 @@ def display_image_on_external_screen(window, image_path):
     # Create a label to display the image
     label = tk.Label(window, image=photo)
     label.pack()
+    label.photo = photo # makes the image to persist through a while cycle
 
     # Update the window to display the new image
     window.update()
@@ -203,6 +206,7 @@ def display_image_on_external_screen_img(window, image):
     # Create a label to display the image
     label = tk.Label(window, image=photo)
     label.pack()
+    label.photo = photo # makes the image to persist through a while cycle
 
     # Update the window to display the new image
     window.update()
