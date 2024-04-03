@@ -25,6 +25,6 @@ else:
 
 img = md.multi_decline_img(coordinates, object, obj_size_x, obj_size_y)
 
-img.save(f"images/{name}.png")
+img.save(f"lc-slm/images/{name}.png")
 
 # [(int(c.slm_width/3), int(c.slm_height/2))]

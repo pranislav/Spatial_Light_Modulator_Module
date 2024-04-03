@@ -42,7 +42,7 @@ gif_skip = 2 # each gif_skip-th frame will be in gif
 
 
 # loading image and creating array target
-target_img = im.open(f"images/{target_name}.{target_type}").convert('L').resize((int(c.slm_width), int(c.slm_height)))
+target_img = im.open(f"lc-slm/images/{target_name}.{target_type}").convert('L').resize((int(c.slm_width), int(c.slm_height)))
 if invert:
     target_img = PIL.ImageOps.invert(target_img)
 if quarterize:
@@ -97,8 +97,8 @@ general_params = f"loops={loops}"
 
 if save_result:
     hologram_name = f"{target_name}_{target_transforms}_{transforms}_hologram_alg={algorithm}_{general_params}_{alg_params}"
-    hologram.img.convert("RGB").save(f"holograms/{hologram_name}.png")
-    expected_target.convert("RGB").save(f"images/{hologram_name}_exp_tar.png")
+    hologram.img.convert("RGB").save(f"lc-slm/holograms/{hologram_name}.png")
+    expected_target.convert("RGB").save(f"lc-slm/images/{hologram_name}_exp_tar.png")
 
 if gif_target:
     hf.create_gif(gif.source_address, f"{directory}/gif_{hologram_name}.gif")
