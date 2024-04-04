@@ -7,6 +7,36 @@ import os
 import sys
 
 
+# --------- a little image processing --------- #
+
+def detect_bright_area(picture: np.array):
+    coord = mean_position_of_white_pixel(picture)
+    length = deviation_of_bright_pixels(picture, coord)
+    return (coord, length)
+
+def mean_position_of_white_pixel(picture):
+    h, w = picture.shape
+    sum = np.array([0, 0])
+    norm = 0
+    for y in range(w):
+        for x in range(h):
+            sum += np.array([y, x]) * picture[y, x]
+            norm += picture[y, x]
+    return sum /norm
+
+def deviation_of_bright_pixels(picture, mean):
+    h, w = picture.shape
+    deviation = 0
+    sum = 0
+    for y in range(w):
+        for x in range(h):
+            deviation += (np.array(y, x) - mean) ** 2 * picture[y, x]
+            sum += picture[y, x]
+    return np.sqrt(deviation / sum)
+
+
+# ------------ phase mask ---------- #
+
 def create_phase_mask(phase_mask, subdomain_size, name):
     '''creates and saves phase mask image based on phase mask array
     '''
@@ -17,7 +47,7 @@ def create_phase_mask(phase_mask, subdomain_size, name):
         for k in range(ss):
             for j in range(w):
                 for p in range(ss):
-                    phase_mask_img.putpixel((ss * i + k, ss* j + p), int(phase_mask[i, j]))
+                    phase_mask_img.putpixel((ss * j + k, ss * i + p), int(phase_mask[i, j]))
     dest_dir = "lc-slm/holograms_for_calibration/calibration_phase_masks"
     if not os.path.exists(dest_dir): os.makedirs(dest_dir)
     phase_mask_img.save(f"{dest_dir}/{name}_phase_mask.png")
@@ -77,12 +107,27 @@ def get_number_of_subdomains(subdomain_size):
     return c.slm_height//subdomain_size, c.slm_width//subdomain_size
 
 
+# ------------ intensity getters a.k.a. metrics -------------- #
+
 def get_intensity_naive(img_arr: np.array):
     '''returns maximal value on the img'''
     return max(img_arr.flatten())
 
 def get_intensity_coordinates(img_arr: np.array, coordinates: tuple):
     return img_arr[coordinates]
+
+def get_intensity_integral(frame, square):
+    (x, y), length = square
+    intensity_sum = 0
+    overflow = 0
+    for i in range(length):
+        for j in range(length):
+            intensity = frame[x + i, y + j]
+            if intensity == 255: overflow += 1
+            intensity_sum += intensity
+    if overflow: print(f"max intensity reached on {overflow} pixels")
+    return intensity_sum
+
 
 
 # ---------- functions for work with camera ----------- #
