@@ -33,23 +33,29 @@ def main(path_to_holograms: str, calibration_name: str):
     H, W = get_number_of_subdomains(subdomain_size)
     path_to_reference_hologram = get_path_to_reference_hologram(path_to_holograms)
     set_exposure_wrt_reference_img(cam, window, path_to_reference_hologram)
-    # coordinates = get_highest_intensity_coordinates(cam, window, path_to_reference_hologram)
     phase_step = 256 // precision
     phase_mask = np.zeros((H, W))
     i_0, j_0 = get_reference_position(path_to_reference_hologram)
     square = detect_bright_area(np.array(im.open(path_to_reference_hologram).convert("L")))
+    # coordinates = get_highest_intensity_coordinates(cam, window, path_to_reference_hologram)
     for i in range(H):
         print(f"{i}/{H}")
         for j in range(W):
             if i == i_0 and j == j_0: continue
-            intensity = 0
-            for k in range(precision):
+            top_intensity = 0
+            k = 0
+            while k < precision:
                 display_image_on_external_screen(window, f"{path_to_holograms}/{i}/{j}/{k}.png") # displays hologram on an external dispaly (SLM)
                 frame = cam.snap()
-                if get_intensity_integral(frame, square) > intensity:
-                    intensity = get_intensity_integral(frame, square)
-                    # if intensity == 255: print("maximal intensity was reached, consider adjusting exposure time")
+                intensity = get_intensity_integral(frame, square)
+                if intensity > top_intensity:
+                    top_intensity = intensity
                     phase_mask[i, j] = k * phase_step
+                    # if intensity == 255:
+                    #     print("maximal intensity was reached")
+                    #     k = 0
+                    #     cam.set_exposure(cam.get_exposure * 1.1) # 10 % increase of exposure time
+                k += 1
     name = f"{os.path.basename(path_to_holograms)}_{calibration_name}"
     create_phase_mask(phase_mask, subdomain_size, name)
 
