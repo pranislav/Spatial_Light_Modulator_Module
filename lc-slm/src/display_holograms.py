@@ -8,7 +8,7 @@ def display_holograms(args):
     window = cl.create_tk_window()
     directory = get_path(args.directory)
     if args.mask_name:
-        mask_im = im.open(f"lc-slm/holograms_for_calibration/calibration_phase_mask/{args.mask_name}")
+        mask_im = im.open(f"lc-slm/holograms_for_calibration/calibration_phase_masks/{args.mask_name}")
         mask_arr = np.array(mask_im)
     while True:
         name = input("gimme a name of a hologram or quit with q >> ")
