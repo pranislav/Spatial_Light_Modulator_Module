@@ -15,6 +15,8 @@ import helping_functions_for_slm_generate_etc as hf
 # name and type of image which should be projected by SLM
 target_name = "multidecline_grating_2x2_dot" # "moving_traps/two_circulating_traps_radius1px/3" # "multidecline_user_defined_5432_dot_2x2"
 target_type = "png"
+#
+path_to_incomming_intensity = ""
 # ...
 save_result = True
 preview = False
@@ -22,7 +24,7 @@ plot_error = True
 # other settings
 invert = False
 quarterize = True # original image is reduced to quarter and pasted to black image of its original size | helpful when imaging - there is no overlap between diffraction maxima of different order
-algorithm = "GD"    # GD for gradient descent, GS for Gerchberg-Saxton
+algorithm = "GS"    # GD for gradient descent, GS for Gerchberg-Saxton
 # stopping parameters
 tolerance = 0.001 # algorithm stops when error descends under tolerance
 max_loops = 50 # algorithm performs no more than max_loops loops no matter what error it is
@@ -47,7 +49,7 @@ if invert:
     target_img = PIL.ImageOps.invert(target_img)
 if quarterize:
     target_img = hf.quarter(target_img)
-target = np.sqrt(np.array(target_img))
+target = np.sqrt(np.array(target_img)) # toto musi ist prec to je picovina. a upravit algoritmy
 
 
 enhance_mask = np.array(target_img) / 255 # normed to 1 | enhance the error to get lower on light areas
@@ -66,10 +68,10 @@ if gif_target:
 
 # compouting phase distribution
 if algorithm == "GS":
-    source_phase_array, exp_tar_array, loops = GS(target, tolerance, max_loops, gif, plot_error)
+    source_phase_array, exp_tar_array, loops = GS(target, path_to_incomming_intensity, tolerance, max_loops, gif, plot_error)
 
 if algorithm == "GD":
-    source_phase_array, exp_tar_array, loops = GD(target, learning_rate, enhance_mask,\
+    source_phase_array, exp_tar_array, loops = GD(target, path_to_incomming_intensity, learning_rate, enhance_mask,\
                     mask_relevance, tolerance, max_loops, unsettle, gif, plot_error)
 
 
@@ -88,7 +90,7 @@ else:
     transforms = ""
 
 if algorithm == "GD":
-    alg_params = f"_leaning_rate={learning_rate}_mask_relevance={mask_relevance}_unsettle={unsettle}"
+    alg_params = f"_learning_rate={learning_rate}_mask_relevance={mask_relevance}_unsettle={unsettle}"
 else:
     alg_params = ""
 
@@ -97,8 +99,8 @@ general_params = f"loops={loops}"
 
 if save_result:
     hologram_name = f"{target_name}_{target_transforms}_{transforms}_hologram_alg={algorithm}_{general_params}_{alg_params}"
-    hologram.img.convert("RGB").save(f"lc-slm/holograms/{hologram_name}.png")
-    expected_target.convert("RGB").save(f"lc-slm/images/{hologram_name}_exp_tar.png")
+    hologram.img.convert("L").save(f"lc-slm/holograms/{hologram_name}.png")
+    expected_target.convert("L").save(f"lc-slm/images/{hologram_name}_exp_tar.png")
 
 if gif_target:
     hf.create_gif(gif.source_address, f"{directory}/gif_{hologram_name}.gif")

@@ -14,11 +14,13 @@ def is_zero(a: np.array) -> List[Tuple[int, int]]:
     return [(i, j) for i in range(len(a)) for j in range(len(a[0])) if a[i][j] == 0]
 
 
-def GS(target: np.array, tolerance: float, max_loops: int, gif_info: gif_struct, plot_error: bool=False) -> np.array:
+def GS(target: np.array, path_to_incomming_intensity: str, tolerance: float, max_loops: int, gif_info: gif_struct, plot_error: bool=False) -> np.array:
     '''classical Gerchberg-Saxton algorithm
     produces input for SLM for creating 'target' image
     '''
 
+    incomming_intensity = np.array(im.open(path_to_incomming_intensity, "L"))
+    incomming_amplitude = np.sqrt(incomming_intensity)
     w, l = target.shape
     space_norm = w * l
     error = tolerance + 1
@@ -28,7 +30,7 @@ def GS(target: np.array, tolerance: float, max_loops: int, gif_info: gif_struct,
     n = 0
     A = ifft2(target)
     while error > tolerance and n < max_loops:
-        B = np.exp(1j * np.angle(A))
+        B = incomming_amplitude * np.exp(1j * np.angle(A))
         C = fftshift(fft2(B))
         D = np.abs(target) * np.exp(1j * np.angle(C))
         A = (ifft2(ifftshift(D)))
@@ -115,8 +117,11 @@ def GS_without_fftshift(target: np.array, tolerance: float, max_loops: int, plot
     return phase_for_slm, exp_tar_for_slm
 
 
-def GD(demanded_output: np.array, learning_rate: float, enhance_mask: np.array,\
+def GD(demanded_output: np.array, path_to_inicomming_intensity: str, learning_rate: float, enhance_mask: np.array,\
        mask_relevance: float, tolerance: float, max_loops: int, unsettle, gif_info: gif_struct, plot_error: bool=False):
+    
+    incomming_intensity = np.array(im.open(path_to_inicomming_intensity, "L"))
+    incomming_amplitude = np.sqrt(incomming_amplitude)
     w, l = demanded_output.shape
     space_norm = w * l
     initial_input = generate_initial_input(l, w)
@@ -129,11 +134,11 @@ def GD(demanded_output: np.array, learning_rate: float, enhance_mask: np.array,\
     i = 0
     print("computing hologram (one bar for 10 loops)", ' ')
     while error > tolerance and i < max_loops:
-        med_output = fft2(input/abs(input))
+        med_output = fft2(input/abs(input) * incomming_amplitude)
         output_unnormed = abs(med_output) **2
         output = output_unnormed / np.amax(output_unnormed) * norm**2 # toto prip. zapocitat do grad. zostupu
         mask = 1 + mask_relevance * enhance_mask
-        dEdF = ifft2(mask * med_output * (output - demanded_output**2))
+        dEdF = ifft2(mask * med_output * (output - demanded_output**2)) * incomming_amplitude
         dEdX = np.array(list(map(dEdX_complex, dEdF, input)))
         input -= learning_rate * dEdX
         error = error_f(output, demanded_output**2, space_norm)
