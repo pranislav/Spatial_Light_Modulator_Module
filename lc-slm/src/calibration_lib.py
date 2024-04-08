@@ -18,21 +18,23 @@ def mean_position_of_white_pixel(picture):
     h, w = picture.shape
     sum = np.array([0, 0])
     norm = 0
-    for y in range(w):
-        for x in range(h):
+    for y in range(h):
+        for x in range(w):
             sum += np.array([y, x]) * picture[y, x]
             norm += picture[y, x]
-    return sum /norm
+    a, b = sum / norm
+    return (int(a), int(b))
 
 def deviation_of_bright_pixels(picture, mean):
     h, w = picture.shape
     deviation = 0
     sum = 0
-    for y in range(w):
-        for x in range(h):
-            deviation += (np.array(y, x) - mean) ** 2 * picture[y, x]
+    for y in range(h):
+        for x in range(w):
+            dist = np.array([y, x]) - mean
+            deviation += np.dot(dist, dist) * picture[y, x]
             sum += picture[y, x]
-    return np.sqrt(deviation / sum)
+    return int(np.sqrt(deviation / sum))
 
 
 # ------------ phase mask ---------- #
@@ -120,9 +122,9 @@ def get_intensity_integral(frame, square):
     (x, y), length = square
     intensity_sum = 0
     overflow = 0
-    for i in range(length):
-        for j in range(length):
-            intensity = frame[x + i, y + j]
+    for i in range(2 * length):
+        for j in range(2 * length):
+            intensity = frame[x - length + i, y - length + j]
             if intensity == 255: overflow += 1
             intensity_sum += intensity
     if overflow: print(f"max intensity reached on {overflow} pixels")
@@ -136,11 +138,11 @@ def set_exposure(cam):
     '''set exposure time such that maximal signal value is
     in interval (max_val_lower, max_val_upper)
     '''
-    max_val_upper = 256 // 2 # in fully-constructive interference the value of intensity should be twice as high 
+    max_val_upper = 256 // 4 # in fully-constructive interference the value of amplitude could be twice as high, therefore intensity four times as high 
     max_val_lower = max_val_upper - 20
     step = 10e-3
-    expo = -10e-3
-    max_val = - expo
+    expo = 0
+    max_val = max_val_lower - 1
     while max_val < max_val_lower or max_val > max_val_upper:
         if max_val < max_val_lower:
             expo += step
