@@ -36,25 +36,26 @@ def main(path_to_holograms: str, calibration_name: str):
     phase_step = 256 // precision
     phase_mask = np.zeros((H, W))
     i_0, j_0 = get_reference_position(path_to_reference_hologram)
-    square = detect_bright_area(np.array(im.open(path_to_reference_hologram).convert("L")))
-    # coordinates = get_highest_intensity_coordinates(cam, window, path_to_reference_hologram)
+    # square = detect_bright_area(np.array(im.open(path_to_reference_hologram).convert("L")))
+    coordinates = get_highest_intensity_coordinates(cam, window, path_to_reference_hologram)
     for i in range(H):
         print(f"{i}/{H}")
         for j in range(W):
-            if i == i_0 and j == j_0: continue
+            # if i == i_0 and j == j_0: continue # reference subdomain is off and the coordinates are absolute anyway
             top_intensity = 0
             k = 0
             while k < precision:
                 display_image_on_external_screen(window, f"{path_to_holograms}/{i}/{j}/{k}.png") # displays hologram on an external dispaly (SLM)
                 frame = cam.snap()
-                intensity = get_intensity_integral(frame, square)
+                # intensity = get_intensity_integral(frame, square)
+                intensity = get_intensity_coordinates(frame, coordinates)
                 if intensity > top_intensity:
                     top_intensity = intensity
                     phase_mask[i, j] = k * phase_step
-                    # if intensity == 255:
-                    #     print("maximal intensity was reached")
-                    #     k = 0
-                    #     cam.set_exposure(cam.get_exposure * 1.1) # 10 % increase of exposure time
+                    if intensity == 255:
+                        print("maximal intensity was reached")
+                        k = 0
+                        cam.set_exposure(cam.get_exposure * 1.1) # 10 % increase of exposure time
                 k += 1
     name = f"{os.path.basename(path_to_holograms)}_{calibration_name}"
     create_phase_mask(phase_mask, subdomain_size, name)
