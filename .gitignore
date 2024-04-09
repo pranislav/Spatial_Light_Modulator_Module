@@ -1,6 +1,7 @@
 # images
 holograms/
 images/
+size16_precision8_x1_y1/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
