@@ -24,7 +24,7 @@ def make_holograms():
     dest_dir = f"lc-slm/holograms_for_calibration/{hologram_set_name}"
     if not os.path.exists(dest_dir): os.makedirs(dest_dir)
     reference_hologram = make_hologram(np.zeros((c.slm_height, c.slm_width)), reference_position)
-    im.fromarray(reference_hologram).convert("RGB").save(f"{dest_dir}/{reference_position}.png")
+    im.fromarray(reference_hologram).convert("L").save(f"{dest_dir}/{reference_position}.png")
     phase_step = 256 // precision
     for i in range(subdomains_number_y):
         for j in range(subdomains_number_x):
@@ -32,21 +32,34 @@ def make_holograms():
                 os.makedirs(f"{dest_dir}/{i}/{j}")
             sbd_position = (subdomain_size * i, subdomain_size * j)
             hologram_arr = make_hologram(deepcopy(reference_hologram), sbd_position)
-            im.fromarray(hologram_arr).convert("RGB").save(f"{dest_dir}/{i}/{j}/0.png")
+            im.fromarray(hologram_arr).convert("L").save(f"{dest_dir}/{i}/{j}/0.png")
             for k in range(1, precision):
                 hologram_arr = shift_hologram(hologram_arr, sbd_position, phase_step)
-                im.fromarray(hologram_arr).convert("RGB").save(f"{dest_dir}/{i}/{j}/{k}.png")
+                im.fromarray(hologram_arr).convert("L").save(f"{dest_dir}/{i}/{j}/{k}.png")
 
 
 
 def make_hologram(substrate: np.array, subdomain_position):
     i_0, j_0 = subdomain_position
     for i in range(subdomain_size):
-        for j in range(subdomain_size - 1):
-            const = 255* c.px_distance / c.wavelength
-            new_phase = const * (np.sin(y_angle * unit) * i +  np.sin(x_angle * unit) * j)
+        for j in range(subdomain_size):
+            const = 256 * c.px_distance / c.wavelength # 256 gives more accurate result
+            new_phase = const * (np.sin(y_angle * unit) * i + np.sin(x_angle * unit) * j)
             substrate[i + i_0, j + j_0] = new_phase % 256
     return substrate
+
+
+# for this implementation the continuity check works just because of a coincidence
+# for arbitrary angle it generally should not work
+def continuity_check():
+    '''chcecks whether perfectly flat slm + optical path without aberrations
+    would yield uniform phase mask (it should)
+    '''
+    hologram = np.zeros((c.slm_height, c.slm_width))
+    for i in range(subdomains_number_y):
+        for j in range(subdomains_number_x):
+            make_hologram(hologram, (subdomain_size*i, subdomain_size*j))
+    im.fromarray(hologram).show()
 
 def shift_hologram(substrate: np.array, subdomain_position, phase_step):
     i_0, j_0 = subdomain_position
@@ -56,4 +69,4 @@ def shift_hologram(substrate: np.array, subdomain_position, phase_step):
     return substrate
 
 if __name__ == "__main__":
-    make_holograms()
+    continuity_check()
