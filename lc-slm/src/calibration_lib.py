@@ -1,10 +1,30 @@
 import constants as c
+import holograms_for_calibration as h
 import tkinter as tk
 from PIL import Image as im, ImageTk
 from screeninfo import get_monitors
 import numpy as np
 import os
 import sys
+
+
+def add_ref(hologram_wo_ref: im, reference_hologram_arr: np.array, reference_coordinates, subdomain_size):
+    i0, j0 = reference_coordinates
+    for i in range(subdomain_size):
+        for j in range(subdomain_size):
+            hologram_wo_ref.putpixel((i0 + i, j0 + j), int(reference_hologram_arr[i, j]))
+    return hologram_wo_ref
+
+def extract_reference_coordinates(reference_hologram_coordinates_ratio, subdomain_size, subdomains_number):
+    y_ratio, x_ratio = reference_hologram_coordinates_ratio
+    H, W = subdomains_number
+    y_coord = subdomain_size * (y_ratio[0] * H // y_ratio[1])
+    x_coord = subdomain_size * (x_ratio[0] * W // x_ratio[1])
+    return (y_coord, x_coord)
+
+def create_reference_hologram(reference_hologram_coordinates):
+    return h.make_hologram(h.make_decline_hologram(), reference_hologram_coordinates)
+
 
 
 # --------- a little image processing --------- #
@@ -155,7 +175,11 @@ def set_exposure(cam):
         max_val = max(frame.flatten())
     
 
-def set_exposure_wrt_reference_img(cam, window, hologram_path):
+def set_exposure_wrt_reference_img(cam, window, hologram):
+    display_image_on_external_screen_img(window, hologram)
+    set_exposure(cam)
+
+def set_exposure_wrt_reference_img_path(cam, window, hologram_path):
     display_image_on_external_screen(window, hologram_path)
     set_exposure(cam)
 
@@ -165,6 +189,10 @@ def get_highest_intensity_coordinates(cam, window, hologram_path):
     img = cam.snap()
     return find_highest_value_coordinates(img)
 
+def get_highest_intensity_coordinates_img(cam, window, hologram):
+    display_image_on_external_screen_img(window, hologram)
+    img = cam.snap()
+    return find_highest_value_coordinates(img)
 
 def find_highest_value_coordinates(arr):
     max_value = arr[0][0]

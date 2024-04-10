@@ -25,19 +25,25 @@ import sys
 from pylablib.devices import uc480
 
 
+reference_hologram_coordinates_ratio = ((1, 2), (1, 2)) # example: ((1, 2), (3, 4)) -- y coordinate will be roughly half of slm height, x coordinate will be roughly three quarters of slm width 
+
+
 def main(path_to_holograms: str, calibration_name: str):
     subdomain_size = get_subdomain_size(path_to_holograms)
     precision = get_precision(f"{path_to_holograms}/0/0")
     cam = uc480.UC480Camera()
     window = create_tk_window()
     H, W = get_number_of_subdomains(subdomain_size)
-    path_to_reference_hologram = get_path_to_reference_hologram(path_to_holograms)
-    set_exposure_wrt_reference_img(cam, window, path_to_reference_hologram)
+    # path_to_reference_hologram = get_path_to_reference_hologram(path_to_holograms)
+    reference_coordinates = extract_reference_coordinates(reference_hologram_coordinates_ratio, subdomain_size, (H, W))
+    reference_hologram = create_reference_hologram(reference_coordinates)
+    set_exposure_wrt_reference_img(cam, window, im.fromarray(reference_hologram))
     phase_step = 256 // precision
     phase_mask = np.zeros((H, W))
-    i_0, j_0 = get_reference_position(path_to_reference_hologram)
+    # i_0, j_0 = get_reference_position(path_to_reference_hologram)
+    i_0, j_0 = reference_coordinates
     # square = detect_bright_area(np.array(im.open(path_to_reference_hologram).convert("L")))
-    coordinates = get_highest_intensity_coordinates(cam, window, path_to_reference_hologram)
+    coordinates = get_highest_intensity_coordinates_img(cam, window, im.fromarray(reference_hologram))
     for i in range(H):
         print(f"{i}/{H}")
         for j in range(W):
@@ -45,7 +51,9 @@ def main(path_to_holograms: str, calibration_name: str):
             top_intensity = 0
             k = 0
             while k < precision:
-                display_image_on_external_screen(window, f"{path_to_holograms}/{i}/{j}/{k}.png") # displays hologram on an external dispaly (SLM)
+                hologram_wo_ref = im.open(f"{path_to_holograms}/{i}/{j}/{k}.png")
+                hologram = add_ref(hologram_wo_ref, reference_hologram, reference_coordinates, subdomain_size)
+                display_image_on_external_screen_img(window, hologram) # displays hologram on an external dispaly (SLM)
                 frame = cam.snap()
                 # intensity = get_intensity_integral(frame, square)
                 intensity = get_intensity_coordinates(frame, coordinates)
