@@ -12,7 +12,7 @@ def add_ref(hologram_wo_ref: im, reference_hologram_arr: np.array, reference_coo
     i0, j0 = reference_coordinates
     for i in range(subdomain_size):
         for j in range(subdomain_size):
-            hologram_wo_ref.putpixel((i0 + i, j0 + j), int(reference_hologram_arr[i, j]))
+            hologram_wo_ref.putpixel((i0 + i, j0 + j), int(reference_hologram_arr[i0 +i, j0 + j]))
     return hologram_wo_ref
 
 def extract_reference_coordinates(reference_hologram_coordinates_ratio, subdomain_size, subdomains_number):
