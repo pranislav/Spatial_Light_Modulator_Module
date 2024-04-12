@@ -1,7 +1,7 @@
 '''creates phase mask for LC-SLM which compensates
 aberrations caused both by the modulator and whole optical path.
 This mask should be added up with any projected hologram.
-For each optical there should be generated its own mask.
+For each optical path there should be generated its own mask.
 
 Principle:
 modulator's screen is divided into square subdomains
@@ -18,44 +18,43 @@ the quality of the interference is decided by
 measuring intensity at the end of the optical path with a camera
 '''
 
+# ! working in c.u units
+
 from calibration_lib import *
 import numpy as np
-import os
-import sys
-from pylablib.devices import uc480
+import argparse
+from pylablib.devices import uc480 
 
 
-reference_hologram_coordinates_ratio = ((1, 2), (1, 2)) # example: ((1, 2), (3, 4)) -- y coordinate will be roughly half of slm height, x coordinate will be roughly three quarters of slm width 
-
-
-def main(path_to_holograms: str, calibration_name: str):
-    subdomain_size = get_subdomain_size(path_to_holograms)
-    precision = get_precision(f"{path_to_holograms}/0/0")
+def calibrate(args):
+    precision = args.precision
+    subdomain_size = args.subdomain_size
     cam = uc480.UC480Camera()
     window = create_tk_window()
     H, W = get_number_of_subdomains(subdomain_size)
-    # path_to_reference_hologram = get_path_to_reference_hologram(path_to_holograms)
-    reference_coordinates = extract_reference_coordinates(reference_hologram_coordinates_ratio, subdomain_size, (H, W))
-    reference_hologram = create_reference_hologram(reference_coordinates)
-    set_exposure_wrt_reference_img(cam, window, im.fromarray(reference_hologram))
+    reference_coordinates = extract_reference_coordinates(args.coord_ratio, subdomain_size, (H, W))
+    sample = make_sample_holograms(args.angle, precision)
+    reference_hologram = add_subdomain(im.fromarray(np.zeros((c.slm_height, c.slm_width))), sample[0], reference_coordinates, subdomain_size)
+    set_exposure_wrt_reference_img(cam, window, reference_hologram)
     phase_step = 256 // precision
     phase_mask = np.zeros((H, W))
-    # i_0, j_0 = get_reference_position(path_to_reference_hologram)
-    i_0, j_0 = reference_coordinates
-    # square = detect_bright_area(np.array(im.open(path_to_reference_hologram).convert("L")))
-    coordinates = get_highest_intensity_coordinates_img(cam, window, im.fromarray(reference_hologram))
+    i0, j0 = reference_coordinates
+    coordinates = get_highest_intensity_coordinates_img(cam, window, reference_hologram) # TODO: rename
+    hologram = reference_hologram
     for i in range(H):
         print(f"{i}/{H}")
+        i_real = i * subdomain_size
         for j in range(W):
-            # if i == i_0 and j == j_0: continue # reference subdomain is off and the coordinates are absolute anyway
+            j_real = j * subdomain_size
+            if i_real == i0 and j_real == j0:
+                hologram.convert("L").save("lc-slm/trash/calibration_reference_sbd_check.png")
+                continue
             top_intensity = 0
             k = 0
             while k < precision:
-                hologram_wo_ref = im.open(f"{path_to_holograms}/{i}/{j}/{k}.png")
-                hologram = add_ref(hologram_wo_ref, reference_hologram, reference_coordinates, subdomain_size)
+                hologram = add_subdomain(hologram, sample[k], (i_real, j_real), subdomain_size)
                 display_image_on_external_screen_img(window, hologram) # displays hologram on an external dispaly (SLM)
                 frame = cam.snap()
-                # intensity = get_intensity_integral(frame, square)
                 intensity = get_intensity_coordinates(frame, coordinates)
                 if intensity > top_intensity:
                     top_intensity = intensity
@@ -63,24 +62,25 @@ def main(path_to_holograms: str, calibration_name: str):
                     if intensity == 255:
                         print("maximal intensity was reached")
                         k = 0
-                        cam.set_exposure(cam.get_exposure * 1.1) # 10 % increase of exposure time
+                        cam.set_exposure(cam.get_exposure() * 1.1) # 10 % increase of exposure time
+                if i_real == i0 and j_real == j0 + subdomain_size:
+                    hologram.convert("L").save(f"lc-slm/trash/calibration_reference_sbd_check_{k}.png")
                 k += 1
-    name = f"{os.path.basename(path_to_holograms)}_{calibration_name}"
-    create_phase_mask(phase_mask, subdomain_size, name)
+            clear_subdomain(hologram, (i_real, j_real), subdomain_size)
+    specification = make_specification(args)
+    create_phase_mask(phase_mask, subdomain_size, specification)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("usage: python calibration.py <hologram_set_name> <calibration_name>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Script for calibrating an optical path by SLM")
 
-    
-    # Get command line arguments
-    path_to_holograms = sys.argv[1]
-    calibration_name = sys.argv[2]
-# path_to_holograms = "lc-slm/holograms_for_calibration/size32_precision8_x1_y1"
-# calibration_name = "home_trial"
-    
-    # Call main function with the parameters
-    main(path_to_holograms, calibration_name)
+    help_coord_ratio = "use form 'ynumerator_ydenominator_xnumerator_xdenominator'. example: 1_2_3_4 -> y coordinate will be roughly half of slm height, x coordinate will be roughly three quarters of slm width"
 
+    parser.add_argument('calibration_name', type=str)
+    parser.add_argument('-ss', '--subdomain_size', type=int, default=32)
+    parser.add_argument('-p', '--precision', type=int, default=8, help='"color depth" of the phase mask')
+    parser.add_argument('-a', '--angle', type=tuple, default=(1, 1), help="(x_decline, y_decline)")
+    parser.add_argument('-c', '--coord_ratio', type=str, default=1_2_1_2, help=help_coord_ratio)
+
+    args = parser.parse_args()
+    calibrate(args)

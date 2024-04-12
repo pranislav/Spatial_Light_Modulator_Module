@@ -1,5 +1,4 @@
 import constants as c
-import holograms_for_calibration as h
 import tkinter as tk
 from PIL import Image as im, ImageTk
 from screeninfo import get_monitors
@@ -8,26 +7,65 @@ import os
 import sys
 
 
-def add_ref(hologram_wo_ref: im, reference_hologram_arr: np.array, reference_coordinates, subdomain_size):
-    i0, j0 = reference_coordinates
+def make_specification(args):
+    return f"size_{args.subdomain_size}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref{args.coord_ratio}_{args.calibration_name}"
+
+# ---------- sample holograms ----------- #
+
+def make_sample_holograms(angle, precision):
+    sample_holograms = []
+    for i in range(precision):
+        sample_holograms.append(decline(angle, i * 256 // precision))
+    return sample_holograms
+
+def decline(angle, offset):
+    x_angle, y_angle = angle
+    hologram = np.zeros((c.slm_height, c.slm_width))
+    const = 256 * c.px_distance / c.wavelength # 256 gives more accurate result
+    for i in range(c.slm_height):
+        for j in range(c.slm_width):
+            new_phase = const * (np.sin(y_angle * c.u) * i + np.sin(x_angle * c.u) * j)
+            hologram[i, j] = int((new_phase + offset) % 256)
+    return hologram
+
+
+# ----------- subdomain manipulation ------------ #
+
+def add_subdomain(hologram: im, sample: np.array, coordinates, subdomain_size):
+    i0, j0 = coordinates
     for i in range(subdomain_size):
         for j in range(subdomain_size):
-            hologram_wo_ref.putpixel((i0 + i, j0 + j), int(reference_hologram_arr[i0 +i, j0 + j]))
-    return hologram_wo_ref
+            hologram.putpixel((j0 + j, i0 + i), int(sample[i0 + i, j0 + j]))
+    return hologram
+
+def clear_subdomain(hologram: im, coordinates, subdomain_size):
+    # equivalent to add_subdomain(hologram, np.zeros(), coordinates, subdomain_size)
+    # but it would be more expensive on time
+    i0, j0 = coordinates
+    for i in range(subdomain_size):
+        for j in range(subdomain_size):
+            hologram.putpixel((j0 + j, i0 + i), 0)
+    return hologram
+
+
+# ---------- new getters ----------- #
 
 def extract_reference_coordinates(reference_hologram_coordinates_ratio, subdomain_size, subdomains_number):
-    y_ratio, x_ratio = reference_hologram_coordinates_ratio
+    y_numerator, y_denominator, x_numerator, x_denominator = reference_hologram_coordinates_ratio.split("_")
     H, W = subdomains_number
-    y_coord = subdomain_size * (y_ratio[0] * H // y_ratio[1])
-    x_coord = subdomain_size * (x_ratio[0] * W // x_ratio[1])
+    y_coord = subdomain_size * (int(y_numerator) * H // int(y_denominator))
+    x_coord = subdomain_size * (int(x_numerator) * W // int(x_denominator))
     return (y_coord, x_coord)
 
-def create_reference_hologram(reference_hologram_coordinates):
-    return h.make_hologram(h.make_decline_hologram(), reference_hologram_coordinates)
+
+def get_number_of_subdomains(subdomain_size):
+    if c.slm_height % subdomain_size != 0 or c.slm_width % subdomain_size != 0:
+        print(f"some of the SLM pixels won't be covered, you better choose number which divides {c.slm_height} and {c.slm_width}")
+    return c.slm_height//subdomain_size, c.slm_width//subdomain_size
 
 
 
-# --------- a little image processing --------- #
+# --------- a little image processing --------- # - for integral metrics (which probably does not work at all)
 
 def detect_bright_area(picture: np.array):
     coord = mean_position_of_white_pixel(picture)
@@ -57,7 +95,7 @@ def deviation_of_bright_pixels(picture, mean):
     return int(np.sqrt(deviation / sum))
 
 
-# ------------ phase mask ---------- #
+# ------------ The Phase Mask ---------- #
 
 def create_phase_mask(phase_mask, subdomain_size, name):
     '''creates and saves phase mask image based on phase mask array
@@ -84,49 +122,43 @@ def mask_hologram(path_to_hologram, path_to_mask):
     return im.fromarray(masked_hologram)
 
 
-# ---------- getters ------------ #
+# ---------- getters ------------ # - for old implementation
 
-def get_path_to_reference_hologram(path):
-    file_list = [_ for _ in filter(could_be_file, os.listdir(path))]
-    if len(file_list) > 1:
-        print("found multiple files while looking for reference hologram")
-        sys.exit(1)
-    return f"{path}/{file_list[0]}"
+# def get_path_to_reference_hologram(path):
+#     file_list = [_ for _ in filter(could_be_file, os.listdir(path))]
+#     if len(file_list) > 1:
+#         print("found multiple files while looking for reference hologram")
+#         sys.exit(1)
+#     return f"{path}/{file_list[0]}"
 
-def could_be_file(basename):
-    _, ext = os.path.splitext(basename)
-    return bool(ext)
+# def could_be_file(basename):
+#     _, ext = os.path.splitext(basename)
+#     return bool(ext)
 
-def get_reference_position(path_to_reference_hologram):
-    name = os.path.basename(path_to_reference_hologram)
-    wout_ext, _ = os.path.splitext(name)
-    return eval(wout_ext)
+# def get_reference_position(path_to_reference_hologram):
+#     name = os.path.basename(path_to_reference_hologram)
+#     wout_ext, _ = os.path.splitext(name)
+#     return eval(wout_ext)
     
 
-def get_subdomain_size(path):
-    '''finds out subdomain size based on system of saving holograms'''
-    dir_count = 0
-    for item in os.listdir(path):
-        item_path = os.path.join(path, item)
-        if os.path.isdir(item_path):
-            dir_count += 1
-    return c.slm_height // dir_count
+# def get_subdomain_size(path):
+#     '''finds out subdomain size based on system of saving holograms'''
+#     dir_count = 0
+#     for item in os.listdir(path):
+#         item_path = os.path.join(path, item)
+#         if os.path.isdir(item_path):
+#             dir_count += 1
+#     return c.slm_height // dir_count
 
 
-def get_precision(path):
-    '''finds out precision based on system of number of holograms for one subdomain'''
-    file_count = 0
-    for item in os.listdir(path):
-        item_path = os.path.join(path, item)
-        if os.path.isfile(item_path):
-            file_count += 1
-    return file_count
-
-
-def get_number_of_subdomains(subdomain_size):
-    if c.slm_height % subdomain_size != 0 or c.slm_width % subdomain_size != 0:
-        print(f"some of the SLM pixels won't be covered, you better choose number which divides {c.slm_height} and {c.slm_width}")
-    return c.slm_height//subdomain_size, c.slm_width//subdomain_size
+# def get_precision(path):
+#     '''finds out precision based on system of number of holograms for one subdomain'''
+#     file_count = 0
+#     for item in os.listdir(path):
+#         item_path = os.path.join(path, item)
+#         if os.path.isfile(item_path):
+#             file_count += 1
+#     return file_count
 
 
 # ------------ intensity getters a.k.a. metrics -------------- #
