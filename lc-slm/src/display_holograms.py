@@ -2,19 +2,32 @@ import calibration_lib as cl
 from PIL import Image as im
 import numpy as np
 import argparse
+import os
 
 
 def display_holograms(args):
     window = cl.create_tk_window()
     directory = get_path(args.directory)
+    mask_name = args.mask_name
     if args.mask_name:
         mask_im = im.open(f"lc-slm/holograms_for_calibration/calibration_phase_masks/{args.mask_name}")
         mask_arr = np.array(mask_im)
     while True:
-        name = input("gimme a name of a hologram or quit with q >> ")
+        name = input("display hologram by typing its name, change directory with cd, change mask with cm >> ")
         if name == "q": break
+        if name[0:3] == "cd ":
+            new_dir = name[3:-1]
+            if not(os.path.isdir(new_dir)):
+                print("specified directory does not exist")
+                continue
+            directory = new_dir
+            print(f"directory changed to {new_dir}")
+            continue
+        if name[0:3] == "cm ":
+            mask_name = name[3:-1]
+            continue
         path = f"{directory}/{name}"
-        if args.mask_name:
+        if mask_name:
             cl.display_image_on_external_screen_img(window, mask_hologram(path, mask_arr))
         else:
             cl.display_image_on_external_screen(window, path)
