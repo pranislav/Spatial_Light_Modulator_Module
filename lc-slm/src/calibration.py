@@ -18,12 +18,13 @@ the quality of the interference is decided by
 measuring intensity at the end of the optical path with a camera
 '''
 
-# ! working in c.u units
+# ! working in constants.u units
 
 from calibration_lib import *
 import numpy as np
 import argparse
-from pylablib.devices import uc480 
+from pylablib.devices import uc480
+from time import time
 
 
 def calibrate(args):
@@ -47,7 +48,6 @@ def calibrate(args):
         for j in range(W):
             j_real = j * subdomain_size
             if i_real == i0 and j_real == j0:
-                hologram.convert("L").save("lc-slm/trash/calibration_reference_sbd_check.png")
                 continue
             top_intensity = 0
             k = 0
@@ -60,11 +60,12 @@ def calibrate(args):
                     top_intensity = intensity
                     phase_mask[i, j] = k * phase_step
                     if intensity == 255:
-                        print("maximal intensity was reached")
+                        print("maximal intensity was reached, adapting...")
+                        cam.set_exposure(cam.get_exposure() * 0.9) # 10 % decrease of exposure time
                         k = 0
-                        cam.set_exposure(cam.get_exposure() * 1.1) # 10 % increase of exposure time
-                if i_real == i0 and j_real == j0 + subdomain_size:
-                    hologram.convert("L").save(f"lc-slm/trash/calibration_reference_sbd_check_{k}.png")
+                        continue
+                # if i_real == i0 and j_real == j0 + subdomain_size:
+                #     hologram.convert("L").save(f"lc-slm/trash/calibration_reference_sbd_check_{k}.png")
                 k += 1
             clear_subdomain(hologram, (i_real, j_real), subdomain_size)
     specification = make_specification(args)
@@ -79,8 +80,10 @@ if __name__ == "__main__":
     parser.add_argument('calibration_name', type=str)
     parser.add_argument('-ss', '--subdomain_size', type=int, default=32)
     parser.add_argument('-p', '--precision', type=int, default=8, help='"color depth" of the phase mask')
-    parser.add_argument('-a', '--angle', type=tuple, default=(1, 1), help="(x_decline, y_decline)")
-    parser.add_argument('-c', '--coord_ratio', type=str, default=1_2_1_2, help=help_coord_ratio)
+    parser.add_argument('-a', '--angle', type=str, default="1_1", help="use from: xdecline_ydecline (angles in constants.u unit)")
+    parser.add_argument('-c', '--coord_ratio', type=str, default="1_2_1_2", help=help_coord_ratio)
 
     args = parser.parse_args()
+    start = time()
     calibrate(args)
+    print("execution_time: ", (time() - start) / 60,  " min")

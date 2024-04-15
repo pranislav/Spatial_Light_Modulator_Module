@@ -13,6 +13,7 @@ def make_specification(args):
 # ---------- sample holograms ----------- #
 
 def make_sample_holograms(angle, precision):
+    angle = angle.split("_")
     sample_holograms = []
     for i in range(precision):
         sample_holograms.append(decline(angle, i * 256 // precision))
@@ -24,7 +25,7 @@ def decline(angle, offset):
     const = 256 * c.px_distance / c.wavelength # 256 gives more accurate result
     for i in range(c.slm_height):
         for j in range(c.slm_width):
-            new_phase = const * (np.sin(y_angle * c.u) * i + np.sin(x_angle * c.u) * j)
+            new_phase = const * (np.sin(float(y_angle) * c.u) * i + np.sin(float(x_angle) * c.u) * j)
             hologram[i, j] = int((new_phase + offset) % 256)
     return hologram
 
