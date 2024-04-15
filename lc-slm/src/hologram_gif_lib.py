@@ -3,7 +3,7 @@ import os
 import matplotlib.pyplot as plt
 from algorithms import GD_for_moving_traps, generate_initial_input, GS_for_moving_traps
 from PIL import Image as im
-from helping_functions_for_slm_generate_etc import remove_files_in_dir, create_gif
+from generate_and_transform_hologram_lib import remove_files_in_dir, create_gif
 from constants import slm_width as w, slm_height as h
 import copy
 
