@@ -6,8 +6,7 @@ from PIL import Image as im
 import PIL.ImageOps
 import slm_screen as sc
 import constants as c
-from structs import gif_struct
-import helping_functions_for_slm_generate_etc as hf
+import generate_and_transform_hologram_lib as hf
 
 
 
@@ -55,7 +54,7 @@ target = np.sqrt(np.array(target_img)) # toto musi ist prec to je picovina. a up
 enhance_mask = np.array(target_img) / 255 # normed to 1 | enhance the error to get lower on light areas
 
 # creating gif data structure (primarily for GD arguments reducing)
-gif = gif_struct()
+gif = hf.gif_struct()
 gif.type = gif_target
 gif.skip_frames = gif_skip
 

@@ -1,5 +1,5 @@
 # TODO: change from the root. this is too expensive. no getpixel, putpixel, work with arrays and convert to image just at the end
-# also, that cf thing is confusing, moreover, i divide it bu pi and right then multiply by it
+# also, that cf thing is confusing, moreover, i divide it by pi and right then multiply by it
 # also, x_decline and y_decline can be done in one function (yes, function, forget about your classy class) - get inspired with holograms_for_calibration
 '''slm - module for work with Spatial Light Modulator
 
@@ -91,6 +91,7 @@ class Screen:
     def my_dmd_trafo(self) -> Screen:
         '''transformates the image so that it appears as original
         at the DMD screen (but rotated by pi/2 rad)'''
+        # TODO: what it is doing here?
 
         # self_copy = self.img.copy()
 

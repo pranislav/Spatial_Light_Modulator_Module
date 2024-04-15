@@ -1,5 +1,6 @@
 '''this thing helps me to optimize optical path wrt. laser power use
-and CCD chip use with restriction to available lenses'''
+and CCD chip use with restriction to available lenses
+works just for given optical path'''
 
 # optical path:
 # source -> collimator          ------> SLM           ------> telescope_in --------> telescope_out -----> microscope   --------- or camera_lens -> CCD_chip

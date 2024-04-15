@@ -3,7 +3,7 @@ from scipy.fft import fft2, ifft2, fftshift, ifftshift
 import matplotlib.pyplot as plt
 from random import random
 import PIL.Image as im
-from structs import gif_struct
+from generate_and_transform_hologram_lib import gif_struct
 from typing import List, Tuple
 from cmath import phase
 

@@ -7,6 +7,12 @@ import numpy as np
 from PIL import ImageOps
 
 
+class gif_struct:
+    type = ""
+    skip_frames = 5
+    source_address = ""
+
+
 def quarter(image: im) -> im:
     '''returns mostly blank image with original image pasted in upper-left corner
     when generated hologram for such a transformed image, there will be no overlap
