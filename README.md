@@ -14,3 +14,5 @@ Functionality LC-SLM part:
 
 Functionality DMD part:
 - wait for it...
+
+Usage 
