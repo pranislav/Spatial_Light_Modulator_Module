@@ -11,6 +11,7 @@ def make_specification(args):
     return f"size_{args.subdomain_size}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref{args.coord_ratio}_{args.calibration_name}"
 
 # ---------- sample holograms ----------- #
+# TODO: nice but could be faster. compare if consistent with same-name function in explore and replace
 
 def make_sample_holograms(angle, precision):
     angle = angle.split("_")

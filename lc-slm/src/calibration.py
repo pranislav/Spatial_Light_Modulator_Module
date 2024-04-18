@@ -37,10 +37,9 @@ def calibrate(args):
     sample = make_sample_holograms(args.angle, precision)
     reference_hologram = add_subdomain(im.fromarray(np.zeros((c.slm_height, c.slm_width))), sample[0], reference_coordinates, subdomain_size)
     set_exposure_wrt_reference_img(cam, window, reference_hologram)
-    phase_step = 256 // precision
     phase_mask = np.zeros((H, W))
     i0, j0 = reference_coordinates
-    coordinates = get_highest_intensity_coordinates_img(cam, window, reference_hologram) # TODO: rename
+    intensity_coord = get_highest_intensity_coordinates_img(cam, window, reference_hologram) # TODO: rename
     hologram = reference_hologram
     for i in range(H):
         print(f"{i}/{H}")
@@ -49,27 +48,30 @@ def calibrate(args):
             j_real = j * subdomain_size
             if i_real == i0 and j_real == j0:
                 continue
-            top_intensity = 0
-            k = 0
-            while k < precision:
-                hologram = add_subdomain(hologram, sample[k], (i_real, j_real), subdomain_size)
-                display_image_on_external_screen_img(window, hologram) # displays hologram on an external dispaly (SLM)
-                frame = cam.snap()
-                intensity = get_intensity_coordinates(frame, coordinates)
-                if intensity > top_intensity:
-                    top_intensity = intensity
-                    phase_mask[i, j] = k * phase_step
-                    if intensity == 255:
-                        print("maximal intensity was reached, adapting...")
-                        cam.set_exposure(cam.get_exposure() * 0.9) # 10 % decrease of exposure time
-                        k = 0
-                        continue
-                # if i_real == i0 and j_real == j0 + subdomain_size:
-                #     hologram.convert("L").save(f"lc-slm/trash/calibration_reference_sbd_check_{k}.png")
-                k += 1
+            phase_mask[i, j] = calibration_loop(window, cam, sample, (i_real, j_real), subdomain_size, precision, intensity_coord)
             clear_subdomain(hologram, (i_real, j_real), subdomain_size)
     specification = make_specification(args)
     create_phase_mask(phase_mask, subdomain_size, specification)
+
+def calibration_loop(window, cam, hologram, sample, subdomain_position, subdomain_size, precision, coordinates):
+    k = 0
+    top_intensity = 0
+    opt_value = 0
+    while k < precision:
+        hologram = add_subdomain(hologram, sample[k], subdomain_position, subdomain_size)
+        display_image_on_external_screen_img(window, hologram) # displays hologram on an external dispaly (SLM)
+        frame = cam.snap()
+        intensity = get_intensity_coordinates(frame, coordinates)
+        if intensity > top_intensity:
+            top_intensity = intensity
+            opt_value = k * 256 // precision
+            if intensity == 255:
+                print("maximal intensity was reached, adapting...")
+                cam.set_exposure(cam.get_exposure() * 0.9) # 10 % decrease of exposure time
+                k = 0
+                continue
+        k += 1
+    return opt_value
 
 
 if __name__ == "__main__":
