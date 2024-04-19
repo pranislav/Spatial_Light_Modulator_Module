@@ -205,7 +205,10 @@ def set_exposure(cam):
             expo -= step
         cam.set_exposure(expo)
         print(expo)
-        frame = cam.snap()
+        num_to_avg = 8
+        for _ in range(num_to_avg):
+            frame += cam.snap()
+        frame /= num_to_avg
         max_val = max(frame.flatten())
     
 
