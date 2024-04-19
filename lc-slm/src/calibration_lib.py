@@ -188,12 +188,12 @@ def get_intensity_integral(frame, square):
 
 # ---------- functions for work with camera ----------- #
 
-def set_exposure(cam):
+def set_exposure(intensity_range, cam):
     '''set exposure time such that maximal signal value is
     in interval (max_val_lower, max_val_upper)
     '''
-    max_val_upper = 256 // 4 # in fully-constructive interference the value of amplitude could be twice as high, therefore intensity four times as high 
-    max_val_lower = max_val_upper - 20
+
+    max_val_lower, max_val_upper = intensity_range
     step = 10e-3
     expo = 0
     max_val = max_val_lower - 1
@@ -212,13 +212,13 @@ def set_exposure(cam):
         max_val = max(frame.flatten())
     
 
-def set_exposure_wrt_reference_img(cam, window, hologram):
+def set_exposure_wrt_reference_img(intensity_range, cam, window, hologram):
     display_image_on_external_screen_img(window, hologram)
-    set_exposure(cam)
+    set_exposure(intensity_range, cam)
 
-def set_exposure_wrt_reference_img_path(cam, window, hologram_path):
+def set_exposure_wrt_reference_img_path(intensity_range, cam, window, hologram_path):
     display_image_on_external_screen(window, hologram_path)
-    set_exposure(cam)
+    set_exposure(intensity_range, cam)
 
 
 def get_highest_intensity_coordinates(cam, window, hologram_path):

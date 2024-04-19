@@ -36,7 +36,7 @@ def calibrate(args):
     reference_coordinates = extract_reference_coordinates(args.coord_ratio, subdomain_size, (H, W))
     sample = make_sample_holograms(args.angle, precision)
     reference_hologram = add_subdomain(im.fromarray(np.zeros((c.slm_height, c.slm_width))), sample[0], reference_coordinates, subdomain_size)
-    set_exposure_wrt_reference_img(cam, window, reference_hologram)
+    set_exposure_wrt_reference_img((256 / 4 - 20, 256 / 4), cam, window, reference_hologram) # in fully-constructive interference the value of amplitude could be twice as high, therefore intensity four times as high 
     phase_mask = np.zeros((H, W))
     i0, j0 = reference_coordinates
     intensity_coord = get_highest_intensity_coordinates_img(cam, window, reference_hologram) # TODO: rename
