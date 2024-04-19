@@ -27,6 +27,7 @@ import tkinter as tk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from pylablib.devices import uc480
+from scipy.optimize import curve_fit
 
 
 def explore():
@@ -34,7 +35,7 @@ def explore():
     sample_list = make_sample_holograms(sample_list, params)
     window = cl.create_tk_window()
     cam = uc480.UC480Camera()
-    while True:
+    while not input("continue (enter) or quit (anything) >> "):
         black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
         if params["decline"][-1] or params["precision"][-1]:
             angle = last_nonempty(params["decline"])
@@ -43,15 +44,18 @@ def explore():
         if params["subdomain_size"][-1] or params["reference_position"][-1]:
             subdomain_size = last_nonempty(params["subdomain_size"])
             reference_position = last_nonempty(params["reference_position"])
-            reference_hologram = cl.add_subdomain(black_hologram, sample_list[0], reference_position, subdomain_size)
+        reference_hologram = cl.add_subdomain(black_hologram, sample_list[0], reference_position, subdomain_size)
+        if params["decline"] or params["subdomain_size"]:
+            cl.set_exposure_wrt_reference_img((256 / 4 - 20, 256 / 4), cam, window, reference_hologram)
         hologram = reference_hologram
         subdomain_position = last_nonempty(params["subdomain_size"])
         num_to_avg = last_nonempty(params["num_to_avg"])
         intensity_coord = cl.get_highest_intensity_coordinates_img(cam, window, reference_hologram)
-        frame, intensity_list = calibration_loop_explore(window, cam, hologram, sample_list, subdomain_position, subdomain_size, precision, intensity_coord, num_to_avg)    
-        display_results(hologram, frame, intensity_list)
+        frame, intensity_data = calibration_loop_explore(window, cam, hologram, sample_list, subdomain_position, subdomain_size, precision, intensity_coord, num_to_avg)
+        intensity_fit = plot_fit(fit_intensity(intensity_data))
+        display_results(hologram, frame, intensity_data, intensity_fit)
 
-        if input("continue (enter) or quit (anything) >> "): break
+        # if input("continue (enter) or quit (anything) >> "): break
         get_params(params)
 
 
@@ -60,7 +64,7 @@ def calibration_loop_explore(window, cam, hologram, sample, subdomain_position, 
     k = 0
     while k < precision:
         hologram = cl.add_subdomain(hologram, sample[k], subdomain_position, subdomain_size)
-        cl.display_image_on_external_screen_img(window, hologram) # displays hologram on an external dispaly (SLM)
+        cl.display_image_on_external_screen_img(window, hologram)
         for _ in range(num_to_avg):
             frame = cam.snap()
             intensity += cl.get_intensity_coordinates(frame, coordinates)
@@ -77,6 +81,28 @@ def calibration_loop_explore(window, cam, hologram, sample, subdomain_position, 
     return frame, intensity_list
 
 
+# ---------- fits and plots ---------- #
+
+def fit_intensity(intensity_data):
+    xdata, ydata = intensity_data
+    params, _ = curve_fit(general_cos, xdata, ydata)
+    return params
+
+
+def general_cos(x, amplitude_shift, amplitude, frequency, phase_shift):
+    return amplitude_shift + amplitude * np.cos(frequency * x - phase_shift)
+
+
+def plot_fit(params):
+    amplitude_shift, amplitude, frequency, phase_shift = params
+    xdata = np.linspace(0, 255, 256)
+    ydata = general_cos(xdata, amplitude_shift, amplitude, frequency, phase_shift)
+    return xdata, ydata
+
+
+# --------- # ---------- #
+
+# TODO: this one compare with the one in cl, if same functionality, move it there, this should be faster
 def make_sample_holograms(angle, precision):
     sample = []
     sample[0] = cl.decline(angle, precision)
@@ -84,11 +110,8 @@ def make_sample_holograms(angle, precision):
         offset = i * 256 // precision
         sample[i] = (sample[0] + offset) % 256
 
-def last_nonempty(lst):
-    for i in len(lst):
-        if lst[-i]:
-            return lst[-i]
 
+# ------------ parameters stuff ------------- #
 
 def default_params():
     params = {}
@@ -100,26 +123,33 @@ def default_params():
     params["num_to_avg"] = [1]
     return params
 
-# TODO: tell the user current values
+
 def get_params(params):
-    params["subdomain_size"].append(get_subdomain_size())
-    params["reference_position"].append(get_position(params.subdomain_size))
-    params["subdomain_position"].append(get_position(params.subdomain_size))
-    params["decline"].append(get_decline())
-    params["precision"].append(get_precision())
-    params["num_to_avg"].append(get_num_to_avg())
+    print("to retain current value, just press enter")
+    params["subdomain_size"].append(get_subdomain_size(last_nonempty(params["subdomain_size"])))
+    params["reference_position"].append(get_position(last_nonempty(params["reference_position"]), params["subdomain_size"]))
+    params["subdomain_position"].append(get_position(last_nonempty(params["subdomain_position"]), params["subdomain_size"]))
+    params["decline"].append(get_decline(last_nonempty(params["decline"])))
+    params["precision"].append(get_precision(last_nonempty(params["precision"])))
+    params["num_to_avg"].append(get_num_to_avg(last_nonempty(params["num_to_avg"])))
 
 
-def get_precision():
-    return input("enter number of phase shifts >> ")
+def last_nonempty(lst):
+    for i in len(lst):
+        if lst[-i]:
+            return lst[-i]
 
-def get_num_to_avg():
-    return input("enter number of frames to be averaged >> ")
+
+def get_precision(current):
+    return input(f"enter number of phase shifts. current value: {current} >> ")
+
+def get_num_to_avg(current):
+    return input(f"enter number of frames to be averaged. current value: {current} >> ")
 
 
-def get_decline():
+def get_decline(current):
     while True:
-        decline_to_be = input("enter decline angle as a tuple in units of quarter of first diffraction maximum >> ")
+        decline_to_be = input(f"enter decline angle as a tuple in units of quarter of first diffraction maximum. current value: {current} >> ")
         if decline_to_be == '':
             return decline_to_be
         x_angle, y_angle = decline_to_be
@@ -129,10 +159,10 @@ def get_decline():
         return decline_to_be
         
 
-def get_position(subdomain_size):
+def get_position(current, subdomain_size):
     max_height, max_width = c.slm_height // subdomain_size, c.slm_width // subdomain_size
     while True:
-        position_to_be = input(f"enter position of the reference subdomain as a tuple of ints. height: {max_height} subdomains, width: {max_width} subdomains >> ")
+        position_to_be = input(f"enter position of the reference subdomain as a tuple of ints. height: {max_height} subdomains, width: {max_width} subdomains. current value: {current} >> ")
         if position_to_be == '':
             return position_to_be
         x, y = position_to_be
@@ -144,9 +174,9 @@ def get_position(subdomain_size):
             continue
         return position_to_be
 
-def get_subdomain_size():
+def get_subdomain_size(current):
     while True:
-        size_to_be = input("enter subdomain size in pixels >> ")
+        size_to_be = input(f"enter subdomain size in pixels. current value: {current} >> ")
         if size_to_be == '':
             return size_to_be
         if size_to_be > c.slm_height:
@@ -155,8 +185,9 @@ def get_subdomain_size():
         return size_to_be
 
 
+# ------------ visualizing -------------- #
 
-def display_results(hologram, frame, intensity_list):
+def display_results(hologram, frame, intensity_data, intensity_fit):
 
     pad = 10
 
@@ -169,7 +200,7 @@ def display_results(hologram, frame, intensity_list):
 
     resize_images(hologram, frame, screen_resolution, pad)
 
-    plot_image = create_plot_img(intensity_list, screen_resolution, hologram.height, pad)
+    plot_image = create_plot_img(intensity_data, intensity_fit, screen_resolution, hologram.height, pad)
 
     # Convert images to Tkinter PhotoImage objects
     tk_hologram = ImageTk.PhotoImage(hologram)
@@ -201,16 +232,17 @@ def resize_images(hologram, frame, screen_resolution, pad):
     frame.resize((frame_ratio * frame.width, frame_ratio * frame.height), im.ANTIALIAS)
 
 
-def create_plot_img(plot_data, screen_resolution, hologram_height, pad):
+def create_plot_img(intensity_data, intensity_fit, screen_resolution, hologram_height, pad):
     screen_width, screen_height = screen_resolution
     plot_width = screen_width - 2 * pad
     plot_height = screen_height - hologram_height - 3 * pad
     # Create a subplot for the plot with the specified width and height
     fig, ax = plt.subplots(figsize=(plot_width, plot_height), dpi=100)  # Use dpi to control pixel density
-    ax.plot(plot_data[0], plot_data[1])
-    ax.set_xlabel('X-axis')
-    ax.set_ylabel('Y-axis')
-    ax.set_title('Example Plot')
+    ax.plot(intensity_data[0], intensity_data[1])
+    ax.plot(intensity_fit[0], intensity_fit[1])
+    ax.set_xlabel('phase shift')
+    ax.set_ylabel('intensity')
+    # ax.set_title('')
 
     # Create a Tkinter canvas for the plot
     canvas = FigureCanvasAgg(fig)
