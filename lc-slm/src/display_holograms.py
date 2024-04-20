@@ -4,13 +4,14 @@ import numpy as np
 import argparse
 import os
 
+mask_dir = "lc-slm/holograms_for_calibration/calibration_phase_masks"
 
 def display_holograms(args):
     window = cl.create_tk_window()
     directory = set_dir(args.directory)
     mask_arr = set_mask(args.mask_name)
     while True:
-        name = input("do an action or type 'help' >>")
+        name = input("do an action or type 'help' >> ")
         if name == "help":
             print_help()
             continue
@@ -23,10 +24,11 @@ def display_holograms(args):
             if len(name) == 2: 
                 mask_arr = None
                 continue
-            mask_arr = set_mask(name[3:-1])
+            mask_arr = set_mask(name[3:])
             continue
         path = set_path_to_hologram(directory, name)
-        if mask_arr:
+        if path is None: continue
+        if mask_arr is not None:
             cl.display_image_on_external_screen_img(window, mask_hologram(path, mask_arr))
         else:
             cl.display_image_on_external_screen(window, path)
@@ -34,24 +36,25 @@ def display_holograms(args):
 def set_path_to_hologram(directory, name):
     if not os.path.isfile(f"{directory}/{name}"):
         print("Error: specified hologram does not exist.")
-        return
+        return None
     return f"{directory}/{name}"
 
 def print_help():
-    print(f"cd <directory> - change directory - {directory_help}")
-    print("<hologram_name> - display hologram in current directory")
-    print(f"cm <mask_name> - change mask - {mask_help}")
-    print("help - display this message")
-    print("q - quit")
+    print("available commands:")
+    print(f"- cd <directory> - change directory, enter {directory_help}")
+    print("- <hologram_name> - display hologram in current directory")
+    print(f"- cm <mask_name> - change mask - {mask_help}")
+    print("- help - display this message")
+    print("- q - quit")
 
 def set_mask(mask_name):
     if mask_name is None or mask_name == "" or mask_name == "none":
         return None
-    if not os.path.isfile(f"lc-slm/holograms_for_calibration/calibration_phase_masks/{mask_name}"):
+    if not os.path.isfile(f"{mask_dir}/{mask_name}"):
         print("Error: specified mask does not exist. setting mask to None")
         mask_arr = None
         return    
-    mask_im = im.open(f"lc-slm/holograms_for_calibration/calibration_phase_masks/{args.mask_name}")
+    mask_im = im.open(f"{mask_dir}/{mask_name}")
     mask_arr = np.array(mask_im)
     return mask_arr
 
@@ -93,11 +96,11 @@ if __name__ == "__main__":
     #                     'i' for lc-slm/images
     #                     'p' if you wish to specify full path to displayed image each time"""
     
-    mask_help = "leave blank or type 'none' for no mask. otherwise type name of the mask. it have to be in lc-slm/holograms_for_calibration/calibration_phase_mask"
+    mask_help = f"leave blank or type 'none' for no mask. otherwise type name of the mask. it have to be in {mask_dir}"
     directory_help = "path (from project root) to directory containing images to be displayed"
 
     parser.add_argument('mask_name', nargs='?', default=None, type=str, help=mask_help)
-    parser.add_argument('-d', '--directory', default="lc-slm/holograms/animals_and_stuff", type=str, help=directory_help)
+    parser.add_argument('-d', '--directory', default="lc-slm/holograms", type=str, help=directory_help)
 
     args = parser.parse_args()
     display_holograms(args)
