@@ -17,13 +17,14 @@ parameters to be changed:
 - number of frames to average to supress the fluctuation
 '''
 
+# TODO: subdomain_position degeneration (real & input one)
+
 import constants as c
 import calibration_lib as cl
 import display_holograms as dh
 import numpy as np
-from PIL import Image as im, ImageTk
+from PIL import Image as im
 from screeninfo import get_monitors
-import tkinter as tk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from pylablib.devices import uc480
@@ -32,10 +33,11 @@ from scipy.optimize import curve_fit
 
 def explore():
     params = default_params()
-    sample_list = make_sample_holograms(sample_list, params)
+    # sample_list = make_sample_holograms(sample_list, params)
     window = cl.create_tk_window()
     cam = uc480.UC480Camera()
-    while not input("continue (enter) or quit (anything) >> "):
+    internal_screen_resolution = get_internal_screen_resolution()
+    while True:
         black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
         if params["decline"][-1] or params["precision"][-1]:
             angle = last_nonempty(params["decline"])
@@ -43,19 +45,22 @@ def explore():
             sample_list = make_sample_holograms(angle, precision)
         if params["subdomain_size"][-1] or params["reference_position"][-1]:
             subdomain_size = last_nonempty(params["subdomain_size"])
-            reference_position = last_nonempty(params["reference_position"])
+            reference_position = real_subdomain_position(last_nonempty(params["reference_position"]), subdomain_size)
         reference_hologram = cl.add_subdomain(black_hologram, sample_list[0], reference_position, subdomain_size)
-        if params["decline"] or params["subdomain_size"]:
-            cl.set_exposure_wrt_reference_img((256 / 4 - 20, 256 / 4), cam, window, reference_hologram)
+        # if params["decline"] or params["subdomain_size"]:
+            # cl.set_exposure_wrt_reference_img((256 / 4 - 20, 256 / 4), cam, window, reference_hologram)
         hologram = reference_hologram
-        subdomain_position = last_nonempty(params["subdomain_size"])
+        subdomain_position = real_subdomain_position(last_nonempty(params["subdomain_position"]), subdomain_size)
         num_to_avg = last_nonempty(params["num_to_avg"])
         intensity_coord = cl.get_highest_intensity_coordinates_img(cam, window, reference_hologram)
         frame, intensity_data = calibration_loop_explore(window, cam, hologram, sample_list, subdomain_position, subdomain_size, precision, intensity_coord, num_to_avg)
-        intensity_fit = plot_fit(fit_intensity(intensity_data))
-        display_results(hologram, frame, intensity_data, intensity_fit)
+        fit_params = fit_intensity(intensity_data)
+        print_fit_params(fit_params)
+        intensity_fit = plot_fit(fit_params)
+        hologram.show()
+        display_results(hologram, im.fromarray(frame), intensity_data, intensity_fit, internal_screen_resolution)
 
-        # if input("continue (enter) or quit (anything) >> "): break
+        if input("continue (enter) or quit (anything) >> "): break
         get_params(params)
 
 
@@ -65,6 +70,7 @@ def calibration_loop_explore(window, cam, hologram, sample, subdomain_position, 
     while k < precision:
         hologram = cl.add_subdomain(hologram, sample[k], subdomain_position, subdomain_size)
         cl.display_image_on_external_screen_img(window, hologram)
+        intensity = 0
         for _ in range(num_to_avg):
             frame = cam.snap()
             intensity += cl.get_intensity_coordinates(frame, coordinates)
@@ -89,8 +95,17 @@ def fit_intensity(intensity_data):
     return params
 
 
+def print_fit_params(fit_params):
+    amplitude_shift, amplitude, frequency, phase_shift = fit_params
+    print(f"amplitude_shift: {round(amplitude_shift, 2)}")
+    print(f"amplitude: {round(amplitude, 2)}")
+    print(f"frequency: {round(frequency, 2)}")
+    print(f"phase_shift: {round(phase_shift, 2)}")
+    print("")
+
+
 def general_cos(x, amplitude_shift, amplitude, frequency, phase_shift):
-    return amplitude_shift + amplitude * np.cos(frequency * x - phase_shift)
+    return amplitude_shift + amplitude * np.cos(frequency * (x - phase_shift))
 
 
 def plot_fit(params):
@@ -105,10 +120,11 @@ def plot_fit(params):
 # TODO: this one compare with the one in cl, if same functionality, move it there, this should be faster
 def make_sample_holograms(angle, precision):
     sample = []
-    sample[0] = cl.decline(angle, precision)
+    sample.append(cl.decline(angle, precision))
     for i in range(1, precision):
         offset = i * 256 // precision
-        sample[i] = (sample[0] + offset) % 256
+        sample.append((sample[0] + offset) % 256)
+    return sample
 
 
 # ------------ parameters stuff ------------- #
@@ -127,24 +143,32 @@ def default_params():
 def get_params(params):
     print("to retain current value, just press enter")
     params["subdomain_size"].append(get_subdomain_size(last_nonempty(params["subdomain_size"])))
-    params["reference_position"].append(get_position(last_nonempty(params["reference_position"]), params["subdomain_size"]))
-    params["subdomain_position"].append(get_position(last_nonempty(params["subdomain_position"]), params["subdomain_size"]))
+    print(params["subdomain_size"])
+    subdomain_size = last_nonempty(params["subdomain_size"])
+    params["reference_position"].append(get_position(last_nonempty(params["reference_position"]), subdomain_size))
+    params["subdomain_position"].append(get_position(last_nonempty(params["subdomain_position"]), subdomain_size))
     params["decline"].append(get_decline(last_nonempty(params["decline"])))
     params["precision"].append(get_precision(last_nonempty(params["precision"])))
     params["num_to_avg"].append(get_num_to_avg(last_nonempty(params["num_to_avg"])))
 
 
 def last_nonempty(lst):
-    for i in len(lst):
+    for i in range(1, len(lst) + 1):
         if lst[-i]:
             return lst[-i]
 
 
 def get_precision(current):
-    return input(f"enter number of phase shifts. current value: {current} >> ")
+    precision_to_be = input(f"enter number of phase shifts. current value: {current} >> ")
+    if precision_to_be == '':
+        return precision_to_be
+    return int(precision_to_be)
 
 def get_num_to_avg(current):
-    return input(f"enter number of frames to be averaged. current value: {current} >> ")
+    num_to_avg_to_be = input(f"enter number of frames to be averaged. current value: {current} >> ")
+    if num_to_avg_to_be == '':
+        return num_to_avg_to_be
+    return int(num_to_avg_to_be)
 
 
 def get_decline(current):
@@ -152,6 +176,7 @@ def get_decline(current):
         decline_to_be = input(f"enter decline angle as a tuple in units of quarter of first diffraction maximum. current value: {current} >> ")
         if decline_to_be == '':
             return decline_to_be
+        decline_to_be = eval(decline_to_be)
         x_angle, y_angle = decline_to_be
         if x_angle > 4 or y_angle > 4:
             print("neither of angles should exceed 4")
@@ -162,9 +187,10 @@ def get_decline(current):
 def get_position(current, subdomain_size):
     max_height, max_width = c.slm_height // subdomain_size, c.slm_width // subdomain_size
     while True:
-        position_to_be = input(f"enter position of the reference subdomain as a tuple of ints. height: {max_height} subdomains, width: {max_width} subdomains. current value: {current} >> ")
+        position_to_be = input(f"enter position of the reference subdomain as a tuple of ints.  width: {max_width} subdomains, height: {max_height} subdomains. current value: {current} >> ")
         if position_to_be == '':
             return position_to_be
+        position_to_be = eval(position_to_be)
         x, y = position_to_be
         if x > max_width:
             print(f"first coordinate should not exceed {max_width}")
@@ -172,13 +198,21 @@ def get_position(current, subdomain_size):
         if y > max_height:
             print(f"second coordinate should not exceed {max_height}")
             continue
-        return position_to_be
+        array_coords = (x, y)
+        return array_coords
+    
+
+def real_subdomain_position(subdomain_position, subdomain_size):
+    subdomain_position_x, subdomain_position_y = subdomain_position
+    return subdomain_size * subdomain_position_x, subdomain_size * subdomain_position_y
+
 
 def get_subdomain_size(current):
     while True:
         size_to_be = input(f"enter subdomain size in pixels. current value: {current} >> ")
         if size_to_be == '':
             return size_to_be
+        size_to_be = int(size_to_be)
         if size_to_be > c.slm_height:
             print(f"subdomain size should not exceed {c.slm_height}")
             continue
@@ -187,49 +221,37 @@ def get_subdomain_size(current):
 
 # ------------ visualizing -------------- #
 
-def display_results(hologram, frame, intensity_data, intensity_fit):
+def display_results(hologram, frame, intensity_data, intensity_fit, internal_screen_resolution):
 
     pad = 10
 
-    # Get screen resolution
-    screen_resolution = get_internal_screen_resolution()
+    hologram, frame = resize_images(hologram, frame, internal_screen_resolution, pad)
+    plot_image = create_plot_img(intensity_data, intensity_fit, internal_screen_resolution, hologram.height, pad)
 
-    # Create a Tkinter window
-    root = tk.Tk()
-    # root.title("Images and Plot Display") # TODO: maybe parameters here?
+    display_image = paste_together(hologram, frame, plot_image, internal_screen_resolution, pad)
+    display_image.show()
 
-    resize_images(hologram, frame, screen_resolution, pad)
 
-    plot_image = create_plot_img(intensity_data, intensity_fit, screen_resolution, hologram.height, pad)
+def paste_together(hologram, frame, plot_image, internal_screen_resolution, pad):
+    blank = im.new("L", internal_screen_resolution, 50)
+    blank.paste(hologram, (pad, pad))
+    blank.paste(frame, (2 * pad + hologram.width, pad))
+    blank.paste(plot_image, (pad, 2 * pad + hologram.height))
+    return blank
 
-    # Convert images to Tkinter PhotoImage objects
-    tk_hologram = ImageTk.PhotoImage(hologram)
-    tk_frame = ImageTk.PhotoImage(frame)
-    tk_plot_image = ImageTk.PhotoImage(plot_image)
-
-    # Display images and plot
-    plot_label = tk.Label(root, image=tk_plot_image)
-    plot_label.image = tk_plot_image
-    plot_label.pack(side="top", padx=pad, pady=pad)
-
-    image_label1 = tk.Label(root, image=tk_hologram)
-    image_label1.image = tk_hologram
-    image_label1.pack(side="left", padx=pad, pady=pad)
-
-    image_label2 = tk.Label(root, image=tk_frame)
-    image_label2.image = tk_frame
-    image_label2.pack(side="left", padx=pad, pady=pad)
-
-    # Run the Tkinter event loop
-    root.update_idletasks()
 
 
 def resize_images(hologram, frame, screen_resolution, pad):
+    min_plot_height = 200
     screen_width, screen_height = screen_resolution
-    resize = screen_width - 3 * pad / (hologram.width + hologram.height / frame.height * frame.width)
-    hologram.resize((resize * hologram.width, resize * hologram.height), im.ANTIALIAS)
-    frame_ratio = hologram.height / frame.height * resize
-    frame.resize((frame_ratio * frame.width, frame_ratio * frame.height), im.ANTIALIAS)
+    resize = (screen_width - 3 * pad) / (hologram.width + hologram.height / frame.height * frame.width)
+    rest = screen_height - 2 * pad - min_plot_height
+    if resize * hologram.height > rest :
+        resize = rest / hologram.height
+    hologram = hologram.resize((int(resize * hologram.width), int(resize * hologram.height)), im.LANCZOS)
+    frame_ratio = hologram.height / frame.height
+    frame = frame.resize((int(frame_ratio * frame.width), int(frame_ratio * frame.height)), im.LANCZOS)
+    return hologram, frame
 
 
 def create_plot_img(intensity_data, intensity_fit, screen_resolution, hologram_height, pad):
@@ -237,8 +259,8 @@ def create_plot_img(intensity_data, intensity_fit, screen_resolution, hologram_h
     plot_width = screen_width - 2 * pad
     plot_height = screen_height - hologram_height - 3 * pad
     # Create a subplot for the plot with the specified width and height
-    fig, ax = plt.subplots(figsize=(plot_width, plot_height), dpi=100)  # Use dpi to control pixel density
-    ax.plot(intensity_data[0], intensity_data[1])
+    fig, ax = plt.subplots(figsize=(plot_width/100, plot_height/100)) # i use f-ing magical constants because f-ing matplotlib wants the number in fucking inches
+    ax.scatter(intensity_data[0], intensity_data[1], )
     ax.plot(intensity_fit[0], intensity_fit[1])
     ax.set_xlabel('phase shift')
     ax.set_ylabel('intensity')
@@ -260,3 +282,7 @@ def get_internal_screen_resolution():
         # Check if the monitor is on the left side of the screen
         if monitor.x == 0:
             return monitor.width, monitor.height
+
+
+if __name__ == "__main__":
+    explore()
