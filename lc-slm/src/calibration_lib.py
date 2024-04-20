@@ -5,10 +5,27 @@ from screeninfo import get_monitors
 import numpy as np
 import os
 import sys
+import explore_calibration as e
+
 
 
 def make_specification(args):
     return f"size_{args.subdomain_size}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref{args.coord_ratio}_{args.calibration_name}"
+
+
+# ----------- best phase() -------------- #
+
+def naive(phase_list):
+    opt_index = phase_list[1].index(max(phase_list[1]))
+    return phase_list[0][opt_index]
+
+def fit(phase_list):
+    _, _, _, phase_shift = e.fit_intensity(phase_list)
+    return phase_shift
+
+def trick(phase_list):
+    pass
+
 
 # ---------- sample holograms ----------- #
 # TODO: nice but could be faster. compare if consistent with same-name function in explore and replace
@@ -33,11 +50,11 @@ def decline(angle, offset):
 
 # ----------- subdomain manipulation ------------ #
 
-def add_subdomain(hologram: im, sample: np.array, coordinates, subdomain_size):
-    i0, j0 = coordinates
+def add_subdomain(hologram: im, sample: np.array, img_coordinates, subdomain_size):
+    i0, j0 = img_coordinates
     for i in range(subdomain_size):
         for j in range(subdomain_size):
-            hologram.putpixel((j0 + j, i0 + i), int(sample[i0 + i, j0 + j]))
+            hologram.putpixel((i0 + i, j0 + j), int(sample[j0 + j, i0 + i]))
     return hologram
 
 def clear_subdomain(hologram: im, coordinates, subdomain_size):
@@ -58,6 +75,10 @@ def extract_reference_coordinates(reference_hologram_coordinates_ratio, subdomai
     y_coord = subdomain_size * (int(y_numerator) * H // int(y_denominator))
     x_coord = subdomain_size * (int(x_numerator) * W // int(x_denominator))
     return (y_coord, x_coord)
+
+def read_reference_coordinates(reference_coordinates_str):
+    x, y = reference_coordinates_str.split('_')
+    return int(x), int(y)
 
 
 def get_number_of_subdomains(subdomain_size):
@@ -206,10 +227,16 @@ def set_exposure(intensity_range, cam):
         cam.set_exposure(expo)
         print(expo)
         num_to_avg = 8
-        for _ in range(num_to_avg):
-            frame += cam.snap()
+        frame = cam.snap()
+        frame = np.array(frame).astype(float)
+        # im.fromarray(frame).show()
+        for _ in range(1, num_to_avg):
+            new_frame = np.array(cam.snap()).astype(float)
+            frame += new_frame
         frame /= num_to_avg
+        # im.fromarray(frame).show()
         max_val = max(frame.flatten())
+        # print(max_val)
     
 
 def set_exposure_wrt_reference_img(intensity_range, cam, window, hologram):
