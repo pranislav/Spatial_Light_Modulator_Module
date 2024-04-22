@@ -5,33 +5,47 @@ import argparse
 import os
 
 mask_dir = "lc-slm/holograms_for_calibration/calibration_phase_masks"
+default_hologram_dir = "lc-slm/holograms"
 
 def display_holograms(args):
     window = cl.create_tk_window()
     directory = set_dir(args.directory)
     mask_arr = set_mask(args.mask_name)
     while True:
-        name = input("do an action or type 'help' >> ")
-        if name == "help":
+        command = input("do an action or type 'help' >> ")
+        if command == "help":
             print_help()
             continue
-        if name == "q":
+        if command == "q":
             break
-        if name[0:3] == "cd ":
-            directory = set_dir(name[3:])
-            continue
-        if name[0:2] == "cm":
-            if len(name) == 2: 
-                mask_arr = None
+        if command[0:2] == "cd":
+            if len(command) == 2:
+                directory = set_dir(default_hologram_dir)
                 continue
-            mask_arr = set_mask(name[3:])
+            maybe_dir = set_dir(command[3:])
+            if maybe_dir is not None: directory = maybe_dir
             continue
-        path = set_path_to_hologram(directory, name)
-        if path is None: continue
-        if mask_arr is not None:
-            cl.display_image_on_external_screen_img(window, mask_hologram(path, mask_arr))
-        else:
-            cl.display_image_on_external_screen(window, path)
+        if command[0:2] == "cm":
+            if len(command) == 2: 
+                mask_arr = None
+                display_with_mask(window, name, directory, mask_arr)
+                continue
+            maybe_mask_arr = set_mask(command[3:])
+            if maybe_mask_arr is not None: mask_arr = maybe_mask_arr
+            display_with_mask(window, name, directory, mask_arr)
+            continue
+        name = command
+        display_with_mask(window, name, directory, mask_arr)
+
+def display_with_mask(window, name, directory, mask_arr): 
+    path = set_path_to_hologram(directory, name)
+    if path is None:
+        return 
+    if mask_arr is not None:
+        cl.display_image_on_external_screen_img(window, mask_hologram(path, mask_arr))
+    else:
+        cl.display_image_on_external_screen(window, path)
+
 
 def set_path_to_hologram(directory, name):
     if not os.path.isfile(f"{directory}/{name}"):
@@ -51,9 +65,8 @@ def set_mask(mask_name):
     if mask_name is None or mask_name == "" or mask_name == "none":
         return None
     if not os.path.isfile(f"{mask_dir}/{mask_name}"):
-        print("Error: specified mask does not exist. setting mask to None")
-        mask_arr = None
-        return    
+        print("Error: specified mask does not exist")
+        return None
     mask_im = im.open(f"{mask_dir}/{mask_name}")
     mask_arr = np.array(mask_im)
     return mask_arr
@@ -61,7 +74,7 @@ def set_mask(mask_name):
 def set_dir(directory):
     if not(os.path.isdir(directory)):
         print("specified directory does not exist. make sure you are in project root and path is correct.")
-        return
+        return None
     print(f"directory changed to {directory}")
     return directory
 
@@ -87,6 +100,7 @@ def mask_hologram(path, mask_arr):
 
 
 if __name__ == "__main__":
+    # TODO: it actually dont need parsing now
     parser = argparse.ArgumentParser(description="displays selected images from specified directory. Images can be masked with mask of given name")
 
     # Adding help message for directory argument
@@ -100,7 +114,7 @@ if __name__ == "__main__":
     directory_help = "path (from project root) to directory containing images to be displayed"
 
     parser.add_argument('mask_name', nargs='?', default=None, type=str, help=mask_help)
-    parser.add_argument('-d', '--directory', default="lc-slm/holograms", type=str, help=directory_help)
+    parser.add_argument('-d', '--directory', default=default_hologram_dir, type=str, help=directory_help)
 
     args = parser.parse_args()
     display_holograms(args)
