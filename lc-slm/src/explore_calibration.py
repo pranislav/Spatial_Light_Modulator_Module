@@ -47,17 +47,16 @@ def explore():
             subdomain_size = last_nonempty(params["subdomain_size"])
             reference_position = real_subdomain_position(last_nonempty(params["reference_position"]), subdomain_size)
         reference_hologram = cl.add_subdomain(black_hologram, sample_list[0], reference_position, subdomain_size)
-        # if params["decline"] or params["subdomain_size"]:
-            # cl.set_exposure_wrt_reference_img((256 / 4 - 20, 256 / 4), cam, window, reference_hologram)
+        num_to_avg = last_nonempty(params["num_to_avg"])
+        if params["decline"][-1] or params["subdomain_size"][-1]:
+            cl.set_exposure_wrt_reference_img(cam, window, (256 / 4 - 20, 256 / 4), reference_hologram, num_to_avg)
         hologram = reference_hologram
         subdomain_position = real_subdomain_position(last_nonempty(params["subdomain_position"]), subdomain_size)
-        num_to_avg = last_nonempty(params["num_to_avg"])
-        intensity_coord = cl.get_highest_intensity_coordinates_img(cam, window, reference_hologram)
+        intensity_coord = cl.get_highest_intensity_coordinates_img(cam, window, reference_hologram, num_to_avg)
         frame, intensity_data = calibration_loop_explore(window, cam, hologram, sample_list, subdomain_position, subdomain_size, precision, intensity_coord, num_to_avg)
         fit_params = fit_intensity(intensity_data)
         print_fit_params(fit_params)
         intensity_fit = plot_fit(fit_params)
-        hologram.show()
         display_results(hologram, im.fromarray(frame), intensity_data, intensity_fit, internal_screen_resolution)
 
         if input("continue (enter) or quit (anything) >> "): break
@@ -79,6 +78,7 @@ def calibration_loop_explore(window, cam, hologram, sample, subdomain_position, 
             print("maximal intensity was reached, adapting...")
             cam.set_exposure(cam.get_exposure() * 0.9) # 10 % decrease of exposure time
             k = 0
+            intensity_list = [[], []]
             continue
         phase = k * 256 // precision
         intensity_list[0].append(phase)
@@ -91,7 +91,8 @@ def calibration_loop_explore(window, cam, hologram, sample, subdomain_position, 
 
 def fit_intensity(intensity_data):
     xdata, ydata = intensity_data
-    params, _ = curve_fit(general_cos, xdata, ydata)
+    p0 = [100, 100, 1/256, 0]
+    params, _ = curve_fit(general_cos, xdata, ydata, p0=p0)
     return params
 
 
@@ -99,7 +100,7 @@ def print_fit_params(fit_params):
     amplitude_shift, amplitude, frequency, phase_shift = fit_params
     print(f"amplitude_shift: {round(amplitude_shift, 2)}")
     print(f"amplitude: {round(amplitude, 2)}")
-    print(f"frequency: {round(frequency, 2)}")
+    print(f"wavelength: {round(2*np.pi / frequency, 2)}")
     print(f"phase_shift: {round(phase_shift, 2)}")
     print("")
 
@@ -132,8 +133,8 @@ def make_sample_holograms(angle, precision):
 def default_params():
     params = {}
     params["subdomain_size"] = [32]
-    params["reference_position"] = [(12, 16)]
-    params["subdomain_position"] = [(12, 15)]
+    params["reference_position"] = [(15, 11)]
+    params["subdomain_position"] = [(14, 11)]
     params["decline"] = [(1, 1)]
     params["precision"] = [8]
     params["num_to_avg"] = [1]
@@ -143,10 +144,9 @@ def default_params():
 def get_params(params):
     print("to retain current value, just press enter")
     params["subdomain_size"].append(get_subdomain_size(last_nonempty(params["subdomain_size"])))
-    print(params["subdomain_size"])
     subdomain_size = last_nonempty(params["subdomain_size"])
-    params["reference_position"].append(get_position(last_nonempty(params["reference_position"]), subdomain_size))
-    params["subdomain_position"].append(get_position(last_nonempty(params["subdomain_position"]), subdomain_size))
+    params["reference_position"].append(get_position(last_nonempty(params["reference_position"]), subdomain_size, "reference"))
+    params["subdomain_position"].append(get_position(last_nonempty(params["subdomain_position"]), subdomain_size, "second"))
     params["decline"].append(get_decline(last_nonempty(params["decline"])))
     params["precision"].append(get_precision(last_nonempty(params["precision"])))
     params["num_to_avg"].append(get_num_to_avg(last_nonempty(params["num_to_avg"])))
@@ -184,23 +184,33 @@ def get_decline(current):
         return decline_to_be
         
 
-def get_position(current, subdomain_size):
+def get_position(current, subdomain_size, which):
     max_height, max_width = c.slm_height // subdomain_size, c.slm_width // subdomain_size
+    limits = (max_width, max_height)
     while True:
-        position_to_be = input(f"enter position of the reference subdomain as a tuple of ints.  width: {max_width} subdomains, height: {max_height} subdomains. current value: {current} >> ")
+        position_to_be = input(f"enter position of the {which} subdomain as a tuple of ints.  width: {max_width} subdomains, height: {max_height} subdomains. current value: {current} >> ")
         if position_to_be == '':
+            if not check_coord_limits(current, limits):
+                continue
             return position_to_be
         position_to_be = eval(position_to_be)
+        if not check_coord_limits(position_to_be, limits):
+            continue
         x, y = position_to_be
-        if x > max_width:
-            print(f"first coordinate should not exceed {max_width}")
-            continue
-        if y > max_height:
-            print(f"second coordinate should not exceed {max_height}")
-            continue
         array_coords = (x, y)
         return array_coords
     
+
+def check_coord_limits(coords, limits):
+    x, y = coords
+    xmax, ymax = limits
+    if x > xmax:
+        print(f"first coordinate should not exceed {xmax}")
+        return False
+    if y > ymax:
+        print(f"second coordinate should not exceed {ymax}")
+        return False
+    return True
 
 def real_subdomain_position(subdomain_position, subdomain_size):
     subdomain_position_x, subdomain_position_y = subdomain_position
