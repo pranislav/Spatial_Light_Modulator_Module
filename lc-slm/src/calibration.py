@@ -28,13 +28,16 @@ from time import time
 
 
 def calibrate(args):
-    loop_args = make_loop_args(args)
+    loop_args = make_loop_args(args) # & set exposure
     best_phase = naive
     H, W = get_number_of_subdomains(args.subdomain_size)
     i0, j0 = read_reference_coordinates(args.reference_coordinates)
     phase_mask = np.zeros((H, W))
+    start_loops = time()
+    print("mainloop start. estimate of remaining time comes after first row. actual row:")
     for i in range(H):
-        print(f"{i}/{H}")
+        print(f"{i + 1}/{H}")
+        if i == 1: print_estimate(H, start_loops)
         for j in range(W):
             if i == i0 and j == j0:
                 continue
@@ -43,28 +46,36 @@ def calibrate(args):
     specification = make_specification(args)
     create_phase_mask(phase_mask, args.subdomain_size, specification)
 
+
+def print_estimate(outer_loops_num, start_loops):
+    time_elapsed = time() - start_loops
+    time_interval = (outer_loops_num - 1) * time_elapsed
+    print(f"estimated remaining time is {round(time_interval / 60, 1)} min")
+
 def make_loop_args(args):
     loop_args = {}
     subdomain_size = args.subdomain_size
     cam = uc480.UC480Camera()
     window = create_tk_window()
+    print("creating sample holograms...")
     samples_list = make_sample_holograms(args.angle, args.precision)
     rx, ry = read_reference_coordinates(args.reference_coordinates)
     real_reference_coordinates = (rx * subdomain_size, ry * subdomain_size)
     reference_hologram = add_subdomain(im.fromarray(np.zeros((c.slm_height, c.slm_width))), samples_list[0], real_reference_coordinates, subdomain_size)
-    set_exposure_wrt_reference_img((256 / 4 - 20, 256 / 4), cam, window, reference_hologram) # in fully-constructive interference the value of amplitude could be twice as high, therefore intensity four times as high 
-    loop_args["intensity_coord"] = get_highest_intensity_coordinates_img(cam, window, reference_hologram)
+    print("adjusting exposure time...")
+    set_exposure_wrt_reference_img(cam, window, (256 / 4 - 20, 256 / 4), reference_hologram, args.num_to_avg) # in fully-constructive interference the value of amplitude could be twice as high, therefore intensity four times as high 
+    loop_args["intensity_coord"] = get_highest_intensity_coordinates_img(cam, window, reference_hologram, args.num_to_avg)
     loop_args["precision"] = args.precision
     loop_args["subdomain_size"] = subdomain_size
     loop_args["samples_list"] = samples_list
     loop_args["cam"] = cam
     loop_args["window"] = window
     loop_args["hologram"] = reference_hologram
+    loop_args["num_to_avg"] = args.num_to_avg
     return loop_args
 
 
 def calibration_loop(i, j, loop_args):
-    num_to_avg = 8 # TODO: let this user decide, set just default value
     subdomain_size = loop_args["subdomain_size"]
     precision = loop_args["precision"]
     cam = loop_args["cam"]
@@ -74,13 +85,14 @@ def calibration_loop(i, j, loop_args):
     k = 0
     intensity_list = [[], []]
     while k < precision:
-        loop_args["hologram"] = add_subdomain(loop_args["hologram"], loop_args["samples_list"][k], loop_args["subdomain_position"], subdomain_size)
+        loop_args["hologram"] = add_subdomain(loop_args["hologram"], loop_args["samples_list"][k], (j_real, i_real), subdomain_size)
         display_image_on_external_screen_img(loop_args["window"], loop_args["hologram"]) # displays hologram on an external dispaly (SLM)
         intensity = 0
-        for _ in range(num_to_avg):
+        for _ in range(loop_args["num_to_avg"]):
             frame = cam.snap()
-            intensity += get_intensity_coordinates(frame,loop_args["intensity_coordinates"])
-        intensity /= num_to_avg
+            intensity += get_intensity_coordinates(frame, loop_args["intensity_coord"])
+        intensity /= loop_args["num_to_avg"]
+        # intensity = get_intensity_coordinates(average_frames(cam, loop_args["num_to_avg"]), loop_args["intensity_coord"])
         if intensity == 255:
             print("maximal intensity was reached, adapting...")
             cam.set_exposure(cam.get_exposure() * 0.9) # 10 % decrease of exposure time
@@ -103,7 +115,8 @@ if __name__ == "__main__":
     parser.add_argument('-ss', '--subdomain_size', type=int, default=32)
     parser.add_argument('-p', '--precision', type=int, default=8, help='"color depth" of the phase mask')
     parser.add_argument('-a', '--angle', type=str, default="1_1", help="use form: xdecline_ydecline (angles in constants.u unit)")
-    parser.add_argument('-c', '--reference_coordinates', type=str, default="12, 16", help=help_ref_coord)
+    parser.add_argument('-c', '--reference_coordinates', type=str, default="12_16", help=help_ref_coord)
+    parser.add_argument('-avg', '--num_to_avg', type=int, default=1, help="number of frames to average when measuring intensity")
 
     args = parser.parse_args()
     start = time()

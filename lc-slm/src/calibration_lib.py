@@ -10,7 +10,7 @@ import explore_calibration as e
 
 
 def make_specification(args):
-    return f"size_{args.subdomain_size}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref{args.coord_ratio}_{args.calibration_name}"
+    return f"size_{args.subdomain_size}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref{args.reference_coordinates}_avg{args.num_to_avg}_{args.calibration_name}"
 
 
 # ----------- best phase() -------------- #
@@ -209,11 +209,12 @@ def get_intensity_integral(frame, square):
 
 # ---------- functions for work with camera ----------- #
 
-def set_exposure(intensity_range, cam):
+def set_exposure(cam, intensity_range, num_to_avg):
     '''set exposure time such that maximal signal value is
     in interval (max_val_lower, max_val_upper)
     '''
 
+    num_to_avg = max(8, num_to_avg)
     max_val_lower, max_val_upper = intensity_range
     step = 10e-3
     expo = 0
@@ -226,36 +227,39 @@ def set_exposure(intensity_range, cam):
             expo -= step
         cam.set_exposure(expo)
         print(expo)
-        num_to_avg = 8
-        frame = cam.snap()
-        frame = np.array(frame).astype(float)
+        avgd_frame = average_frames(cam, num_to_avg)
         # im.fromarray(frame).show()
-        for _ in range(1, num_to_avg):
-            new_frame = np.array(cam.snap()).astype(float)
-            frame += new_frame
-        frame /= num_to_avg
-        # im.fromarray(frame).show()
-        max_val = max(frame.flatten())
+        max_val = max(avgd_frame.flatten())
         # print(max_val)
     
 
-def set_exposure_wrt_reference_img(intensity_range, cam, window, hologram):
+def average_frames(cam, num_to_avg):
+    frame = cam.snap()
+    frame = np.array(frame).astype(float)
+    # im.fromarray(frame).show()
+    for _ in range(1, num_to_avg):
+        new_frame = np.array(cam.snap()).astype(float)
+        frame += new_frame
+    frame /= num_to_avg
+    return frame
+
+def set_exposure_wrt_reference_img(cam, window, intensity_range, hologram, num_to_avg):
     display_image_on_external_screen_img(window, hologram)
-    set_exposure(intensity_range, cam)
+    set_exposure(cam, intensity_range, num_to_avg)
 
-def set_exposure_wrt_reference_img_path(intensity_range, cam, window, hologram_path):
+def set_exposure_wrt_reference_img_path(cam, window, intensity_range, hologram_path, num_to_avg):
     display_image_on_external_screen(window, hologram_path)
-    set_exposure(intensity_range, cam)
+    set_exposure(cam, intensity_range, num_to_avg)
 
 
-def get_highest_intensity_coordinates(cam, window, hologram_path):
+def get_highest_intensity_coordinates(cam, window, hologram_path, num_to_avg):
     display_image_on_external_screen(window, hologram_path)
-    img = cam.snap()
+    img = average_frames(cam, max(8, num_to_avg))
     return find_highest_value_coordinates(img)
 
-def get_highest_intensity_coordinates_img(cam, window, hologram):
+def get_highest_intensity_coordinates_img(cam, window, hologram, num_to_avg):
     display_image_on_external_screen_img(window, hologram)
-    img = cam.snap()
+    img = average_frames(cam, max(8, num_to_avg))
     return find_highest_value_coordinates(img)
 
 def find_highest_value_coordinates(arr):
