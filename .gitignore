@@ -1,8 +1,6 @@
 # images
-traps/
-gif_source
-previews/
-size16_precision8_x1_y1/
+images/
+holograms/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
