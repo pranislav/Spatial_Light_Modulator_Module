@@ -50,9 +50,9 @@ def explore():
         num_to_avg = last_nonempty(params["num_to_avg"])
         if params["decline"][-1] or params["subdomain_size"][-1]:
             cl.set_exposure_wrt_reference_img(cam, window, (256 / 4 - 20, 256 / 4), reference_hologram, num_to_avg)
+            intensity_coord = cl.get_highest_intensity_coordinates_img(cam, window, reference_hologram, num_to_avg)
         hologram = reference_hologram
         subdomain_position = real_subdomain_position(last_nonempty(params["subdomain_position"]), subdomain_size)
-        intensity_coord = cl.get_highest_intensity_coordinates_img(cam, window, reference_hologram, num_to_avg)
         frame, intensity_data = calibration_loop_explore(window, cam, hologram, sample_list, subdomain_position, subdomain_size, precision, intensity_coord, num_to_avg)
         fit_params = fit_intensity(intensity_data)
         print_fit_params(fit_params)
@@ -91,8 +91,11 @@ def calibration_loop_explore(window, cam, hologram, sample, subdomain_position, 
 
 def fit_intensity(intensity_data):
     xdata, ydata = intensity_data
-    p0 = [100, 100, 1/256, 0]
-    params, _ = curve_fit(general_cos, xdata, ydata, p0=p0)
+    supposed_frequency = 2 * np.pi /256
+    p0 = [100, 100, supposed_frequency, 0]
+    lower_bounds = [0, 0, supposed_frequency * 0.6, 0]
+    upper_bounds = [255, 255, supposed_frequency * 1.5, 255]
+    params, _ = curve_fit(general_cos, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
     return params
 
 
@@ -272,6 +275,7 @@ def create_plot_img(intensity_data, intensity_fit, screen_resolution, hologram_h
     fig, ax = plt.subplots(figsize=(plot_width/100, plot_height/100)) # i use f-ing magical constants because f-ing matplotlib wants the number in fucking inches
     ax.scatter(intensity_data[0], intensity_data[1], )
     ax.plot(intensity_fit[0], intensity_fit[1])
+    ax.set_ylim(0, 256)
     ax.set_xlabel('phase shift')
     ax.set_ylabel('intensity')
     # ax.set_title('')
