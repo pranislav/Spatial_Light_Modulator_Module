@@ -29,6 +29,10 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from pylablib.devices import uc480
 from scipy.optimize import curve_fit
+import argparse
+import cv2
+import os
+from copy import deepcopy
 
 
 def explore():
@@ -37,6 +41,8 @@ def explore():
     window = cl.create_tk_window()
     cam = uc480.UC480Camera()
     internal_screen_resolution = get_internal_screen_resolution()
+    video_dir = "images/explore"
+    if not os.path.exists(video_dir): os.makedirs(video_dir)
     while True:
         black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
         if params["decline"][-1] or params["precision"][-1]:
@@ -53,11 +59,18 @@ def explore():
             intensity_coord = cl.get_highest_intensity_coordinates_img(cam, window, reference_hologram, num_to_avg)
         hologram = reference_hologram
         subdomain_position = real_subdomain_position(last_nonempty(params["subdomain_position"]), subdomain_size)
-        frame, intensity_data = calibration_loop_explore(window, cam, hologram, sample_list, subdomain_position, subdomain_size, precision, intensity_coord, num_to_avg)
+        frames, intensity_data = calibration_loop_explore(window, cam, hologram, sample_list, subdomain_position, subdomain_size, precision, intensity_coord, num_to_avg)
         fit_params = fit_intensity(intensity_data)
         print_fit_params(fit_params)
         intensity_fit = plot_fit(fit_params)
-        display_results(hologram, im.fromarray(frame), intensity_data, intensity_fit, internal_screen_resolution)
+        frame_img_list = dot_frames(frames, intensity_coord)
+        output, video_frame_info = format_output(hologram, frame_img_list[0], intensity_data, intensity_fit, internal_screen_resolution)
+        if args.mode == 'i':
+            output.show()
+        elif args.mode == 'v':
+            name = make_name(params)
+            img_list = make_imgs_for_video(output, frame_img_list, video_frame_info)
+            images_to_video(img_list, name, 3, video_dir) # TODO: treat fps in other way
 
         if input("continue (enter) or quit (anything) >> "): break
         get_params(params)
@@ -65,6 +78,7 @@ def explore():
 
 def calibration_loop_explore(window, cam, hologram, sample, subdomain_position, subdomain_size, precision, coordinates, num_to_avg):
     intensity_list = [[], []]
+    images_list = []
     k = 0
     while k < precision:
         hologram = cl.add_subdomain(hologram, sample[k], subdomain_position, subdomain_size)
@@ -73,18 +87,20 @@ def calibration_loop_explore(window, cam, hologram, sample, subdomain_position, 
         for _ in range(num_to_avg):
             frame = cam.snap()
             intensity += cl.get_intensity_coordinates(frame, coordinates)
+            images_list.append(frame)
         intensity /= num_to_avg
         if intensity == 255:
             print("maximal intensity was reached, adapting...")
             cam.set_exposure(cam.get_exposure() * 0.9) # 10 % decrease of exposure time
             k = 0
             intensity_list = [[], []]
+            images_list = []
             continue
         phase = k * 256 // precision
         intensity_list[0].append(phase)
         intensity_list[1].append(intensity)
         k += 1
-    return frame, intensity_list
+    return images_list, intensity_list
 
 
 # ---------- fits and plots ---------- #
@@ -234,27 +250,31 @@ def get_subdomain_size(current):
 
 # ------------ visualizing -------------- #
 
-def display_results(hologram, frame, intensity_data, intensity_fit, internal_screen_resolution):
+def format_output(hologram, frame, intensity_data, intensity_fit, internal_screen_resolution):
 
     pad = 10
 
-    hologram, frame = resize_images(hologram, frame, internal_screen_resolution, pad)
+    crop_coords = resize_hologram_crop_frame(hologram, frame, internal_screen_resolution, pad)
     plot_image = create_plot_img(intensity_data, intensity_fit, internal_screen_resolution, hologram.height, pad)
 
-    display_image = paste_together(hologram, frame, plot_image, internal_screen_resolution, pad)
-    display_image.show()
+    display_image, frame_coords = paste_together(hologram, frame, plot_image, internal_screen_resolution, pad)
+    return display_image, (crop_coords, frame_coords)
 
 
 def paste_together(hologram, frame, plot_image, internal_screen_resolution, pad):
     blank = im.new("L", internal_screen_resolution, 50)
     blank.paste(hologram, (pad, pad))
-    blank.paste(frame, (2 * pad + hologram.width, pad))
+    frame_coords = 2 * pad + hologram.width, pad
+    blank.paste(frame, (frame_coords))
     blank.paste(plot_image, (pad, 2 * pad + hologram.height))
-    return blank
+    return blank, frame_coords
 
 
 
 def resize_images(hologram, frame, screen_resolution, pad):
+    '''resize two images (hologram & frame) in a way that
+    they have the same height and fit exactly in the screen next to each other also with padding
+    '''
     min_plot_height = 200
     screen_width, screen_height = screen_resolution
     resize = (screen_width - 3 * pad) / (hologram.width + hologram.height / frame.height * frame.width)
@@ -265,6 +285,31 @@ def resize_images(hologram, frame, screen_resolution, pad):
     frame_ratio = hologram.height / frame.height
     frame = frame.resize((int(frame_ratio * frame.width), int(frame_ratio * frame.height)), im.LANCZOS)
     return hologram, frame
+
+
+def resize_hologram_crop_frame(hologram, frame, screen_resolution, pad):
+    '''similar to resize_images except the second one is cropped instead of resized
+    so that pixels from the original image correspond to pixels on the screen
+    '''
+    min_plot_height = 200
+    screen_width, screen_height = screen_resolution
+    resize = (screen_width - 3 * pad) / (hologram.width + hologram.height / frame.height * frame.width)
+    rest = screen_height - 2 * pad - min_plot_height
+    if resize * hologram.height > rest :
+        resize = rest / hologram.height
+    hologram = hologram.resize((int(resize * hologram.width), int(resize * hologram.height)), im.LANCZOS)
+    frame_width = screen_width - 3 * pad - hologram.width
+    crop_coords = crop_frame(frame, hologram.height, frame_width)    
+    return crop_coords
+
+def crop_frame(frame, width, height):
+    original_width, original_height = frame.size
+    # middle_coords = (original_width // 2, original_height // 2)
+    x_corner = (original_width - width) // 2
+    y_corner = (original_height - height) // 2
+    crop_coords = (x_corner, y_corner, x_corner + width, y_corner + height)
+    frame.crop(crop_coords)
+    return crop_coords
 
 
 def create_plot_img(intensity_data, intensity_fit, screen_resolution, hologram_height, pad):
@@ -296,7 +341,59 @@ def get_internal_screen_resolution():
         # Check if the monitor is on the left side of the screen
         if monitor.x == 0:
             return monitor.width, monitor.height
+        
+
+
+# --------- video creating section ---------- #
+
+def dot_frames(frames, coords):
+    frame_img_list = []
+    for frame in frames:
+        frame_img = im.fromarray(frame, "RGB")
+        frame_img.putpixel(coords, (255, 0, 0))
+        frame_img_list.append(frame_img)
+    return frame_img_list
+
+
+def make_imgs_for_video(seed, frame_img_list, video_frame_info):
+    crop_coords, frame_coords = video_frame_info
+    img_list = []
+    for frame in frame_img_list:
+        cropped_frame = frame.crop(crop_coords)
+        new_img = deepcopy(seed).paste(cropped_frame, frame_coords)
+        img_list.append(new_img)
+    return img_list
+
+
+def make_name(params):
+    name = f""
+    for key in params.keys():
+        name += f"{key}={params[key]}_"
+    return name
+
+
+def images_to_video(image_list, video_name, fps, output_path="."):
+    # Get dimensions from the first image
+    width, height = image_list[0].size
+
+    # Define the codec and create VideoWriter object
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # You can use other codecs too, like 'XVID'
+    video = cv2.VideoWriter(os.path.join(output_path, video_name), fourcc, fps, (width, height))
+
+    for img in image_list:
+        # Convert PIL Image to numpy array
+        frame = np.array(img)
+        # Convert RGB to BGR
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        video.write(frame)
+
+    cv2.destroyAllWindows()
+    video.release()
 
 
 if __name__ == "__main__":
-    explore()
+    parser = argparse.ArgumentParser("script for simulating and visualizing calibration loops")
+    parser.add_argument('-m', '-mode', options=['i', 'v'], default='i', type=str, help="i for images, v for video output")
+    args = parser.parse_args()
+
+    explore(args)
