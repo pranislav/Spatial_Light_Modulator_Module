@@ -19,7 +19,7 @@ def naive(phase_list):
     opt_index = phase_list[1].index(max(phase_list[1]))
     return phase_list[0][opt_index]
 
-def fit(phase_list):
+def fit_phase_shift(phase_list):
     _, _, _, phase_shift = e.fit_intensity(phase_list)
     return phase_shift
 

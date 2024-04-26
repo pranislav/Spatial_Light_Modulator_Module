@@ -127,6 +127,9 @@ def print_fit_params(fit_params):
 def general_cos(x, amplitude_shift, amplitude, frequency, phase_shift):
     return amplitude_shift + amplitude * np.cos(frequency * (x - phase_shift))
 
+def cos_floor(x, amplitude, frequency, phase_shift):
+    return amplitude * (1 + np.cos(frequency * (x - phase_shift)))
+
 
 def plot_fit(params):
     amplitude_shift, amplitude, frequency, phase_shift = params
