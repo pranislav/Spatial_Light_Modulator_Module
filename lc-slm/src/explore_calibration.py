@@ -35,13 +35,13 @@ import os
 from copy import deepcopy
 
 
-def explore():
+def explore(args):
     params = default_params()
     # sample_list = make_sample_holograms(sample_list, params)
     window = cl.create_tk_window()
     cam = uc480.UC480Camera()
     internal_screen_resolution = get_internal_screen_resolution()
-    video_dir = "images/explore"
+    video_dir = "lc-slm/images/explore"
     if not os.path.exists(video_dir): os.makedirs(video_dir)
     while True:
         black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
@@ -87,7 +87,7 @@ def calibration_loop_explore(window, cam, hologram, sample, subdomain_position, 
         for _ in range(num_to_avg):
             frame = cam.snap()
             intensity += cl.get_intensity_coordinates(frame, coordinates)
-            images_list.append(frame)
+        images_list.append(frame)
         intensity /= num_to_avg
         if intensity == 255:
             print("maximal intensity was reached, adapting...")
@@ -254,7 +254,7 @@ def format_output(hologram, frame, intensity_data, intensity_fit, internal_scree
 
     pad = 10
 
-    crop_coords = resize_hologram_crop_frame(hologram, frame, internal_screen_resolution, pad)
+    hologram, frame, crop_coords = resize_hologram_crop_frame(hologram, frame, internal_screen_resolution, pad) # TODO: why do i need to overwrite them?
     plot_image = create_plot_img(intensity_data, intensity_fit, internal_screen_resolution, hologram.height, pad)
 
     display_image, frame_coords = paste_together(hologram, frame, plot_image, internal_screen_resolution, pad)
@@ -262,7 +262,7 @@ def format_output(hologram, frame, intensity_data, intensity_fit, internal_scree
 
 
 def paste_together(hologram, frame, plot_image, internal_screen_resolution, pad):
-    blank = im.new("L", internal_screen_resolution, 50)
+    blank = im.new("L", internal_screen_resolution, 50).convert("RGB")
     blank.paste(hologram, (pad, pad))
     frame_coords = 2 * pad + hologram.width, pad
     blank.paste(frame, (frame_coords))
@@ -299,8 +299,8 @@ def resize_hologram_crop_frame(hologram, frame, screen_resolution, pad):
         resize = rest / hologram.height
     hologram = hologram.resize((int(resize * hologram.width), int(resize * hologram.height)), im.LANCZOS)
     frame_width = screen_width - 3 * pad - hologram.width
-    crop_coords = crop_frame(frame, hologram.height, frame_width)    
-    return crop_coords
+    frame, crop_coords = crop_frame(frame, frame_width, hologram.height)    
+    return hologram, frame, crop_coords
 
 def crop_frame(frame, width, height):
     original_width, original_height = frame.size
@@ -308,8 +308,8 @@ def crop_frame(frame, width, height):
     x_corner = (original_width - width) // 2
     y_corner = (original_height - height) // 2
     crop_coords = (x_corner, y_corner, x_corner + width, y_corner + height)
-    frame.crop(crop_coords)
-    return crop_coords
+    cropped_frame = frame.crop(crop_coords)
+    return cropped_frame, crop_coords
 
 
 def create_plot_img(intensity_data, intensity_fit, screen_resolution, hologram_height, pad):
@@ -349,10 +349,21 @@ def get_internal_screen_resolution():
 def dot_frames(frames, coords):
     frame_img_list = []
     for frame in frames:
-        frame_img = im.fromarray(frame, "RGB")
-        frame_img.putpixel(coords, (255, 0, 0))
+        frame_img = im.fromarray(frame, "L").convert("RGB")
+        frame_img = add_cross(frame_img, coords)
+        # frame_img.show()
         frame_img_list.append(frame_img)
     return frame_img_list
+
+def add_cross(img, coords):
+    y, x = coords
+    radius = 5
+    red = (255, 0, 0)
+    for i in range(- radius, radius + 1):
+        img.putpixel((x + i, y), red)
+    for i in range(- radius, radius + 1):
+        img.putpixel((x, y + i), red)
+    return img
 
 
 def make_imgs_for_video(seed, frame_img_list, video_frame_info):
@@ -360,7 +371,8 @@ def make_imgs_for_video(seed, frame_img_list, video_frame_info):
     img_list = []
     for frame in frame_img_list:
         cropped_frame = frame.crop(crop_coords)
-        new_img = deepcopy(seed).paste(cropped_frame, frame_coords)
+        new_img = deepcopy(seed)
+        new_img.paste(cropped_frame, frame_coords)
         img_list.append(new_img)
     return img_list
 
@@ -368,7 +380,7 @@ def make_imgs_for_video(seed, frame_img_list, video_frame_info):
 def make_name(params):
     name = f""
     for key in params.keys():
-        name += f"{key}={params[key]}_"
+        name += f"{key}={last_nonempty(params[key])}_"
     return name
 
 
@@ -378,7 +390,7 @@ def images_to_video(image_list, video_name, fps, output_path="."):
 
     # Define the codec and create VideoWriter object
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # You can use other codecs too, like 'XVID'
-    video = cv2.VideoWriter(os.path.join(output_path, video_name), fourcc, fps, (width, height))
+    video = cv2.VideoWriter(f"{output_path}/{video_name}.mp4", fourcc, fps, (width, height))
 
     for img in image_list:
         # Convert PIL Image to numpy array
@@ -393,7 +405,7 @@ def images_to_video(image_list, video_name, fps, output_path="."):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("script for simulating and visualizing calibration loops")
-    parser.add_argument('-m', '-mode', options=['i', 'v'], default='i', type=str, help="i for images, v for video output")
+    parser.add_argument('-m', '--mode', choices=['i', 'v'], default='i', type=str, help="i for images, v for video output")
     args = parser.parse_args()
 
     explore(args)
