@@ -1,4 +1,6 @@
-'''generates hologram series for calibrating SLM'''
+'''OUTDATED, new version of calibration.py does not need pregenerated holograms
+generates hologram series for calibrating SLM
+'''
 
 from PIL import Image as im
 import numpy as np
