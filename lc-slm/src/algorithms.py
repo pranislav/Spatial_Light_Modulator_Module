@@ -14,7 +14,8 @@ def is_zero(a: np.array) -> List[Tuple[int, int]]:
     return [(i, j) for i in range(len(a)) for j in range(len(a[0])) if a[i][j] == 0]
 
 
-def GS(target: np.array, path_to_incomming_intensity: str, tolerance: float, max_loops: int, gif_info: gif_struct, plot_error: bool=False) -> np.array:
+def GS(target: np.array, path_to_incomming_intensity: str, tolerance: float, max_loops: int,\
+       gif_info: gif_struct, plot_error: bool=False, correspond_to2pi: int=256) -> np.array:
     '''classical Gerchberg-Saxton algorithm
     produces input for SLM for creating 'target' image
     '''
@@ -41,7 +42,7 @@ def GS(target: np.array, path_to_incomming_intensity: str, tolerance: float, max
         error_evolution.append(error)
         if do_gif and n % skip_frames == 0:
             if do_gif == 'h':
-                img = im.fromarray((np.angle(A) + np.pi) * 255 / (2*np.pi))
+                img = im.fromarray((np.angle(A) + np.pi) * correspond_to2pi / (2*np.pi))
             if do_gif == 'i':
                 exp_tar **= 2
                 phase_for_slm = exp_tar * 255/np.amax(exp_tar)
@@ -51,13 +52,13 @@ def GS(target: np.array, path_to_incomming_intensity: str, tolerance: float, max
         if n % 10 == 0: print("-", end='')
     print()
     printout(error, n, error_evolution, "asdf", plot_error)
-    phase_for_slm = (np.angle(A) + np.pi) * 255 / (2*np.pi) # converts phase to color value, input for SLM
+    phase_for_slm = (np.angle(A) + np.pi) * correspond_to2pi / (2*np.pi) # converts phase to color value, input for SLM
     exp_tar = exp_tar**2
     exp_tar_for_slm = exp_tar * 255/np.amax(exp_tar) # what the outcome from SLM should look like
     return phase_for_slm, exp_tar_for_slm, n
 
 
-def GS_for_moving_traps(target: np.array, tolerance: float, max_loops: int) -> np.array:
+def GS_for_moving_traps(target: np.array, tolerance: float, max_loops: int, correspond_to2pi: int=256) -> np.array:
     '''GS adapted for creeating holograms for moving traps
     '''
 
@@ -81,12 +82,12 @@ def GS_for_moving_traps(target: np.array, tolerance: float, max_loops: int) -> n
         n+=1
         if n % 10 == 0: print("-", end='')
     print()
-    phase_for_slm = (np.angle(A) + np.pi) * 255 / (2*np.pi) # converts phase to color value, input for SLM
+    phase_for_slm = (np.angle(A) + np.pi) * correspond_to2pi / (2*np.pi) # converts phase to color value, input for SLM
     exp_tar = exp_tar**2
     exp_tar_for_slm = exp_tar * 255/np.amax(exp_tar) # what the outcome from SLM should look like
     return phase_for_slm, exp_tar_for_slm, error_evolution
 
-def GS_without_fftshift(target: np.array, tolerance: float, max_loops: int, plot_error: bool=False) -> np.array:
+def GS_without_fftshift(target: np.array, tolerance: float, max_loops: int, plot_error: bool=False, correspond_to2pi: int=256) -> np.array:
     '''classical Gerchberg-Saxton algorithm
     produces input for SLM for creating 'target' image
     '''
@@ -111,14 +112,15 @@ def GS_without_fftshift(target: np.array, tolerance: float, max_loops: int, plot
         if n % 10 == 0: print("-", end='')
     print()
     printout(error, n, error_evolution, "asdf", plot_error)
-    phase_for_slm = np.angle(A) * 255 / (2*np.pi) # converts phase to color value, input for SLM
+    phase_for_slm = np.angle(A) * correspond_to2pi / (2*np.pi) # converts phase to color value, input for SLM
     exp_tar = exp_tar**2
     exp_tar_for_slm = exp_tar * 255/np.amax(exp_tar) # what the outcome from SLM should look like
     return phase_for_slm, exp_tar_for_slm
 
 
 def GD(demanded_output: np.array, path_to_inicomming_intensity: str, learning_rate: float, enhance_mask: np.array,\
-       mask_relevance: float, tolerance: float, max_loops: int, unsettle, gif_info: gif_struct, plot_error: bool=False):
+       mask_relevance: float, tolerance: float, max_loops: int, unsettle, gif_info: gif_struct, plot_error: bool=False,\
+       correspond_to2pi: int=256) -> Tuple[np.array, np.array, int]:
     
     incomming_intensity = np.array(im.open(path_to_inicomming_intensity, "L"))
     incomming_amplitude = np.sqrt(incomming_amplitude)
@@ -145,7 +147,7 @@ def GD(demanded_output: np.array, path_to_inicomming_intensity: str, learning_ra
         error_evolution.append(error)
         if do_gif and i % skip_frames == 0:
             if do_gif == 'h':
-                img = im.fromarray(complex_to_real_phase(input/abs(input)))
+                img = im.fromarray(complex_to_real_phase(input/abs(input), correspond_to2pi))
             if do_gif == 'i':
                 img = im.fromarray(output)
             img.convert("RGB").save(f"{gif_info.source_address}/{i // skip_frames}.jpg")
@@ -154,7 +156,7 @@ def GD(demanded_output: np.array, path_to_inicomming_intensity: str, learning_ra
             learning_rate *= 2
         if i % 10 == 0: print("-", end='')
     printout(error, i, error_evolution, f"learning_rate: {learning_rate}", plot_error)
-    phase_for_slm = complex_to_real_phase(input)
+    phase_for_slm = complex_to_real_phase(input, correspond_to2pi)
     exp_tar_for_slm = output
     return phase_for_slm, exp_tar_for_slm, i
 
@@ -176,8 +178,8 @@ def generate_initial_input(w, h):
     random_matrix = [[(np.sqrt(random()) + 1j*np.sqrt(random())) for _ in range(w)] for _ in range(h)]
     return np.array(random_matrix)
 
-def complex_to_real_phase(complex_phase):
-    return (np.angle(complex_phase) + np.pi) / (2*np.pi) * 255
+def complex_to_real_phase(complex_phase, correspond_to2pi=256):
+    return (np.angle(complex_phase) + np.pi) / (2*np.pi) * correspond_to2pi
 
 def dEdX_complex(dEdF, x):
     rE, iE = dEdF.real, dEdF.imag
@@ -188,7 +190,7 @@ def dEdX_complex(dEdF, x):
     return re_res + 1j * im_res
 
 def GD_for_moving_traps(demanded_output: np.array, initial_input: np.array, learning_rate: float=0.005,
-       mask_relevance: float=10, tolerance: float=0.001, max_loops: int=50, unsettle=0):
+       mask_relevance: float=10, tolerance: float=0.001, max_loops: int=50, unsettle=0, correspond_to2pi: int=256):
     w, l = demanded_output.shape
     space_norm = w * l
     error_evolution = []
@@ -211,7 +213,7 @@ def GD_for_moving_traps(demanded_output: np.array, initial_input: np.array, lear
             learning_rate *= 2
         if i % 10 == 0: print("-", end='')
     print()
-    phase_for_slm = complex_to_real_phase(input)
+    phase_for_slm = complex_to_real_phase(input, correspond_to2pi)
     exp_tar_for_slm = output
     init_input_for_next = input
     return phase_for_slm, init_input_for_next, exp_tar_for_slm, error_evolution
