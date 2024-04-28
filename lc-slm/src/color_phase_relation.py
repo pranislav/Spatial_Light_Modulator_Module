@@ -136,13 +136,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Script for calibrating an optical path by SLM")
 
     help_ref_coord = "pseudo coordinates of reference subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size"
-    help_fit_func = "a + b*cos(c(x + d)), 'all' fits all params, 'floor' supposes a = b/2, 'uni_amp' performs two runs, first one determines ampliude, second one does , 'uni_amp_floor' "
 
-    parser.add_argument('-ss', '--subdomain_size', type=int, default=32)
-    parser.add_argument('-p', '--precision', type=int, default=8, help='"color depth" of the phase mask')
+    parser.add_argument('-ss', '--subdomain_size', type=int, default=64)
+    parser.add_argument('-p', '--precision', type=int, default=16, help="number of phase shifts")
     parser.add_argument('-a', '--angle', type=str, default="1_1", help="use form: xdecline_ydecline (angles in constants.u unit)")
-    parser.add_argument('-c', '--reference_coordinates', type=str, default="12_16", help=help_ref_coord)
-    parser.add_argument('-avg', '--num_to_avg', type=int, default=1, help="number of frames to average when measuring intensity")
+    parser.add_argument('-c', '--reference_coordinates', type=str, default="6_8", help=help_ref_coord)
+    parser.add_argument('-avg', '--num_to_avg', type=int, default=8, help="number of frames to average when measuring intensity")
     parser.add_argument('-f', '--floor', action='store_true', help="when fitting, it is supposed that minimal intensity is almost zero")
     parser.add_argument('-amp', '--fix_amplitude', action='store_true', help="makes second round of fitting with fixed amplitude (determined in previous round)")
 
