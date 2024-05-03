@@ -20,8 +20,12 @@ def naive(phase_list):
     return phase_list[0][opt_index]
 
 def fit_phase_shift(phase_list):
-    _, _, _, phase_shift = e.fit_intensity(phase_list)
-    return phase_shift
+    try:
+        _, _, _, phase_shift = e.fit_intensity(phase_list)
+    except:
+        print("fit unsuccessful")
+        phase_shift = 0
+    return int(phase_shift)
 
 def trick(phase_list):
     pass
@@ -120,7 +124,7 @@ def deviation_of_bright_pixels(picture, mean):
 
 # ------------ The Phase Mask ---------- #
 
-def create_phase_mask(phase_mask, subdomain_size, name):
+def create_phase_mask(phase_mask, subdomain_size, name, dest_dir):
     '''creates and saves phase mask image based on phase mask array
     '''
     h, w = phase_mask.shape
@@ -131,9 +135,8 @@ def create_phase_mask(phase_mask, subdomain_size, name):
             for j in range(w):
                 for p in range(ss):
                     phase_mask_img.putpixel((ss * j + k, ss * i + p), int(phase_mask[i, j]))
-    dest_dir = "lc-slm/holograms_for_calibration/calibration_phase_masks"
     if not os.path.exists(dest_dir): os.makedirs(dest_dir)
-    phase_mask_img.save(f"{dest_dir}/{name}_phase_mask.png")
+    phase_mask_img.save(f"{dest_dir}/{name}.png")
 
 
 def mask_hologram(path_to_hologram, path_to_mask):

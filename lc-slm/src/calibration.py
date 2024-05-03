@@ -43,8 +43,9 @@ def calibrate(args):
                 continue
             intensity_list = calibration_loop(i, j, loop_args)
             phase_mask[i, j] = best_phase(intensity_list)
-    specification = make_specification(args)
-    create_phase_mask(phase_mask, args.subdomain_size, specification)
+    specification = "phase_mask_" + make_specification(args)
+    dest_dir = "lc-slm/holograms/holograms_for_calibration/calibration_phase_masks"
+    create_phase_mask(phase_mask, args.subdomain_size, specification, dest_dir)
 
 
 def print_estimate(outer_loops_num, start_loops):
@@ -64,6 +65,7 @@ def make_loop_args(args):
     reference_hologram = add_subdomain(im.fromarray(np.zeros((c.slm_height, c.slm_width))), samples_list[0], real_reference_coordinates, subdomain_size)
     print("adjusting exposure time...")
     set_exposure_wrt_reference_img(cam, window, (256 / 4 - 20, 256 / 4), reference_hologram, args.num_to_avg) # in fully-constructive interference the value of amplitude could be twice as high, therefore intensity four times as high 
+    # cam.set_exposure(0.001)
     loop_args["intensity_coord"] = get_highest_intensity_coordinates_img(cam, window, reference_hologram, args.num_to_avg)
     loop_args["precision"] = args.precision
     loop_args["subdomain_size"] = subdomain_size
