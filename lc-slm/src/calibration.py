@@ -31,13 +31,13 @@ def calibrate(args):
     loop_args = make_loop_args(args) # & set exposure
     best_phase = naive
     H, W = get_number_of_subdomains(args.subdomain_size)
-    i0, j0 = read_reference_coordinates(args.reference_coordinates)
+    j0, i0 = read_reference_coordinates(args.reference_coordinates)
     phase_mask = np.zeros((H, W))
     start_loops = time()
     print("mainloop start. estimate of remaining time comes after first row. actual row:")
     for i in range(H):
-        print(f"{i + 1}/{H}")
         if i == 1: print_estimate(H, start_loops)
+        print(f"{i + 1}/{H}")
         for j in range(W):
             if i == i0 and j == j0:
                 continue
@@ -62,7 +62,7 @@ def make_loop_args(args):
     samples_list = make_sample_holograms(args.angle, args.precision)
     rx, ry = read_reference_coordinates(args.reference_coordinates)
     real_reference_coordinates = (rx * subdomain_size, ry * subdomain_size)
-    reference_hologram = add_subdomain(im.fromarray(np.zeros((c.slm_height, c.slm_width))), samples_list[0], real_reference_coordinates, subdomain_size)
+    reference_hologram = add_subdomain(black_hologram, samples_list[0], real_reference_coordinates, subdomain_size)
     print("adjusting exposure time...")
     set_exposure_wrt_reference_img(cam, window, (256 / 4 - 20, 256 / 4), reference_hologram, args.num_to_avg) # in fully-constructive interference the value of amplitude could be twice as high, therefore intensity four times as high 
     # cam.set_exposure(0.001)
@@ -99,6 +99,7 @@ def calibration_loop(i, j, loop_args):
             print("maximal intensity was reached, adapting...")
             cam.set_exposure(cam.get_exposure() * 0.9) # 10 % decrease of exposure time
             k = 0
+            intensity_list = [[], []]
             continue
         phase = k * 256 // precision
         intensity_list[0].append(phase)
@@ -117,7 +118,7 @@ if __name__ == "__main__":
     parser.add_argument('-ss', '--subdomain_size', type=int, default=32)
     parser.add_argument('-p', '--precision', type=int, default=8, help='"color depth" of the phase mask')
     parser.add_argument('-a', '--angle', type=str, default="1_1", help="use form: xdecline_ydecline (angles in constants.u unit)")
-    parser.add_argument('-c', '--reference_coordinates', type=str, default="12_16", help=help_ref_coord)
+    parser.add_argument('-c', '--reference_coordinates', type=str, default="16_12", help=help_ref_coord)
     parser.add_argument('-avg', '--num_to_avg', type=int, default=1, help="number of frames to average when measuring intensity")
 
     args = parser.parse_args()

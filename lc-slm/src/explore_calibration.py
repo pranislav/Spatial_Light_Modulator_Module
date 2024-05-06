@@ -44,7 +44,6 @@ def explore(args):
     video_dir = "lc-slm/images/explore"
     if not os.path.exists(video_dir): os.makedirs(video_dir)
     while True:
-        black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
         if params["decline"][-1] or params["precision"][-1]:
             angle = last_nonempty(params["decline"])
             precision = last_nonempty(params["precision"])
@@ -52,7 +51,7 @@ def explore(args):
         if params["subdomain_size"][-1] or params["reference_position"][-1]:
             subdomain_size = last_nonempty(params["subdomain_size"])
             reference_position = real_subdomain_position(last_nonempty(params["reference_position"]), subdomain_size)
-        reference_hologram = cl.add_subdomain(black_hologram, sample_list[0], reference_position, subdomain_size)
+        reference_hologram = cl.add_subdomain(cl.black_hologram, sample_list[0], reference_position, subdomain_size)
         num_to_avg = last_nonempty(params["num_to_avg"])
         if params["decline"][-1] or params["subdomain_size"][-1]:
             cl.set_exposure_wrt_reference_img(cam, window, (256 / 4 - 20, 256 / 4), reference_hologram, num_to_avg)

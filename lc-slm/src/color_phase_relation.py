@@ -16,7 +16,7 @@ def main(args):
     fit = fit_intensity_floorc if args.floor else fit_intensity_generalc
     intensity_lists = []
     H, W = get_number_of_subdomains(args.subdomain_size)
-    i0, j0 = read_reference_coordinates(args.reference_coordinates)
+    j0, i0 = read_reference_coordinates(args.reference_coordinates)
     do_loop = partial(circle, (H, W), H // 4)
     for i in range(H):
         print(f"{i + 1}/{H}")
@@ -144,7 +144,7 @@ if __name__ == "__main__":
     parser.add_argument('-ss', '--subdomain_size', type=int, default=64)
     parser.add_argument('-p', '--precision', type=int, default=16, help="number of phase shifts")
     parser.add_argument('-a', '--angle', type=str, default="1_1", help="use form: xdecline_ydecline (angles in constants.u unit)")
-    parser.add_argument('-c', '--reference_coordinates', type=str, default="6_8", help=help_ref_coord)
+    parser.add_argument('-c', '--reference_coordinates', type=str, default="8_6", help=help_ref_coord)
     parser.add_argument('-avg', '--num_to_avg', type=int, default=8, help="number of frames to average when measuring intensity")
     parser.add_argument('-f', '--floor', action='store_true', help="when fitting, it is supposed that minimal intensity is almost zero")
     parser.add_argument('-amp', '--fix_amplitude', action='store_true', help="makes second round of fitting with fixed amplitude (determined in previous round)")

@@ -12,13 +12,13 @@ from color_phase_relation import general_cos
 def fit_maps(args):
     loop_args = make_loop_args(args) # & set exposure
     H, W = get_number_of_subdomains(args.subdomain_size)
-    i0, j0 = read_reference_coordinates(args.reference_coordinates)
+    j0, i0 = read_reference_coordinates(args.reference_coordinates)
     param_maps = initiate_param_maps((H, W))
     start_loops = time()
     print("mainloop start. estimate of remaining time comes after first row. actual row:")
     for i in range(H):
-        print(f"{i + 1}/{H}")
         if i == 1: print_estimate(H, start_loops)
+        print(f"{i + 1}/{H}")
         for j in range(W):
             if i == i0 and j == j0:
                 continue
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     parser.add_argument('-ss', '--subdomain_size', type=int, default=32)
     parser.add_argument('-p', '--precision', type=int, default=8, help='"color depth" of the phase mask')
     parser.add_argument('-a', '--angle', type=str, default="1_1", help="use form: xdecline_ydecline (angles in constants.u unit)")
-    parser.add_argument('-c', '--reference_coordinates', type=str, default="12_16", help=help_ref_coord)
+    parser.add_argument('-c', '--reference_coordinates', type=str, default="16_12", help=help_ref_coord)
     parser.add_argument('-avg', '--num_to_avg', type=int, default=1, help="number of frames to average when measuring intensity")
 
     args = parser.parse_args()

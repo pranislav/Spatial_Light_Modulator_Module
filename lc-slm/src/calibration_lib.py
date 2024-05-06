@@ -9,6 +9,8 @@ import explore_calibration as e
 
 
 
+black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
+
 def make_specification(args):
     return f"size_{args.subdomain_size}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref{args.reference_coordinates}_avg{args.num_to_avg}_{args.calibration_name}"
 
