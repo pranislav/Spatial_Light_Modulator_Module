@@ -25,11 +25,12 @@ import numpy as np
 import argparse
 from pylablib.devices import uc480
 from time import time
+from functools import partial
 
 
 def calibrate(args):
     loop_args = make_loop_args(args) # & set exposure
-    best_phase = naive
+    best_phase = partial(fit_phase_shift_fixed_wavelength, wavelength=args.correspond_to2pi)
     H, W = get_number_of_subdomains(args.subdomain_size)
     j0, i0 = read_reference_coordinates(args.reference_coordinates)
     phase_mask = np.zeros((H, W))
@@ -62,6 +63,7 @@ def make_loop_args(args):
     samples_list = make_sample_holograms(args.angle, args.precision)
     rx, ry = read_reference_coordinates(args.reference_coordinates)
     real_reference_coordinates = (rx * subdomain_size, ry * subdomain_size)
+    black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
     reference_hologram = add_subdomain(black_hologram, samples_list[0], real_reference_coordinates, subdomain_size)
     print("adjusting exposure time...")
     set_exposure_wrt_reference_img(cam, window, (256 / 4 - 20, 256 / 4), reference_hologram, args.num_to_avg) # in fully-constructive interference the value of amplitude could be twice as high, therefore intensity four times as high 
@@ -120,6 +122,7 @@ if __name__ == "__main__":
     parser.add_argument('-a', '--angle', type=str, default="1_1", help="use form: xdecline_ydecline (angles in constants.u unit)")
     parser.add_argument('-c', '--reference_coordinates', type=str, default="16_12", help=help_ref_coord)
     parser.add_argument('-avg', '--num_to_avg', type=int, default=1, help="number of frames to average when measuring intensity")
+    parser.add_argument('-ct2pi', '--correspond_to2pi', type=int, default=256, help="value of pixel corresponding to 2pi phase shift")
 
     args = parser.parse_args()
     start = time()

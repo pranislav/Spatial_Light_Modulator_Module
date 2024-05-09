@@ -9,8 +9,6 @@ import explore_calibration as e
 
 
 
-black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
-
 def make_specification(args):
     return f"size_{args.subdomain_size}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref{args.reference_coordinates}_avg{args.num_to_avg}_{args.calibration_name}"
 
@@ -24,6 +22,22 @@ def naive(phase_list):
 def fit_phase_shift(phase_list):
     try:
         _, _, _, phase_shift = e.fit_intensity(phase_list)
+    except:
+        print("fit unsuccessful")
+        phase_shift = 0
+    return int(phase_shift)
+
+def fit_amplitude(phase_list):
+    try:
+        _, amplitude, _, _ = e.fit_intensity(phase_list)
+    except:
+        print("fit unsuccessful")
+        amplitude = 0
+    return int(amplitude)
+
+def fit_phase_shift_fixed_wavelength(phase_list, wavelength):
+    try:
+        _, _, phase_shift = e.fit_intensity_fixed_wavelength(phase_list, wavelength)
     except:
         print("fit unsuccessful")
         phase_shift = 0
