@@ -33,6 +33,8 @@ import argparse
 import cv2
 import os
 from copy import deepcopy
+from functools import partial
+import time
 
 
 def explore(args):
@@ -44,6 +46,7 @@ def explore(args):
     video_dir = "lc-slm/images/explore"
     if not os.path.exists(video_dir): os.makedirs(video_dir)
     while True:
+        black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
         if params["decline"][-1] or params["precision"][-1]:
             angle = last_nonempty(params["decline"])
             precision = last_nonempty(params["precision"])
@@ -51,7 +54,7 @@ def explore(args):
         if params["subdomain_size"][-1] or params["reference_position"][-1]:
             subdomain_size = last_nonempty(params["subdomain_size"])
             reference_position = real_subdomain_position(last_nonempty(params["reference_position"]), subdomain_size)
-        reference_hologram = cl.add_subdomain(cl.black_hologram, sample_list[0], reference_position, subdomain_size)
+        reference_hologram = cl.add_subdomain(black_hologram, sample_list[0], reference_position, subdomain_size)
         num_to_avg = last_nonempty(params["num_to_avg"])
         if params["decline"][-1] or params["subdomain_size"][-1]:
             cl.set_exposure_wrt_reference_img(cam, window, (256 / 4 - 20, 256 / 4), reference_hologram, num_to_avg)
@@ -114,6 +117,17 @@ def fit_intensity(intensity_data):
     return params
 
 
+def fit_intensity_fixed_wavelength(intensity_data, wavelength):
+    xdata, ydata = intensity_data
+    p0 = [100, 100, 0]
+    lower_bounds = [0, 0, 0]
+    upper_bounds = [255, 255, wavelength]
+    cos_fixed_wavelenght = partial(cos_wavelength_last, wavelength=wavelength)
+    params, _ = curve_fit(cos_fixed_wavelenght, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
+    return params
+
+
+
 def print_fit_params(fit_params):
     amplitude_shift, amplitude, frequency, phase_shift = fit_params
     print(f"amplitude_shift: {round(amplitude_shift, 2)}")
@@ -125,6 +139,9 @@ def print_fit_params(fit_params):
 
 def general_cos(x, amplitude_shift, amplitude, frequency, phase_shift):
     return amplitude_shift + amplitude * np.cos(frequency * (x - phase_shift))
+
+def cos_wavelength_last(x, amplitude_shift, amplitude, phase_shift, wavelength):
+    return amplitude_shift + amplitude * np.cos((2 * np.pi / wavelength) * (x - phase_shift))
 
 def cos_floor(x, amplitude, frequency, phase_shift):
     return amplitude * (1 + np.cos(frequency * (x - phase_shift)))
@@ -383,7 +400,7 @@ def make_name(params):
     name = f""
     for key in params.keys():
         name += f"{key}={last_nonempty(params[key])}_"
-    return name
+    return name + time.strftime("%Y-%m-%d_%H-%M-%S")
 
 
 def images_to_video(image_list, video_name, fps, output_path="."):
