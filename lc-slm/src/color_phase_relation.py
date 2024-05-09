@@ -7,13 +7,15 @@ from calibration_lib import *
 from functools import partial
 # import explore_calibration as e
 from scipy.optimize import curve_fit
+import inspect
+import fit_stuff as f
 
 
 def main(args):
     loop_args = ca.make_loop_args(args)
     calibration_loop = partial(ca.calibration_loop, loop_args=loop_args)
-    fit_params_dict = {"amplitude_shift": [], "amplitude": [], "wavelength": [], "phase_shift": []}
-    fit = fit_intensity_floorc if args.floor else fit_intensity_generalc
+    fit_func = f.positive_cos_floor() if args.floor else f.positive_cos
+    fit_params_dict = {param: [] for param in fit_func.__code__.co_varnames[1:]}
     intensity_lists = []
     H, W = get_number_of_subdomains(args.subdomain_size)
     j0, i0 = read_reference_coordinates(args.reference_coordinates)
@@ -25,18 +27,19 @@ def main(args):
                 continue
             if do_loop(i, j):
                 intensity_lists.append(calibration_loop(i, j))
-                try:
-                    fit(intensity_lists[-1], fit_params_dict)
-                except:
-                    print("fit unsuccessful")
-                    continue
+                # try:
+                param_dict = f.fit_intensity_general(intensity_lists[-1], fit_func)
+                # except:
+                #     print("fit unsuccessful")
+                #     continue
+                fill_fit_params_dict(fit_params_dict, param_dict)
     avg_params, std = average_fit_params(fit_params_dict)
     params_printout(avg_params, std)
     if args.fix_amplitude:
-        fit = fit_intensity_floorc_amp if args.floor else fit_intensity_generalc_amp
+        fit_func = f.positive_cos_floor_fixed_amp(avg_params["amplitude"]) if args.floor else f.positive_cos_fixed_amp(avg_params["amplitude"])
         fit_params_dict = {"amplitude_shift": [], "wavelength": [], "phase_shift": []}
         for intensity_list in intensity_lists:
-            fit(intensity_list, fit_params_dict, avg_params["amplitude"])
+            f.fit_intensity_general(intensity_list, fit_func)
         avg_params, std = average_fit_params(fit_params_dict)
         print("fitted params with fixed amplitude:")
         params_printout(avg_params, std)
@@ -57,60 +60,82 @@ def average_fit_params(fit_params_dict):
         std[key] = np.std(fit_params_dict[key])
     return avg_params, std   
 
-
-def fit_intensity_generalc(intensity_data, param_dict):
-    xdata, ydata = intensity_data
-    intensity_range = 256
-    phase_range = 256
-    supposed_wavelength = phase_range
-    p0 = [intensity_range/2, supposed_wavelength, 0, intensity_range/2]
-    lower_bounds = [0, supposed_wavelength * 0.6, 0, 0]
-    upper_bounds = [intensity_range, supposed_wavelength * 1.5, phase_range, intensity_range]
-    params, _ = curve_fit(general_cos, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
-    param_dict["amplitude_shift"].append(params[0])
-    param_dict["amplitude"].append(params[3])
-    param_dict["wavelength"].append(params[1])
-    param_dict["phase_shift"].append(params[2])
-
-def fit_intensity_generalc_amp(intensity_data, param_dict, amplitude):
-    xdata, ydata = intensity_data
-    intensity_range = 256
-    phase_range = 256
-    supposed_wavelength = phase_range
-    p0 = [intensity_range/2, supposed_wavelength, 0]
-    lower_bounds = [0, supposed_wavelength * 0.6, 0]
-    upper_bounds = [intensity_range, supposed_wavelength * 1.5, phase_range]
-    params, _ = curve_fit(partial(general_cos, amplitude=amplitude), xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
-    param_dict["amplitude_shift"].append(params[0])
-    param_dict["wavelength"].append(params[1])
-    param_dict["phase_shift"].append(params[2])
-
-def fit_intensity_floorc(intensity_data, param_dict):
-    xdata, ydata = intensity_data
-    intensity_range = 256
-    phase_range = 256
-    supposed_wavelength = phase_range
-    p0 = [supposed_wavelength, 0, intensity_range/2]
-    lower_bounds = [supposed_wavelength * 0.6, 0, 0]
-    upper_bounds = [supposed_wavelength * 1.5, phase_range, intensity_range]
-    params, _ = curve_fit(floor_cos, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
-    param_dict["amplitude"].append(params[2])
-    param_dict["wavelength"].append(params[0])
-    param_dict["phase_shift"].append(params[1])
+# -------------------
 
 
-def fit_intensity_floorc_amp(intensity_data, param_dict, amplitude):
-    xdata, ydata = intensity_data
-    intensity_range = 256
-    phase_range = 256
-    supposed_wavelength = phase_range
-    p0 = [supposed_wavelength, 0]
-    lower_bounds = [supposed_wavelength * 0.6, 0]
-    upper_bounds = [supposed_wavelength * 1.5, phase_range]
-    floor_cos_amp = partial(floor_cos, amplitude=amplitude)
-    params, _ = curve_fit(floor_cos_amp, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
-    param_dict["wavelength"].append(params[0])
-    param_dict["phase_shift"].append(params[1])
+
+# ------------------- fitting functions -------------------
+
+# def fit_intensity_generalc(intensity_data, param_dict):
+#     xdata, ydata = intensity_data
+#     intensity_range = 256
+#     phase_range = 256
+#     supposed_wavelength = phase_range
+#     p0 = [intensity_range/2, supposed_wavelength, 0, intensity_range/2]
+#     lower_bounds = [0, supposed_wavelength * 0.6, 0, 0]
+#     upper_bounds = [intensity_range, supposed_wavelength * 1.5, phase_range, intensity_range]
+#     params, _ = curve_fit(general_cos, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
+#     param_dict["amplitude_shift"].append(params[0])
+#     param_dict["amplitude"].append(params[3])
+#     param_dict["wavelength"].append(params[1])
+#     param_dict["phase_shift"].append(params[2])
+
+
+
+# def fit_intensity_generalc_new(intensity_data, param_dict): 
+#     initial_guess = {"amplitude_shift": 128, "wavelength": 256, "phase_shift": 0, "amplitude": 128}
+#     lower_bounds = {"amplitude_shift": 0, "wavelength": 100, "phase_shift": 0, "amplitude": 0}
+#     upper_bounds = {"amplitude_shift": 256, "wavelength": 300, "phase_shift": 256, "amplitude": 256}
+#     xdata, ydata = intensity_data
+#     param_names = list(inspect.signature(general_cos).parameters.keys())[1:] # first parameter is independent variable
+#     p0 = [initial_guess[key] for key in param_names]
+#     lower_bounds = [lower_bounds[key] for key in param_names]
+#     upper_bounds = [upper_bounds[key] for key in param_names]
+#     params, _ = curve_fit(general_cos, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
+#     params_dict = dict(zip(param_names, params))
+#     for key in params_dict.keys():
+#         param_dict[key].append(params_dict[key])
+
+
+# def fit_intensity_generalc_amp(intensity_data, param_dict, amplitude):
+#     xdata, ydata = intensity_data
+#     intensity_range = 256
+#     phase_range = 256
+#     supposed_wavelength = phase_range
+#     p0 = [intensity_range/2, supposed_wavelength, 0]
+#     lower_bounds = [0, supposed_wavelength * 0.6, 0]
+#     upper_bounds = [intensity_range, supposed_wavelength * 1.5, phase_range]
+#     params, _ = curve_fit(partial(general_cos, amplitude=amplitude), xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
+#     param_dict["amplitude_shift"].append(params[0])
+#     param_dict["wavelength"].append(params[1])
+#     param_dict["phase_shift"].append(params[2])
+
+# def fit_intensity_floorc(intensity_data, param_dict):
+#     xdata, ydata = intensity_data
+#     intensity_range = 256
+#     phase_range = 256
+#     supposed_wavelength = phase_range
+#     p0 = [supposed_wavelength, 0, intensity_range/2]
+#     lower_bounds = [supposed_wavelength * 0.6, 0, 0]
+#     upper_bounds = [supposed_wavelength * 1.5, phase_range, intensity_range]
+#     params, _ = curve_fit(floor_cos, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
+#     param_dict["amplitude"].append(params[2])
+#     param_dict["wavelength"].append(params[0])
+#     param_dict["phase_shift"].append(params[1])
+
+
+# def fit_intensity_floorc_amp(intensity_data, param_dict, amplitude):
+#     xdata, ydata = intensity_data
+#     intensity_range = 256
+#     phase_range = 256
+#     supposed_wavelength = phase_range
+#     p0 = [supposed_wavelength, 0]
+#     lower_bounds = [supposed_wavelength * 0.6, 0]
+#     upper_bounds = [supposed_wavelength * 1.5, phase_range]
+#     floor_cos_amp = partial(floor_cos, amplitude=amplitude)
+#     params, _ = curve_fit(floor_cos_amp, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
+#     param_dict["wavelength"].append(params[0])
+#     param_dict["phase_shift"].append(params[1])
 
 # just for demo that the problem is in partial
 # def floor_cos_amp(x, wavelength, phase_shift):

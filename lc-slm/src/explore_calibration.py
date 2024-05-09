@@ -35,6 +35,7 @@ import os
 from copy import deepcopy
 from functools import partial
 import time
+import fit_stuff as f
 
 
 def explore(args):
@@ -62,7 +63,7 @@ def explore(args):
         hologram = reference_hologram
         subdomain_position = real_subdomain_position(last_nonempty(params["subdomain_position"]), subdomain_size)
         frames, intensity_data = calibration_loop_explore(window, cam, hologram, sample_list, subdomain_position, subdomain_size, precision, intensity_coord, num_to_avg)
-        fit_params = fit_intensity(intensity_data)
+        fit_params = f.fit_intensity_general(intensity_data, f.positive_cos)
         print_fit_params(fit_params)
         intensity_fit = plot_fit(fit_params)
         frame_img_list = dot_frames(frames, intensity_coord)
@@ -107,50 +108,52 @@ def calibration_loop_explore(window, cam, hologram, sample, subdomain_position, 
 
 # ---------- fits and plots ---------- #
 
-def fit_intensity(intensity_data):
-    xdata, ydata = intensity_data
-    supposed_frequency = 2 * np.pi /256
-    p0 = [100, 100, supposed_frequency, 0]
-    lower_bounds = [0, 0, supposed_frequency * 0.6, 0]
-    upper_bounds = [255, 255, supposed_frequency * 1.5, 255]
-    params, _ = curve_fit(general_cos, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
-    return params
+# def fit_intensity(intensity_data):
+#     xdata, ydata = intensity_data
+#     supposed_frequency = 2 * np.pi /256
+#     p0 = [100, 100, supposed_frequency, 0]
+#     lower_bounds = [0, 0, supposed_frequency * 0.6, 0]
+#     upper_bounds = [255, 255, supposed_frequency * 1.5, 255]
+#     params, _ = curve_fit(general_cos, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
+#     return params
 
 
-def fit_intensity_fixed_wavelength(intensity_data, wavelength):
-    xdata, ydata = intensity_data
-    p0 = [100, 100, 0]
-    lower_bounds = [0, 0, 0]
-    upper_bounds = [255, 255, wavelength]
-    cos_fixed_wavelenght = partial(cos_wavelength_last, wavelength=wavelength)
-    params, _ = curve_fit(cos_fixed_wavelenght, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
-    return params
+# def fit_intensity_fixed_wavelength(intensity_data, wavelength):
+#     xdata, ydata = intensity_data
+#     p0 = [100, 100, 0]
+#     lower_bounds = [0, 0, 0]
+#     upper_bounds = [255, 255, wavelength]
+#     cos_fixed_wavelenght = partial(cos_wavelength_last, wavelength=wavelength)
+#     params, _ = curve_fit(cos_fixed_wavelenght, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
+#     return params
 
 
 
 def print_fit_params(fit_params):
-    amplitude_shift, amplitude, frequency, phase_shift = fit_params
-    print(f"amplitude_shift: {round(amplitude_shift, 2)}")
-    print(f"amplitude: {round(amplitude, 2)}")
-    print(f"wavelength: {round(2*np.pi / frequency, 2)}")
-    print(f"phase_shift: {round(phase_shift, 2)}")
-    print("")
+    for key, value in fit_params.items():
+        print(f"{key}: {round(value, 2)}")
+    # amplitude_shift, amplitude, frequency, phase_shift = fit_params
+    # print(f"amplitude_shift: {round(amplitude_shift, 2)}")
+    # print(f"amplitude: {round(amplitude, 2)}")
+    # print(f"wavelength: {round(2*np.pi / frequency, 2)}")
+    # print(f"phase_shift: {round(phase_shift, 2)}")
+    # print("")
 
 
-def general_cos(x, amplitude_shift, amplitude, frequency, phase_shift):
-    return amplitude_shift + amplitude * np.cos(frequency * (x - phase_shift))
+# def general_cos(x, amplitude_shift, amplitude, frequency, phase_shift):
+#     return amplitude_shift + amplitude * np.cos(frequency * (x - phase_shift))
 
-def cos_wavelength_last(x, amplitude_shift, amplitude, phase_shift, wavelength):
-    return amplitude_shift + amplitude * np.cos((2 * np.pi / wavelength) * (x - phase_shift))
+# def cos_wavelength_last(x, amplitude_shift, amplitude, phase_shift, wavelength):
+#     return amplitude_shift + amplitude * np.cos((2 * np.pi / wavelength) * (x - phase_shift))
 
-def cos_floor(x, amplitude, frequency, phase_shift):
-    return amplitude * (1 + np.cos(frequency * (x - phase_shift)))
+# def cos_floor(x, amplitude, frequency, phase_shift):
+#     return amplitude * (1 + np.cos(frequency * (x - phase_shift)))
 
 
 def plot_fit(params):
-    amplitude_shift, amplitude, frequency, phase_shift = params
+    # amplitude_shift, amplitude, frequency, phase_shift = params
     xdata = np.linspace(0, 255, 256)
-    ydata = general_cos(xdata, amplitude_shift, amplitude, frequency, phase_shift)
+    ydata = f.positive_cos(xdata, *params.values())
     return xdata, ydata
 
 

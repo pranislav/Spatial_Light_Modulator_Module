@@ -13,7 +13,8 @@ def fit_maps(args):
     loop_args = make_loop_args(args) # & set exposure
     H, W = get_number_of_subdomains(args.subdomain_size)
     j0, i0 = read_reference_coordinates(args.reference_coordinates)
-    param_maps = initiate_param_maps((H, W))
+    fit_func = f.positive_cos
+    param_maps = initiate_param_maps((H, W), fit_func)
     start_loops = time()
     print("mainloop start. estimate of remaining time comes after first row. actual row:")
     for i in range(H):
@@ -23,9 +24,14 @@ def fit_maps(args):
             if i == i0 and j == j0:
                 continue
             intensity_list = calibration_loop(i, j, loop_args)
-            fit_intensity_generalc_maps(intensity_list, param_maps, (i, j))
+            param_dict = f.fit_intensity_general(intensity_list, fit_func)
+            fill_maps(param_maps, param_dict, (i, j))
     create_param_maps(param_maps, args.subdomain_size)
 
+
+def fill_maps(param_maps, param_dict, coord): # if error, check if coord is in the right order
+    for key in param_dict.keys():
+        param_maps[key][coord] = param_dict[key]
 
 def create_param_maps(param_maps, subdomain_size):
     dest_dir = "lc-slm/holograms/fit_maps"
@@ -34,41 +40,43 @@ def create_param_maps(param_maps, subdomain_size):
         create_phase_mask(param_maps[key], subdomain_size, specification, dest_dir)
 
 
-def fit_intensity_generalc_maps(intensity_data, param_maps, coords):
-    xdata, ydata = intensity_data
-    intensity_range = 256
-    phase_range = 256
-    supposed_wavelength = phase_range
-    p0 = [intensity_range/2, supposed_wavelength, 0, intensity_range/2]
-    lower_bounds = [0, supposed_wavelength * 0.6, 0, 0]
-    upper_bounds = [intensity_range, supposed_wavelength * 1.5, phase_range, intensity_range]
-    try:
-        params, _ = curve_fit(general_cos, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
-    except:
-        print("fit unsuccessful")
-        return
-    amp_shift, wavelength, phase_shift, amplitude = params
-    param_maps["amplitude_shift"][coords] = amp_shift
-    param_maps["amplitude"][coords] = amplitude
-    param_maps["wavelength"][coords] = wavelength
-    param_maps["phase_shift"][coords] = phase_shift
-    param_maps["min_val+128"][coords] = amplitude - amp_shift + 128
-    param_maps["min_val%256"][coords] = (amplitude - amp_shift) % 256
-    param_maps["max_val"][coords] = amplitude + amp_shift
-    param_maps["wavelength-128"][coords] = wavelength - 128
+# def fit_intensity_generalc_maps(intensity_data, param_maps, coords):
+#     xdata, ydata = intensity_data
+#     intensity_range = 256
+#     phase_range = 256
+#     supposed_wavelength = phase_range
+#     p0 = [intensity_range/2, supposed_wavelength, 0, intensity_range/2]
+#     lower_bounds = [0, supposed_wavelength * 0.6, 0, 0]
+#     upper_bounds = [intensity_range, supposed_wavelength * 1.5, phase_range, intensity_range]
+#     try:
+#         params, _ = curve_fit(general_cos, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
+#     except:
+#         print("fit unsuccessful")
+#         return
+#     amp_shift, wavelength, phase_shift, amplitude = params
+#     param_maps["amplitude_shift"][coords] = amp_shift
+#     param_maps["amplitude"][coords] = amplitude
+#     param_maps["wavelength"][coords] = wavelength
+#     param_maps["phase_shift"][coords] = phase_shift
+#     param_maps["min_val+128"][coords] = amplitude - amp_shift + 128
+#     param_maps["min_val%256"][coords] = (amplitude - amp_shift) % 256
+#     param_maps["max_val"][coords] = amplitude + amp_shift
+#     param_maps["wavelength-128"][coords] = wavelength - 128
 
 
-def initiate_param_maps(shape):
+def initiate_param_maps(shape, fit_func):
     H, W = shape
     param_maps = {}
-    param_maps["amplitude_shift"] = np.zeros((H, W))
-    param_maps["wavelength"] = np.zeros((H, W))
-    param_maps["phase_shift"] = np.zeros((H, W))
-    param_maps["amplitude"] = np.zeros((H, W))
-    param_maps["min_val+128"] = np.zeros((H, W))
-    param_maps["min_val%256"] = np.zeros((H, W))
-    param_maps["max_val"] = np.zeros((H, W))
-    param_maps["wavelength-128"] = np.zeros((H, W))
+    for key in fit_func.__code__.co_varnames[1:]: # TODO: replace inspect.signature with this on other places
+        param_maps[key] = np.zeros((H, W))
+    # param_maps["amplitude_shift"] = np.zeros((H, W))
+    # param_maps["wavelength"] = np.zeros((H, W))
+    # param_maps["phase_shift"] = np.zeros((H, W))
+    # param_maps["amplitude"] = np.zeros((H, W))
+    # param_maps["min_val+128"] = np.zeros((H, W))
+    # param_maps["min_val%256"] = np.zeros((H, W))
+    # param_maps["max_val"] = np.zeros((H, W))
+    # param_maps["wavelength-128"] = np.zeros((H, W))
     return param_maps
 
 

@@ -26,11 +26,13 @@ import argparse
 from pylablib.devices import uc480
 from time import time
 from functools import partial
+import fit_stuff as f
 
 
 def calibrate(args):
     loop_args = make_loop_args(args) # & set exposure
-    best_phase = partial(fit_phase_shift_fixed_wavelength, wavelength=args.correspond_to2pi)
+    fit = lambda x: f.fit_intensity_general(x, f.positive_cos_fixed_wavelength(args.correspond_to2pi))  # TODO other options?
+    best_phase = compose_func(return_phase, fit)
     H, W = get_number_of_subdomains(args.subdomain_size)
     j0, i0 = read_reference_coordinates(args.reference_coordinates)
     phase_mask = np.zeros((H, W))
@@ -48,6 +50,11 @@ def calibrate(args):
     dest_dir = "lc-slm/holograms/holograms_for_calibration/calibration_phase_masks"
     create_phase_mask(phase_mask, args.subdomain_size, specification, dest_dir)
 
+def compose_func(func1, func2):
+    return lambda x: func1(func2(x))
+    
+def return_phase(dict):
+    return dict["phase_shift"]
 
 def print_estimate(outer_loops_num, start_loops):
     time_elapsed = time() - start_loops

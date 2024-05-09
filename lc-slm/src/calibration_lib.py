@@ -19,29 +19,29 @@ def naive(phase_list):
     opt_index = phase_list[1].index(max(phase_list[1]))
     return phase_list[0][opt_index]
 
-def fit_phase_shift(phase_list):
-    try:
-        _, _, _, phase_shift = e.fit_intensity(phase_list)
-    except:
-        print("fit unsuccessful")
-        phase_shift = 0
-    return int(phase_shift)
+# def fit_phase_shift(phase_list):
+#     try:
+#         _, _, _, phase_shift = e.fit_intensity(phase_list)
+#     except:
+#         print("fit unsuccessful")
+#         phase_shift = 0
+#     return int(phase_shift)
 
-def fit_amplitude(phase_list):
-    try:
-        _, amplitude, _, _ = e.fit_intensity(phase_list)
-    except:
-        print("fit unsuccessful")
-        amplitude = 0
-    return int(amplitude)
+# def fit_amplitude(phase_list):
+#     try:
+#         _, amplitude, _, _ = e.fit_intensity(phase_list)
+#     except:
+#         print("fit unsuccessful")
+#         amplitude = 0
+#     return int(amplitude)
 
-def fit_phase_shift_fixed_wavelength(phase_list, wavelength):
-    try:
-        _, _, phase_shift = e.fit_intensity_fixed_wavelength(phase_list, wavelength)
-    except:
-        print("fit unsuccessful")
-        phase_shift = 0
-    return int(phase_shift)
+# def fit_phase_shift_fixed_wavelength(phase_list, wavelength):
+#     try:
+#         _, _, phase_shift = e.fit_intensity_fixed_wavelength(phase_list, wavelength)
+#     except:
+#         print("fit unsuccessful")
+#         phase_shift = 0
+#     return int(phase_shift)
 
 def trick(phase_list):
     pass
@@ -162,45 +162,6 @@ def mask_hologram(path_to_hologram, path_to_mask):
     mask_arr = np.array(mask_im)
     masked_hologram = hologram_arr + mask_arr
     return im.fromarray(masked_hologram)
-
-
-# ---------- getters ------------ # - for old implementation
-
-# def get_path_to_reference_hologram(path):
-#     file_list = [_ for _ in filter(could_be_file, os.listdir(path))]
-#     if len(file_list) > 1:
-#         print("found multiple files while looking for reference hologram")
-#         sys.exit(1)
-#     return f"{path}/{file_list[0]}"
-
-# def could_be_file(basename):
-#     _, ext = os.path.splitext(basename)
-#     return bool(ext)
-
-# def get_reference_position(path_to_reference_hologram):
-#     name = os.path.basename(path_to_reference_hologram)
-#     wout_ext, _ = os.path.splitext(name)
-#     return eval(wout_ext)
-    
-
-# def get_subdomain_size(path):
-#     '''finds out subdomain size based on system of saving holograms'''
-#     dir_count = 0
-#     for item in os.listdir(path):
-#         item_path = os.path.join(path, item)
-#         if os.path.isdir(item_path):
-#             dir_count += 1
-#     return c.slm_height // dir_count
-
-
-# def get_precision(path):
-#     '''finds out precision based on system of number of holograms for one subdomain'''
-#     file_count = 0
-#     for item in os.listdir(path):
-#         item_path = os.path.join(path, item)
-#         if os.path.isfile(item_path):
-#             file_count += 1
-#     return file_count
 
 
 # ------------ intensity getters a.k.a. metrics -------------- #
