@@ -52,8 +52,9 @@ def fit_intensity_generalc_maps(intensity_data, param_maps, coords):
     param_maps["amplitude"][coords] = amplitude
     param_maps["wavelength"][coords] = wavelength
     param_maps["phase_shift"][coords] = phase_shift
-    param_maps["min_amp+128"][coords] = amplitude - amp_shift + 128
-    param_maps["max_amp"][coords] = amplitude + amp_shift
+    param_maps["min_val+128"][coords] = amplitude - amp_shift + 128
+    param_maps["min_val%256"][coords] = (amplitude - amp_shift) % 256
+    param_maps["max_val"][coords] = amplitude + amp_shift
     param_maps["wavelength-128"][coords] = wavelength - 128
 
 
@@ -64,8 +65,9 @@ def initiate_param_maps(shape):
     param_maps["wavelength"] = np.zeros((H, W))
     param_maps["phase_shift"] = np.zeros((H, W))
     param_maps["amplitude"] = np.zeros((H, W))
-    param_maps["min_amp+128"] = np.zeros((H, W))
-    param_maps["max_amp"] = np.zeros((H, W))
+    param_maps["min_val+128"] = np.zeros((H, W))
+    param_maps["min_val%256"] = np.zeros((H, W))
+    param_maps["max_val"] = np.zeros((H, W))
     param_maps["wavelength-128"] = np.zeros((H, W))
     return param_maps
 
