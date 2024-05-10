@@ -1,0 +1,70 @@
+2024-05-10_16-53-26
+subdomain_size: 64
+precision: 16
+angle: 1_1
+reference_coordinates: 8_6
+num_to_avg: 8
+floor: False
+fix_amplitude: False
+average fit parameters:
+amplitude_shift: 21.15978109534416 +- 11.697115437066708
+amplitude: 110.28414570747924 +- 42.377532110127724
+wavelength: 237.41841269918723 +- 16.926900656227662
+phase_shift: 15.267317474962013 +- 20.908931301528654
+
+2024-05-10_17-02-16
+subdomain_size: 64
+precision: 16
+angle: 1_1
+reference_coordinates: 8_6
+num_to_avg: 8
+floor: False
+fix_amplitude: True
+
+average fit parameters:
+amplitude_shift: 22.378946524056346 +- 13.385848196833019
+amplitude: 102.01228973064673 +- 41.79207624560768
+wavelength: 240.89292402974834 +- 14.236461927846634
+phase_shift: 13.26078982801282 +- 25.73807478355394
+
+fit with fixed amplitude
+average fit parameters:
+amplitude_shift: 22.31766755186568 +- 12.873409304843552
+wavelength: 240.3213802188527 +- 23.03858717266947
+phase_shift: 13.81968262815173 +- 26.767470616746206
+
+2024-05-10_17-13-03
+subdomain_size: 64
+precision: 16
+angle: 1_1
+reference_coordinates: 8_6
+num_to_avg: 8
+floor: True
+fix_amplitude: True
+
+average fit parameters:
+amplitude: 131.4631387542353 +- 30.554956281373585
+wavelength: 230.31542812884564 +- 24.7211101708097
+phase_shift: 19.407974725496988 +- 27.243992130666157
+
+fit with fixed amplitude
+average fit parameters:
+wavelength: 227.26866601615325 +- 23.465274375936943
+phase_shift: 16.702147726644608 +- 22.806710649545725
+
+2024-05-10_19-28-23
+subdomain_size: 64
+precision: 16
+angle: 1_1
+reference_coordinates: 8_6
+num_to_avg: 8
+floor: False
+fix_amplitude: False
+correspond_to2pi: 256
+
+average fit parameters:
+amplitude_shift: 24.213836058988544 +- 18.58930006029049
+amplitude: 87.57773978781275 +- 47.834134888778394
+wavelength: 220.9221167223212 +- 29.753163590602963
+phase_shift: 9.431001059485956 +- 24.515394980928484
+
