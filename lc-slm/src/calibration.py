@@ -25,7 +25,6 @@ import numpy as np
 import argparse
 from pylablib.devices import uc480
 from time import time
-from functools import partial
 import fit_stuff as f
 
 
@@ -67,7 +66,7 @@ def make_loop_args(args):
     cam = uc480.UC480Camera()
     window = create_tk_window()
     print("creating sample holograms...")
-    samples_list = make_sample_holograms(args.angle, args.precision)
+    samples_list = make_sample_holograms(args.angle, args.precision, args.correspond_to2pi)
     rx, ry = read_reference_coordinates(args.reference_coordinates)
     real_reference_coordinates = (rx * subdomain_size, ry * subdomain_size)
     black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))

@@ -2,11 +2,7 @@ from calibration_lib import *
 from calibration import *
 import numpy as np
 import argparse
-from pylablib.devices import uc480
 from time import time
-import color_phase_relation as cp
-from scipy.optimize import curve_fit
-from color_phase_relation import general_cos
 
 
 def fit_maps(args):
@@ -40,43 +36,11 @@ def create_param_maps(param_maps, subdomain_size):
         create_phase_mask(param_maps[key], subdomain_size, specification, dest_dir)
 
 
-# def fit_intensity_generalc_maps(intensity_data, param_maps, coords):
-#     xdata, ydata = intensity_data
-#     intensity_range = 256
-#     phase_range = 256
-#     supposed_wavelength = phase_range
-#     p0 = [intensity_range/2, supposed_wavelength, 0, intensity_range/2]
-#     lower_bounds = [0, supposed_wavelength * 0.6, 0, 0]
-#     upper_bounds = [intensity_range, supposed_wavelength * 1.5, phase_range, intensity_range]
-#     try:
-#         params, _ = curve_fit(general_cos, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
-#     except:
-#         print("fit unsuccessful")
-#         return
-#     amp_shift, wavelength, phase_shift, amplitude = params
-#     param_maps["amplitude_shift"][coords] = amp_shift
-#     param_maps["amplitude"][coords] = amplitude
-#     param_maps["wavelength"][coords] = wavelength
-#     param_maps["phase_shift"][coords] = phase_shift
-#     param_maps["min_val+128"][coords] = amplitude - amp_shift + 128
-#     param_maps["min_val%256"][coords] = (amplitude - amp_shift) % 256
-#     param_maps["max_val"][coords] = amplitude + amp_shift
-#     param_maps["wavelength-128"][coords] = wavelength - 128
-
-
 def initiate_param_maps(shape, fit_func):
     H, W = shape
     param_maps = {}
-    for key in fit_func.__code__.co_varnames[1:]: # TODO: replace inspect.signature with this on other places
+    for key in fit_func.__code__.co_varnames[1:]:
         param_maps[key] = np.zeros((H, W))
-    # param_maps["amplitude_shift"] = np.zeros((H, W))
-    # param_maps["wavelength"] = np.zeros((H, W))
-    # param_maps["phase_shift"] = np.zeros((H, W))
-    # param_maps["amplitude"] = np.zeros((H, W))
-    # param_maps["min_val+128"] = np.zeros((H, W))
-    # param_maps["min_val%256"] = np.zeros((H, W))
-    # param_maps["max_val"] = np.zeros((H, W))
-    # param_maps["wavelength-128"] = np.zeros((H, W))
     return param_maps
 
 

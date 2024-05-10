@@ -15,11 +15,13 @@ from pylablib.devices import uc480
 from time import sleep
 from PIL import Image as im
 import fit_stuff as f
+import time
+import os
 
 
 
 def main(precision, runs, wait, floor):
-    fit_func = f.positive_cos_floor if floor else f.positive_cos
+    fit_func = f.positive_cos_floor() if floor else f.positive_cos
     cam = uc480.UC480Camera()
     window = cl.create_tk_window()
     subdomain_size = int(np.sqrt(1 / 5) * c.slm_height)
@@ -31,22 +33,26 @@ def main(precision, runs, wait, floor):
     cl.set_exposure_wrt_reference_img(cam, window, (220, 240), hologram_set[0], 8)
     intensity_coords = cl.get_highest_intensity_coordinates_img(cam, window, hologram_set[0], 8)
     fit_params_dict = {param: [] for param in fit_func.__code__.co_varnames[1:]}
-    for _ in range(runs):
-        two_big_loop(precision, cam, window, hologram_set, intensity_coords, fit_params_dict, fit_func)
-        # make_plot(fit_params_dict, precision)
-        print(fit_params_dict[-1])
+    time_name = time.strftime("%Y-%m-%d_%H-%M-%S")
+    for i in range(runs):
+        intensity_list = two_big_loop(precision, cam, window, hologram_set, intensity_coords)
+        param_dict = f.fit_intensity_general(intensity_list, fit_func)
+        cp.fill_fit_params_dict(fit_params_dict, param_dict)
+        make_plot(intensity_list, fit_params_dict, i, time_name)
+        print(f"run {i + 1}/{runs}")
         sleep(wait)
     avg_params, std = cp.average_fit_params(fit_params_dict)
     cp.params_printout(avg_params, std)
 
 
-def make_plot(fit_params_dict, precision):
-    intensity_fit = plot_fit_dict(fit_params_dict)
+def make_plot(intensity_list, fit_params_dict, time_name, i):
+    intensity_fit = e.plot_fit(fit_params_dict)
+    plot_image = e.create_plot_img(intensity_list, intensity_fit, (500, 200), 0, 0)
+    dest_dir = "lc-slm/images/fit_2big"
+    if not os.path.exists(dest_dir):
+        os.makedirs(dest_dir)
+    plot_image.save(f"{dest_dir}/{time_name}_{i}.png")
 
-
-def plot_fit_dict(fit_params_dict):
-    xdata = np.linspace(0, 255, 256)
-    ydata = cp.general_cos(xdata, amplitude_shift=fit_params_dict["amplitude_shift"][-1], amplitude=fit_params_dict["amplitude"][-1], wavelength=fit_params_dict["wavelength"][-1], phase_shift=fit_params_dict["phase_shift"][-1])
 
 def two_big_loop(precision, cam, window, hologram_set, intensity_coords, fit_params_dict, fit_fun):
     intensity_list = [[], []]
@@ -64,8 +70,8 @@ def two_big_loop(precision, cam, window, hologram_set, intensity_coords, fit_par
         phase = k * 256 // precision
         intensity_list[0].append(phase)
         intensity_list[1].append(intensity)
-    param_dict = f.fit_intensity_general(intensity_list, fit_fun)
-    cp.fill_fit_params_dict(fit_params_dict, param_dict)
+        k += 1
+    return intensity_list
 
 
 

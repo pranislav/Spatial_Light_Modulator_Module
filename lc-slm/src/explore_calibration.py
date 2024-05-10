@@ -28,12 +28,10 @@ from screeninfo import get_monitors
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from pylablib.devices import uc480
-from scipy.optimize import curve_fit
 import argparse
 import cv2
 import os
 from copy import deepcopy
-from functools import partial
 import time
 import fit_stuff as f
 
@@ -48,10 +46,11 @@ def explore(args):
     if not os.path.exists(video_dir): os.makedirs(video_dir)
     while True:
         black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
-        if params["decline"][-1] or params["precision"][-1]:
+        if params["decline"][-1] or params["precision"][-1] or params["correspond_to_2pi"][-1]:
             angle = last_nonempty(params["decline"])
             precision = last_nonempty(params["precision"])
-            sample_list = make_sample_holograms(angle, precision)
+            correspond_to_2pi = last_nonempty(params["correspond_to_2pi"])
+            sample_list = make_sample_holograms(angle, precision, correspond_to_2pi)
         if params["subdomain_size"][-1] or params["reference_position"][-1]:
             subdomain_size = last_nonempty(params["subdomain_size"])
             reference_position = real_subdomain_position(last_nonempty(params["reference_position"]), subdomain_size)
@@ -59,6 +58,7 @@ def explore(args):
         num_to_avg = last_nonempty(params["num_to_avg"])
         if params["decline"][-1] or params["subdomain_size"][-1]:
             cl.set_exposure_wrt_reference_img(cam, window, (256 / 4 - 20, 256 / 4), reference_hologram, num_to_avg)
+        if params["decline"][-1] or params["subdomain_size"][-1] or params["correspond_to_2pi"][-1]:
             intensity_coord = cl.get_highest_intensity_coordinates_img(cam, window, reference_hologram, num_to_avg)
         hologram = reference_hologram
         subdomain_position = real_subdomain_position(last_nonempty(params["subdomain_position"]), subdomain_size)
@@ -85,6 +85,7 @@ def calibration_loop_explore(window, cam, hologram, sample, subdomain_position, 
     k = 0
     while k < precision:
         hologram = cl.add_subdomain(hologram, sample[k], subdomain_position, subdomain_size)
+        hologram.show()
         cl.display_image_on_external_screen_img(window, hologram)
         intensity = 0
         for _ in range(num_to_avg):
@@ -108,50 +109,13 @@ def calibration_loop_explore(window, cam, hologram, sample, subdomain_position, 
 
 # ---------- fits and plots ---------- #
 
-# def fit_intensity(intensity_data):
-#     xdata, ydata = intensity_data
-#     supposed_frequency = 2 * np.pi /256
-#     p0 = [100, 100, supposed_frequency, 0]
-#     lower_bounds = [0, 0, supposed_frequency * 0.6, 0]
-#     upper_bounds = [255, 255, supposed_frequency * 1.5, 255]
-#     params, _ = curve_fit(general_cos, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
-#     return params
-
-
-# def fit_intensity_fixed_wavelength(intensity_data, wavelength):
-#     xdata, ydata = intensity_data
-#     p0 = [100, 100, 0]
-#     lower_bounds = [0, 0, 0]
-#     upper_bounds = [255, 255, wavelength]
-#     cos_fixed_wavelenght = partial(cos_wavelength_last, wavelength=wavelength)
-#     params, _ = curve_fit(cos_fixed_wavelenght, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
-#     return params
-
-
 
 def print_fit_params(fit_params):
     for key, value in fit_params.items():
         print(f"{key}: {round(value, 2)}")
-    # amplitude_shift, amplitude, frequency, phase_shift = fit_params
-    # print(f"amplitude_shift: {round(amplitude_shift, 2)}")
-    # print(f"amplitude: {round(amplitude, 2)}")
-    # print(f"wavelength: {round(2*np.pi / frequency, 2)}")
-    # print(f"phase_shift: {round(phase_shift, 2)}")
-    # print("")
-
-
-# def general_cos(x, amplitude_shift, amplitude, frequency, phase_shift):
-#     return amplitude_shift + amplitude * np.cos(frequency * (x - phase_shift))
-
-# def cos_wavelength_last(x, amplitude_shift, amplitude, phase_shift, wavelength):
-#     return amplitude_shift + amplitude * np.cos((2 * np.pi / wavelength) * (x - phase_shift))
-
-# def cos_floor(x, amplitude, frequency, phase_shift):
-#     return amplitude * (1 + np.cos(frequency * (x - phase_shift)))
 
 
 def plot_fit(params):
-    # amplitude_shift, amplitude, frequency, phase_shift = params
     xdata = np.linspace(0, 255, 256)
     ydata = f.positive_cos(xdata, *params.values())
     return xdata, ydata
@@ -160,9 +124,9 @@ def plot_fit(params):
 # --------- # ---------- #
 
 # TODO: this one compare with the one in cl, if same functionality, move it there, this should be faster
-def make_sample_holograms(angle, precision):
+def make_sample_holograms(angle, precision, ct2pi):
     sample = []
-    sample.append(cl.decline(angle, precision))
+    sample.append(cl.decline(angle, 0, ct2pi))
     for i in range(1, precision):
         offset = i * 256 // precision
         sample.append((sample[0] + offset) % 256)
@@ -173,6 +137,7 @@ def make_sample_holograms(angle, precision):
 
 def default_params():
     params = {}
+    params["correspond_to_2pi"] = [256]
     params["subdomain_size"] = [32]
     params["reference_position"] = [(15, 11)]
     params["subdomain_position"] = [(14, 11)]
@@ -184,6 +149,7 @@ def default_params():
 
 def get_params(params):
     print("to retain current value, just press enter")
+    params["correspond_to_2pi"].append(get_correspond_to_2pi(last_nonempty(params["correspond_to_2pi"])))
     params["subdomain_size"].append(get_subdomain_size(last_nonempty(params["subdomain_size"])))
     subdomain_size = last_nonempty(params["subdomain_size"])
     params["reference_position"].append(get_position(last_nonempty(params["reference_position"]), subdomain_size, "reference"))
@@ -197,6 +163,13 @@ def last_nonempty(lst):
     for i in range(1, len(lst) + 1):
         if lst[-i]:
             return lst[-i]
+        
+
+def get_correspond_to_2pi(current):
+    correspond_to_2pi_to_be = input(f"enter value of pixel corresponding to 2pi phase shift. current value: {current} >> ")
+    if correspond_to_2pi_to_be == '':
+        return correspond_to_2pi_to_be
+    return int(correspond_to_2pi_to_be)
 
 
 def get_precision(current):

@@ -1,6 +1,5 @@
 import numpy as np
 from scipy.optimize import curve_fit
-import inspect
 
 
 def fit_intensity_general(intensity_data, func):
@@ -31,3 +30,7 @@ def positive_cos_fixed_wavelength(wavelength):
 
 def positive_cos_floor_fixed_amp(amplitude):
     return lambda x, wavelength, phase_shift: positive_cos(x, 0, amplitude, wavelength, phase_shift)
+
+def positive_cos_floor_fixed_wavelength(wavelength):
+    return lambda x, amplitude, phase_shift: positive_cos(x, 0, amplitude, wavelength, phase_shift)
+

@@ -5,16 +5,14 @@ import argparse
 import calibration as ca
 from calibration_lib import *
 from functools import partial
-# import explore_calibration as e
-from scipy.optimize import curve_fit
-import inspect
-import fit_stuff as f
+import fit_stuff as fs
+import time
 
 
 def main(args):
     loop_args = ca.make_loop_args(args)
     calibration_loop = partial(ca.calibration_loop, loop_args=loop_args)
-    fit_func = f.positive_cos_floor() if args.floor else f.positive_cos
+    fit_func = fs.positive_cos_floor() if args.floor else fs.positive_cos
     fit_params_dict = {param: [] for param in fit_func.__code__.co_varnames[1:]}
     intensity_lists = []
     H, W = get_number_of_subdomains(args.subdomain_size)
@@ -27,29 +25,41 @@ def main(args):
                 continue
             if do_loop(i, j):
                 intensity_lists.append(calibration_loop(i, j))
-                # try:
-                param_dict = f.fit_intensity_general(intensity_lists[-1], fit_func)
-                # except:
-                #     print("fit unsuccessful")
-                #     continue
+                try: # TODO: catch just the exception that is thrown when fitting is unsuccessful
+                    param_dict = fs.fit_intensity_general(intensity_lists[-1], fit_func)
+                except:
+                    print("fit unsuccessful")
+                    continue
                 fill_fit_params_dict(fit_params_dict, param_dict)
     avg_params, std = average_fit_params(fit_params_dict)
-    params_printout(avg_params, std)
+    file_name = "lc-slm/fit_params.txt"
+    print_info(args, file_name)
+    params_printout(avg_params, std, file_name)
     if args.fix_amplitude:
-        fit_func = f.positive_cos_floor_fixed_amp(avg_params["amplitude"]) if args.floor else f.positive_cos_fixed_amp(avg_params["amplitude"])
-        fit_params_dict = {"amplitude_shift": [], "wavelength": [], "phase_shift": []}
+        fit_func = fs.positive_cos_floor_fixed_amp(avg_params["amplitude"]) if args.floor else fs.positive_cos_fixed_amp(avg_params["amplitude"])
+        fit_params_dict = {param: [] for param in fit_func.__code__.co_varnames[1:]}
         for intensity_list in intensity_lists:
-            f.fit_intensity_general(intensity_list, fit_func)
+            param_dict = fs.fit_intensity_general(intensity_list, fit_func)
+            fill_fit_params_dict(fit_params_dict, param_dict)
         avg_params, std = average_fit_params(fit_params_dict)
-        print("fitted params with fixed amplitude:")
-        params_printout(avg_params, std)
+        with open(file_name, "a") as f:
+            f.write("fit with fixed amplitude\n")
+        params_printout(avg_params, std, file_name)
 
 
+def print_info(args, file_name):
+    with open(file_name, "a") as f:
+        f.write(time.strftime("%Y-%m-%d_%H-%M-%S") + "\n")
+        for key in args.__dict__.keys():
+            f.write(f"{key}: {args.__dict__[key]}\n")
+        f.write("\n")
 
-def params_printout(avg_params, std):
-    print("average fit parameters:")
-    for key in avg_params.keys():
-        print(f"{key}: {avg_params[key]} +- {std[key]}")
+def params_printout(avg_params, std, file_name):
+    with open(file_name, "a") as f:
+        f.write("average fit parameters:\n")
+        for key in avg_params.keys():
+            f.write(f"{key}: {avg_params[key]} +- {std[key]}\n")
+        f.write("\n")
 
 def average_fit_params(fit_params_dict):
     avg_params = {}
@@ -61,91 +71,6 @@ def average_fit_params(fit_params_dict):
     return avg_params, std   
 
 # -------------------
-
-
-
-# ------------------- fitting functions -------------------
-
-# def fit_intensity_generalc(intensity_data, param_dict):
-#     xdata, ydata = intensity_data
-#     intensity_range = 256
-#     phase_range = 256
-#     supposed_wavelength = phase_range
-#     p0 = [intensity_range/2, supposed_wavelength, 0, intensity_range/2]
-#     lower_bounds = [0, supposed_wavelength * 0.6, 0, 0]
-#     upper_bounds = [intensity_range, supposed_wavelength * 1.5, phase_range, intensity_range]
-#     params, _ = curve_fit(general_cos, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
-#     param_dict["amplitude_shift"].append(params[0])
-#     param_dict["amplitude"].append(params[3])
-#     param_dict["wavelength"].append(params[1])
-#     param_dict["phase_shift"].append(params[2])
-
-
-
-# def fit_intensity_generalc_new(intensity_data, param_dict): 
-#     initial_guess = {"amplitude_shift": 128, "wavelength": 256, "phase_shift": 0, "amplitude": 128}
-#     lower_bounds = {"amplitude_shift": 0, "wavelength": 100, "phase_shift": 0, "amplitude": 0}
-#     upper_bounds = {"amplitude_shift": 256, "wavelength": 300, "phase_shift": 256, "amplitude": 256}
-#     xdata, ydata = intensity_data
-#     param_names = list(inspect.signature(general_cos).parameters.keys())[1:] # first parameter is independent variable
-#     p0 = [initial_guess[key] for key in param_names]
-#     lower_bounds = [lower_bounds[key] for key in param_names]
-#     upper_bounds = [upper_bounds[key] for key in param_names]
-#     params, _ = curve_fit(general_cos, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
-#     params_dict = dict(zip(param_names, params))
-#     for key in params_dict.keys():
-#         param_dict[key].append(params_dict[key])
-
-
-# def fit_intensity_generalc_amp(intensity_data, param_dict, amplitude):
-#     xdata, ydata = intensity_data
-#     intensity_range = 256
-#     phase_range = 256
-#     supposed_wavelength = phase_range
-#     p0 = [intensity_range/2, supposed_wavelength, 0]
-#     lower_bounds = [0, supposed_wavelength * 0.6, 0]
-#     upper_bounds = [intensity_range, supposed_wavelength * 1.5, phase_range]
-#     params, _ = curve_fit(partial(general_cos, amplitude=amplitude), xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
-#     param_dict["amplitude_shift"].append(params[0])
-#     param_dict["wavelength"].append(params[1])
-#     param_dict["phase_shift"].append(params[2])
-
-# def fit_intensity_floorc(intensity_data, param_dict):
-#     xdata, ydata = intensity_data
-#     intensity_range = 256
-#     phase_range = 256
-#     supposed_wavelength = phase_range
-#     p0 = [supposed_wavelength, 0, intensity_range/2]
-#     lower_bounds = [supposed_wavelength * 0.6, 0, 0]
-#     upper_bounds = [supposed_wavelength * 1.5, phase_range, intensity_range]
-#     params, _ = curve_fit(floor_cos, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
-#     param_dict["amplitude"].append(params[2])
-#     param_dict["wavelength"].append(params[0])
-#     param_dict["phase_shift"].append(params[1])
-
-
-# def fit_intensity_floorc_amp(intensity_data, param_dict, amplitude):
-#     xdata, ydata = intensity_data
-#     intensity_range = 256
-#     phase_range = 256
-#     supposed_wavelength = phase_range
-#     p0 = [supposed_wavelength, 0]
-#     lower_bounds = [supposed_wavelength * 0.6, 0]
-#     upper_bounds = [supposed_wavelength * 1.5, phase_range]
-#     floor_cos_amp = partial(floor_cos, amplitude=amplitude)
-#     params, _ = curve_fit(floor_cos_amp, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
-#     param_dict["wavelength"].append(params[0])
-#     param_dict["phase_shift"].append(params[1])
-
-# just for demo that the problem is in partial
-# def floor_cos_amp(x, wavelength, phase_shift):
-#     return 76 * (1 + np.cos((2 * np.pi / wavelength) * (x - phase_shift)))
-
-def general_cos(x, amplitude_shift, wavelength, phase_shift, amplitude):
-    return amplitude_shift + amplitude * np.cos((2 * np.pi / wavelength) * (x - phase_shift))
-
-def floor_cos(x, wavelength, phase_shift, amplitude):
-    return amplitude * (1 + np.cos((2 * np.pi / wavelength) * (x - phase_shift)))
 
 
 def fill_fit_params_dict(dct, params):
@@ -161,6 +86,9 @@ def circle(dimensions, radius, i, j):
         return True
     return False
 
+# def do_loop_coords_special(i, j):
+#     return j == 3 and (i ==2 or i == 3) or j == 4 and (i == 2 or i == 3)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Script for calibrating an optical path by SLM")
 
@@ -173,7 +101,7 @@ if __name__ == "__main__":
     parser.add_argument('-avg', '--num_to_avg', type=int, default=8, help="number of frames to average when measuring intensity")
     parser.add_argument('-f', '--floor', action='store_true', help="when fitting, it is supposed that minimal intensity is almost zero")
     parser.add_argument('-amp', '--fix_amplitude', action='store_true', help="makes second round of fitting with fixed amplitude (determined in previous round)")
-
+    parser.add_argument('-ct2pi', '--correspond_to2pi', type=int, default=256, help="value of pixel corresponding to 2pi phase shift")
     args = parser.parse_args()
 
     main(args)
