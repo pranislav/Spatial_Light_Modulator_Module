@@ -68,3 +68,35 @@ amplitude: 87.57773978781275 +- 47.834134888778394
 wavelength: 220.9221167223212 +- 29.753163590602963
 phase_shift: 9.431001059485956 +- 24.515394980928484
 
+2024-05-10_19-37-12
+subdomain_size: 64
+precision: 16
+angle: 1_1
+reference_coordinates: 8_6
+num_to_avg: 8
+floor: False
+fix_amplitude: False
+correspond_to2pi: 220
+
+average fit parameters:
+amplitude_shift: 22.092703921383276 +- 16.30152495787541
+amplitude: 127.05828818499565 +- 40.26434561375697
+wavelength: 240.71663612987382 +- 15.351076473096713
+phase_shift: 4.375801201744544 +- 13.065587962177915
+
+2024-05-10_19-45-24
+subdomain_size: 64
+precision: 16
+angle: 1_1
+reference_coordinates: 8_6
+num_to_avg: 8
+floor: False
+fix_amplitude: False
+correspond_to2pi: 230
+
+average fit parameters:
+amplitude_shift: 24.12798394736841 +- 17.63443221625884
+amplitude: 126.00197252168827 +- 46.23678187051102
+wavelength: 242.21483813707178 +- 15.991373765892321
+phase_shift: 6.544163784057691 +- 17.51705902237268
+

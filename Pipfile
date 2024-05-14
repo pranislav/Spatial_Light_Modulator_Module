@@ -11,6 +11,7 @@ imageio = "*"
 opencv-python = "*"
 pylablib = "*"
 screeninfo = "*"
+pytest = "*"
 
 [dev-packages]
 ipykernel = "*"
