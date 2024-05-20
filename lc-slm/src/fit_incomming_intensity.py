@@ -5,7 +5,7 @@ import constants as c
 
 # Generate some example data
 data = "paper_shade_01"
-Z = np.array(im.open(f"lc-slm/incomming_intensity_images/{data}.png").convert("L")) / 256
+Z = np.array(im.open(f"lc-slm/images/incomming_intensity_images/{data}.png").convert("L")) / 256
 y_len, x_len = Z.shape
 x_data = np.linspace(0, x_len, x_len)
 y_data = np.linspace(0, y_len, y_len)

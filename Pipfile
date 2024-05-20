@@ -12,6 +12,8 @@ opencv-python = "*"
 pylablib = "*"
 screeninfo = "*"
 pytest = "*"
+cffi = "*"
+scikit-image = "*"
 
 [dev-packages]
 ipykernel = "*"
