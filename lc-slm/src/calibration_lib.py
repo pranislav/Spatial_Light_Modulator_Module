@@ -6,9 +6,18 @@ import numpy as np
 import os
 import sys
 import explore_calibration as e
+import phase_mask_smoothing as pms
 
 
-
+def produce_phase_mask(phase_mask, args):
+    specification = "phase_mask_" + make_specification(args)
+    dest_dir = "lc-slm/holograms/holograms_for_calibration/calibration_phase_masks"
+    big_phase_mask = expand_phase_mask(phase_mask, args.subdomain_size)
+    save_phase_mask(big_phase_mask, dest_dir, specification)
+    phase_mask_unwrapped = pms.unwrap_phase_picture(big_phase_mask, args.correspond_to2pi)
+    if args.smooth_phase_mask:
+        big_phase_mask = pms.circular_box_blur(phase_mask_unwrapped, args.subdomain_size // 2)
+    save_phase_mask(big_phase_mask, dest_dir, "smoothed_"+specification)
 
 def make_specification(args):
     return f"size_{args.subdomain_size}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref{args.reference_coordinates}_avg{args.num_to_avg}_{args.calibration_name}"

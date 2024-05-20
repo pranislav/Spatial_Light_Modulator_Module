@@ -50,12 +50,7 @@ def calibrate(args):
                 continue
             intensity_list = calibration_loop(i, j, loop_args)
             phase_mask[i, j] = best_phase(intensity_list)
-    specification = "phase_mask_" + make_specification(args)
-    dest_dir = "lc-slm/holograms/holograms_for_calibration/calibration_phase_masks"
-    big_phase_mask = expand_phase_mask(phase_mask, args.subdomain_size)
-    if args.smooth_phase_mask:
-        big_phase_mask = pms.circular_box_blur(big_phase_mask, args.subdomain_size // 2)
-    save_phase_mask(big_phase_mask, dest_dir, specification)
+    produce_phase_mask(phase_mask, args)
 
 
 def compose_func(func1, func2):
