@@ -11,28 +11,35 @@ import copy
 from polyfit2d import polyfit2d
 import cv2
 
+
 # def main(phase_mask_name, correspond_to_2pi, subdomain_size):
 #     phase_mask = read_phase_mask(phase_mask_name)
 #     small_phase_mask = subdomain_to_pixel(phase_mask, subdomain_size)
 #     unwrapped_mask = unwrap_phase_picture(small_phase_mask, correspond_to_2pi, subdomain_size)
-#     original_size_unwrapped_mask = pixel_to_subdomain(unwrapped_mask.compressed(), subdomain_size)
-#     original_size_unwrapped_mask_img = im.fromarray(original_size_unwrapped_mask, mode='L')
-#     blurred_unwrapped_mask = circular_box_blur(original_size_unwrapped_mask_img, subdomain_size // 2)
+#     unwrapped_mask_original_frame = original_frame(small_phase_mask, unwrapped_mask.data)
+#     original_size_unwrapped_mask = pixel_to_subdomain(unwrapped_mask_original_frame, subdomain_size)
+#     blurred_unwrapped_mask = circular_box_blur(original_size_unwrapped_mask, subdomain_size // 2)
 #     time_name = time.strftime("%Y-%m-%d_%H-%M-%S")
 #     save_blurred_mask_unwrapped(copy.deepcopy(blurred_unwrapped_mask), phase_mask_name, time_name)
 #     save_blurred_mask(blurred_unwrapped_mask, phase_mask_name, time_name, correspond_to_2pi)
-
 def main(args):
     phase_mask = read_phase_mask(args.phase_mask_name)
     small_phase_mask = subdomain_to_pixel(phase_mask, args.subdomain_size)
-    unwrapped_mask = unwrap_phase_picture(small_phase_mask, args.correspond_to_2pi, args.subdomain_size)
-    original_size_unwrapped_mask = pixel_to_subdomain(ma.getdata(unwrapped_mask), args.subdomain_size)
+    unwrapped_mask = unwrap_phase_picture(small_phase_mask, args.correspond_to_2pi)
+    # unwrapped_mask_original_frame = original_frame(small_phase_mask, unwrapped_mask.data)
+    original_size_unwrapped_mask = pixel_to_subdomain(unwrapped_mask, args.subdomain_size)
     # original_size_unwrapped_mask_img = im.fromarray(original_size_unwrapped_mask, mode='L')
     blurred_unwrapped_mask = circular_box_blur(original_size_unwrapped_mask, args.subdomain_size // 2)
     time_name = time.strftime("%Y-%m-%d_%H-%M-%S")
     save_blurred_mask_unwrapped(copy.deepcopy(blurred_unwrapped_mask), args.phase_mask_name, time_name)
     save_blurred_mask(blurred_unwrapped_mask, args.phase_mask_name, time_name, args.correspond_to_2pi)
 
+
+def original_frame(phase_mask, unwrapped_mask):
+    mask = circular_hole(phase_mask.shape)
+    unwrapped_mask_without_frame = unwrapped_mask * (np.ones(phase_mask.shape) - mask)
+    frame = phase_mask * mask
+    return unwrapped_mask_without_frame #+ frame
 
 def save_blurred_mask_unwrapped(blurred_mask, name, time_name):
     blurred_mask = blurred_mask / max(blurred_mask.flatten()) * 255
@@ -53,7 +60,7 @@ def save_blurred_mask(blurred_mask, name, time_name, correspond_to_2pi):
 #     fitted_mask = polyval(x, p)
 #     return fitted_mask.reshape(h, w)
 
-def unwrap_phase_picture(phase_mask, correspond_to_2pi, subdomain_size):
+def unwrap_phase_picture(phase_mask, correspond_to_2pi):
     phase_mask = transform_to_phase_values(phase_mask, correspond_to_2pi)
     phase_mask = mask_mask(phase_mask)
     unwrapped_phase_mask = unwrap_phase(phase_mask)
@@ -87,7 +94,10 @@ def pixel_to_subdomain(phase_mask, subdomain_size):
         for k in range(ss):
             for j in range(w):
                 for p in range(ss):
-                    big_phase_mask[ss * i + k, ss * j + p] = int(phase_mask[i, j])
+                    try:
+                        big_phase_mask[ss * i + k, ss * j + p] = int(phase_mask[i, j])
+                    except:
+                        big_phase_mask[ss * i + k, ss * j + p] = 0
     return big_phase_mask
             
 
@@ -95,15 +105,20 @@ def transform_to_phase_values(phase_mask, correspond_to_2pi):
     return phase_mask / correspond_to_2pi * 2 * np.pi - np.pi
 
 def mask_mask(phase_mask):
-    h, w = phase_mask.shape
+    mask = circular_hole(phase_mask.shape)
+    return ma.masked_array(phase_mask, mask)
+
+def circular_hole(shape):
+    h, w = shape
     R = h // 2 + 1
     i0, j0 = h // 2, w // 2
     mask = np.array([[0 if (i - i0)**2 + (j - j0)**2 < R**2 else 1 for j in range(w)] for i in range(h)])
-    return ma.masked_array(phase_mask, mask)
+    return mask
 
 def transform_to_color_values(phase_mask, correspond_to_2pi):
     offset = determine_offset(phase_mask.min())
-    return (phase_mask + offset) * correspond_to_2pi / (2 * np.pi)
+    positive_phase_mask = (phase_mask + offset) * correspond_to_2pi / (2 * np.pi)
+    return positive_phase_mask
 
 def determine_offset(min_val):
     offset = 0
@@ -122,9 +137,15 @@ def create_circular_kernel(radius):
 
 def circular_box_blur(image, radius):
     kernel = create_circular_kernel(radius)
+    # im.fromarray(image).convert("L").show()
     blurred = cv2.filter2D(image, -1, kernel)
+    show_negative(blurred)
+    # im.fromarray(blurred).convert("L").show()
     return blurred
 
+def show_negative(arr):
+    binary = np.array([[0 if a > 0 else 255 for a in arr[i]]for i in range(arr.shape[0])])
+    im.fromarray(binary).convert("L").show()
 
 
 if __name__ == "__main__":
