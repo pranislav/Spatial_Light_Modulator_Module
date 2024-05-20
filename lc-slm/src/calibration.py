@@ -26,6 +26,7 @@ import argparse
 from pylablib.devices import uc480
 from time import time
 import fit_stuff as f
+import phase_mask_smoothing as pms
 
 
 def calibrate(args):
@@ -35,6 +36,8 @@ def calibrate(args):
     H, W = get_number_of_subdomains(args.subdomain_size)
     j0, i0 = read_reference_coordinates(args.reference_coordinates)
     phase_mask = np.zeros((H, W))
+    if args.skip_subdomains_out_of_inscribed_circle:
+        skip_subdomain = pms.circular_hole_inclusive((H, W))
     start_loops = time()
     print("mainloop start. estimate of remaining time comes after first row. actual row:")
     for i in range(H):
@@ -42,6 +45,8 @@ def calibrate(args):
         print(f"{i + 1}/{H}")
         for j in range(W):
             if i == i0 and j == j0:
+                continue
+            if skip_subdomain[i, j]:
                 continue
             intensity_list = calibration_loop(i, j, loop_args)
             phase_mask[i, j] = best_phase(intensity_list)
@@ -129,6 +134,7 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--reference_coordinates', type=str, default="16_12", help=help_ref_coord)
     parser.add_argument('-avg', '--num_to_avg', type=int, default=1, help="number of frames to average when measuring intensity")
     parser.add_argument('-ct2pi', '--correspond_to2pi', type=int, default=256, help="value of pixel corresponding to 2pi phase shift")
+    parser.add_argument('-skip', '--skip_subdomains_out_of_inscribed_circle', type=bool, default=False, help="if True, subdomains out of the inscribed circle will not be callibrated. use when the SLM is not fully illuminated and the light beam is circular.")
 
     args = parser.parse_args()
     start = time()

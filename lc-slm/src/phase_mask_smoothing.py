@@ -36,7 +36,7 @@ def main(args):
 
 
 def original_frame(phase_mask, unwrapped_mask):
-    mask = circular_hole(phase_mask.shape)
+    mask = circular_hole_inclusive(phase_mask.shape)
     unwrapped_mask_without_frame = unwrapped_mask * (np.ones(phase_mask.shape) - mask)
     frame = phase_mask * mask
     return unwrapped_mask_without_frame #+ frame
@@ -62,7 +62,7 @@ def save_blurred_mask(blurred_mask, name, time_name, correspond_to_2pi):
 
 def unwrap_phase_picture(phase_mask, correspond_to_2pi):
     phase_mask = transform_to_phase_values(phase_mask, correspond_to_2pi)
-    phase_mask = mask_mask(phase_mask)
+    # phase_mask = mask_mask(phase_mask)
     unwrapped_phase_mask = unwrap_phase(phase_mask)
     unwrapped_phase_mask = transform_to_color_values(unwrapped_phase_mask, correspond_to_2pi)
     # preview_img(unwrapped_phase_mask)
@@ -94,10 +94,7 @@ def pixel_to_subdomain(phase_mask, subdomain_size):
         for k in range(ss):
             for j in range(w):
                 for p in range(ss):
-                    try:
-                        big_phase_mask[ss * i + k, ss * j + p] = int(phase_mask[i, j])
-                    except:
-                        big_phase_mask[ss * i + k, ss * j + p] = 0
+                    big_phase_mask[ss * i + k, ss * j + p] = int(phase_mask[i, j])
     return big_phase_mask
             
 
@@ -105,10 +102,10 @@ def transform_to_phase_values(phase_mask, correspond_to_2pi):
     return phase_mask / correspond_to_2pi * 2 * np.pi - np.pi
 
 def mask_mask(phase_mask):
-    mask = circular_hole(phase_mask.shape)
+    mask = circular_hole_inclusive(phase_mask.shape)
     return ma.masked_array(phase_mask, mask)
 
-def circular_hole(shape):
+def circular_hole_inclusive(shape):
     h, w = shape
     R = h // 2 + 1
     i0, j0 = h // 2, w // 2
