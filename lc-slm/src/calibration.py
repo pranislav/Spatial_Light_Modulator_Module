@@ -52,7 +52,11 @@ def calibrate(args):
             phase_mask[i, j] = best_phase(intensity_list)
     specification = "phase_mask_" + make_specification(args)
     dest_dir = "lc-slm/holograms/holograms_for_calibration/calibration_phase_masks"
-    create_phase_mask(phase_mask, args.subdomain_size, specification, dest_dir)
+    big_phase_mask = expand_phase_mask(phase_mask, args.subdomain_size)
+    if args.smooth_phase_mask:
+        big_phase_mask = pms.circular_box_blur(big_phase_mask, args.subdomain_size // 2)
+    save_phase_mask(big_phase_mask, dest_dir, specification)
+
 
 def compose_func(func1, func2):
     return lambda x: func1(func2(x))
@@ -134,7 +138,8 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--reference_coordinates', type=str, default="16_12", help=help_ref_coord)
     parser.add_argument('-avg', '--num_to_avg', type=int, default=1, help="number of frames to average when measuring intensity")
     parser.add_argument('-ct2pi', '--correspond_to2pi', type=int, default=256, help="value of pixel corresponding to 2pi phase shift")
-    parser.add_argument('-skip', '--skip_subdomains_out_of_inscribed_circle', type=bool, default=False, help="if True, subdomains out of the inscribed circle will not be callibrated. use when the SLM is not fully illuminated and the light beam is circular.")
+    parser.add_argument('-skip', '--skip_subdomains_out_of_inscribed_circle', action="store_true", help="subdomains out of the inscribed circle will not be callibrated. use when the SLM is not fully illuminated and the light beam is circular.")
+    parser.add_argument('-smooth', '--smooth_phase_mask', action="store_true", help="the phase mask will be smoothed")
 
     args = parser.parse_args()
     start = time()

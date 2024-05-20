@@ -9,6 +9,7 @@ import explore_calibration as e
 
 
 
+
 def make_specification(args):
     return f"size_{args.subdomain_size}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref{args.reference_coordinates}_avg{args.num_to_avg}_{args.calibration_name}"
 
@@ -140,18 +141,24 @@ def deviation_of_bright_pixels(picture, mean):
 
 # ------------ The Phase Mask ---------- #
 
-def create_phase_mask(phase_mask, subdomain_size, name, dest_dir):
-    '''creates and saves phase mask image based on phase mask array
+def expand_phase_mask(phase_mask, subdomain_size):
+    '''takes a phase mask where one pixel represents a subdomain
+    and returns a phase mask where one pixel represents a pixel in SLM
     '''
     h, w = phase_mask.shape
     ss = subdomain_size
-    phase_mask_img = im.new("L", (w * ss, h * ss))
+    big_phase_mask = np.zeros((h * ss, w * ss))
     for i in range(h):
         for k in range(ss):
             for j in range(w):
                 for p in range(ss):
-                    phase_mask_img.putpixel((ss * j + k, ss * i + p), int(phase_mask[i, j]))
+                    big_phase_mask.putpixel((ss * i + k, ss * j + p), int(phase_mask[i, j]))
+    return big_phase_mask
+
+
+def save_phase_mask(phase_mask, dest_dir, name):                
     if not os.path.exists(dest_dir): os.makedirs(dest_dir)
+    phase_mask_img = im.fromarray(phase_mask)
     phase_mask_img.save(f"{dest_dir}/{name}.png")
 
 
