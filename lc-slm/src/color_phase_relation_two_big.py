@@ -60,7 +60,7 @@ def two_big_loop(precision, cam, window, hologram_set, intensity_coords, fit_par
     while k < precision:
         cl.display_image_on_external_screen_img(window, hologram_set[k])
         frame = cam.snap()
-        intensity = cl.get_intensity_coordinates(frame, intensity_coords)
+        intensity = cl.get_intensity_on_coordinates(frame, intensity_coords)
         if intensity == 255:
             print("maximal intensity was reached, adapting...")
             cam.set_exposure(cam.get_exposure() * 0.9) # 10 % decrease of exposure time

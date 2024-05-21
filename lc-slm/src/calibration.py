@@ -104,7 +104,7 @@ def calibration_loop(i, j, loop_args):
         intensity = 0
         for _ in range(loop_args["num_to_avg"]):
             frame = cam.snap()
-            intensity += get_intensity_coordinates(frame, loop_args["intensity_coord"])
+            intensity += get_intensity_on_coordinates(frame, loop_args["intensity_coord"])
         intensity /= loop_args["num_to_avg"]
         # intensity = get_intensity_coordinates(average_frames(cam, loop_args["num_to_avg"]), loop_args["intensity_coord"])
         if intensity == 255:

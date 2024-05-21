@@ -186,7 +186,7 @@ def get_intensity_naive(img_arr: np.array):
     '''returns maximal value on the img'''
     return max(img_arr.flatten())
 
-def get_intensity_coordinates(img_arr: np.array, coordinates: tuple):
+def get_intensity_on_coordinates(img_arr: np.array, coordinates: tuple):
     return img_arr[coordinates]
 
 def get_intensity_integral(frame, square):
