@@ -11,13 +11,13 @@ import phase_mask_smoothing as pms
 
 def produce_phase_mask(phase_mask, args):
     specification = "phase_mask_" + make_specification(args)
-    dest_dir = "lc-slm/holograms/holograms_for_calibration/calibration_phase_masks"
+    dest_dir = "lc-slm/holograms/calibration_phase_masks"
     big_phase_mask = expand_phase_mask(phase_mask, args.subdomain_size)
     save_phase_mask(big_phase_mask, dest_dir, specification)
     phase_mask_unwrapped = pms.unwrap_phase_picture(big_phase_mask, args.correspond_to2pi)
     if args.smooth_phase_mask:
         big_phase_mask = pms.circular_box_blur(phase_mask_unwrapped, args.subdomain_size // 2)
-    save_phase_mask(big_phase_mask, dest_dir, "smoothed_"+specification)
+        save_phase_mask(big_phase_mask, dest_dir, "smoothed_"+specification)
 
 def make_specification(args):
     return f"size_{args.subdomain_size}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref{args.reference_coordinates}_avg{args.num_to_avg}_{args.calibration_name}"
@@ -161,14 +161,14 @@ def expand_phase_mask(phase_mask, subdomain_size):
         for k in range(ss):
             for j in range(w):
                 for p in range(ss):
-                    big_phase_mask.putpixel((ss * i + k, ss * j + p), int(phase_mask[i, j]))
+                    big_phase_mask[ss * i + k, ss * j + p] =  int(phase_mask[i, j])
     return big_phase_mask
 
 
 def save_phase_mask(phase_mask, dest_dir, name):                
     if not os.path.exists(dest_dir): os.makedirs(dest_dir)
     phase_mask_img = im.fromarray(phase_mask)
-    phase_mask_img.save(f"{dest_dir}/{name}.png")
+    phase_mask_img.convert('L').save(f"{dest_dir}/{name}.png")
 
 
 def mask_hologram(path_to_hologram, path_to_mask):

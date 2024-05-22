@@ -85,12 +85,12 @@ def calibration_loop_explore(window, cam, hologram, sample, subdomain_position, 
     k = 0
     while k < precision:
         hologram = cl.add_subdomain(hologram, sample[k], subdomain_position, subdomain_size)
-        hologram.show()
         cl.display_image_on_external_screen_img(window, hologram)
+        # time.sleep(0.1)
         intensity = 0
         for _ in range(num_to_avg):
             frame = cam.snap()
-            intensity += cl.get_intensity_coordinates(frame, coordinates)
+            intensity += cl.get_intensity_on_coordinates(frame, coordinates)
         images_list.append(frame)
         intensity /= num_to_avg
         if intensity == 255:

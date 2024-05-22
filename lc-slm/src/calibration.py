@@ -38,6 +38,8 @@ def calibrate(args):
     phase_mask = np.zeros((H, W))
     if args.skip_subdomains_out_of_inscribed_circle:
         skip_subdomain = pms.circular_hole_inclusive((H, W))
+    else:
+        skip_subdomain = np.zeros((H, W))
     start_loops = time()
     print("mainloop start. estimate of remaining time comes after first row. actual row:")
     for i in range(H):
