@@ -38,23 +38,26 @@ def display_holograms(args):
             continue
         if command[:2] == 'c':
             print("in mode for displaying instant calibration holograms")
-            display_instant_calibration_holograms()
+            display_instant_calibration_holograms(window)
             continue
         name = command
         display_with_mask(window, name, directory, mask_arr, args.ct2pi)
 
 
-def display_instant_calibration_holograms():
-    params = e.default_params()
+def display_instant_calibration_holograms(window):
+    params = default_params()
     while True:
         get_params(params)
+        # print(params)
         sample_hologram = cl.decline(params["decline"], 0, params["correspond_to_2pi"])
         hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
-        hologram = cl.add_subdomain(hologram, sample_hologram, params["reference_position"], params["subdomain_size"])
+        reference_position = e.real_subdomain_position(params["reference_position"], params["subdomain_size"])
+        subdomain_position = e.real_subdomain_position(params["subdomain_position"], params["subdomain_size"])
+        hologram = cl.add_subdomain(hologram, sample_hologram, reference_position, params["subdomain_size"])
         if params["phase_shift"] != 0:
             sample_hologram = cl.decline(params["decline"], params["phase_shift"], params["correspond_to_2pi"])
-        hologram = cl.add_subdomain(hologram, sample_hologram, params["subdomain_position"], params["subdomain_size"])
-        cl.display_image_on_external_screen(hologram)
+        hologram = cl.add_subdomain(hologram, sample_hologram, subdomain_position, params["subdomain_size"])
+        cl.display_image_on_external_screen_img(window, hologram)
         command = input("press enter to continue, type 'q' to quit this mode >> ")
         if command == 'q':
             print("leaving mode for displaying instant calibration holograms")
@@ -77,7 +80,7 @@ def get_params(params):
     for key in params.keys():
         value = input(f"{key} (current: {params[key]}) >> ")
         if value != '':
-            params[key] = value
+            params[key] = eval(value)
 
 
 def display_with_mask(window, name, directory, mask_arr, ct2pi): 
@@ -101,6 +104,7 @@ def print_help():
     print(f"- cd <directory> - change directory, enter {directory_help}")
     print("- <hologram_name> - display hologram in current directory")
     print(f"- cm <mask_name> - change mask - {mask_help}")
+    print("- c - enter mode for displaying instant calibration holograms")
     print("- help - display this message")
     print("- q - quit")
 
