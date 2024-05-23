@@ -115,9 +115,9 @@ def print_fit_params(fit_params):
         print(f"{key}: {round(value, 2)}")
 
 
-def plot_fit(params):
+def plot_fit(params, fit_func=f.positive_cos):
     xdata = np.linspace(0, 255, 256)
-    ydata = f.positive_cos(xdata, *params.values())
+    ydata = fit_func(xdata, *params.values())
     return xdata, ydata
 
 

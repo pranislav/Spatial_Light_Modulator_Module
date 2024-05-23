@@ -41,7 +41,7 @@ def display_holograms(args):
             display_instant_calibration_holograms(window)
             continue
         name = command
-        display_with_mask(window, name, directory, mask_arr, args.ct2pi)
+        display_with_mask(window, name, directory, mask_arr, args.correspond_to2pi)
 
 
 def display_instant_calibration_holograms(window):

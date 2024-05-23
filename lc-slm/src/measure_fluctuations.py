@@ -21,7 +21,7 @@ def measure_fluctuations(args):
     window = cl.create_tk_window()
     hologram = create_calibration_hologram(args)
     if args.exposure is not None:
-        cam.set_exposure(cam, args.exposure)
+        cam.set_exposure(args.exposure)
     else:
         cl.set_exposure_wrt_reference_img(cam, window, (210, 240), hologram, 1)
     intensity_coords = cl.get_highest_intensity_coordinates_img(cam, window, hologram, 1)
@@ -42,7 +42,8 @@ def plot_and_save(intensity_evolution, expo):
     plt.ylim(0, 270)
     plt.xlabel("time [s]")
     plt.ylabel("intensity [a.u.]")
-    plt.title(f"Intensity evolution on static hologram, exposure time: {expo} s")
+    expo_round = round(expo, 5)
+    plt.title(f"Intensity evolution on static hologram, exposure time: {expo_round} s")
     time_name = time.strftime("%Y-%m-%d_%H-%M-%S")
     dest_dir = "lc-slm/images/measure_fluctuations"
     if not os.path.exists(dest_dir):
