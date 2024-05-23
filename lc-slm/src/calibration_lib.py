@@ -221,6 +221,10 @@ def set_exposure(cam, intensity_range, num_to_avg):
         if max_val > max_val_upper:
             step /= 2
             expo -= step
+        if expo < 0.000267:
+            print("exposure time reached minimal possible value!")
+            cam.set_exposure(0.000267)
+            return
         cam.set_exposure(expo)
         print(expo)
         avgd_frame = average_frames(cam, num_to_avg)
