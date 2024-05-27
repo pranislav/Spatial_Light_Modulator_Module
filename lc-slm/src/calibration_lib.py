@@ -16,8 +16,9 @@ def produce_phase_mask(phase_mask, args):
     save_phase_mask(big_phase_mask, dest_dir, specification)
     phase_mask_unwrapped = pms.unwrap_phase_picture(big_phase_mask, args.correspond_to2pi)
     if args.smooth_phase_mask:
-        big_phase_mask = pms.circular_box_blur(phase_mask_unwrapped, args.subdomain_size // 2)
-        save_phase_mask(big_phase_mask, dest_dir, "smoothed_"+specification)
+        # big_phase_mask = pms.circular_box_blur(phase_mask_unwrapped, args.subdomain_size // 2)
+        big_phase_mask = im.fromarray(phase_mask_unwrapped).resize((c.slm_width, c.slm_height), im.BICUBIC)
+        save_phase_mask(np.array(big_phase_mask) % args.ct2pi, dest_dir, "smoothed_"+specification)
 
 def make_specification(args):
     return f"size_{args.subdomain_size}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref{args.reference_coordinates}_avg{args.num_to_avg}_{args.calibration_name}"
@@ -74,7 +75,7 @@ def decline(angle, offset, ct2pi):
     for i in range(c.slm_height):
         for j in range(c.slm_width):
             new_phase = const * (np.sin(float(y_angle) * c.u) * i + np.sin(float(x_angle) * c.u) * j)
-            hologram[i, j] = int((new_phase + offset) % 256)
+            hologram[i, j] = int((new_phase + offset) % ct2pi)
     return hologram
 
 

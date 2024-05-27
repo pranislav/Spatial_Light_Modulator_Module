@@ -36,14 +36,16 @@ def calibrate(args):
     H, W = get_number_of_subdomains(args.subdomain_size)
     j0, i0 = read_reference_coordinates(args.reference_coordinates)
     phase_mask = np.zeros((H, W))
-    if args.skip_subdomains_out_of_inscribed_circle:
+    skip = args.skip_subdomains_out_of_inscribed_circle
+    if skip:
         skip_subdomain = pms.circular_hole_inclusive((H, W))
     else:
         skip_subdomain = np.zeros((H, W))
     start_loops = time()
-    print("mainloop start. estimate of remaining time comes after first row. actual row:")
+    print("mainloop start.")
+    if not skip: print("estimate of remaining time comes after first row. actual row:")
     for i in range(H):
-        if i == 1: print_estimate(H, start_loops)
+        if i == 1 and not skip: print_estimate(H, start_loops)
         print(f"{i + 1}/{H}")
         for j in range(W):
             if i == i0 and j == j0:
