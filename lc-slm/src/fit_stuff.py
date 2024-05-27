@@ -3,7 +3,7 @@ from scipy.optimize import curve_fit
 
 
 def fit_intensity_general(intensity_data, func):
-    initial_guess = {"amplitude_shift": 0, "wavelength": 256, "phase_shift": 0, "amplitude": 256}
+    initial_guess = {"amplitude_shift": 0, "wavelength": 256, "phase_shift": 100, "amplitude": 256}
     lower_bounds = {"amplitude_shift": 0, "wavelength": 100, "phase_shift": 0, "amplitude": 0}
     upper_bounds = {"amplitude_shift": 256, "wavelength": 300, "phase_shift": 256, "amplitude": 256}
     xdata, ydata = intensity_data
