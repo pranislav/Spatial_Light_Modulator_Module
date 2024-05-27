@@ -6,7 +6,7 @@ import os
 import explore_calibration as e
 import constants as c
 
-mask_dir = "lc-slm/holograms_for_calibration/calibration_phase_masks"
+mask_dir = "lc-slm/holograms/calibration_phase_masks"
 default_hologram_dir = "lc-slm/holograms"
 
 def display_holograms(args):
@@ -30,11 +30,11 @@ def display_holograms(args):
         if command[0:2] == "cm":
             if len(command) == 2: 
                 mask_arr = None
-                display_with_mask(window, name, directory, mask_arr, args.ct2pi)
+                display_with_mask(window, name, directory, mask_arr, args.correspond_to2pi)
                 continue
             maybe_mask_arr = set_mask(command[3:])
             if maybe_mask_arr is not None: mask_arr = maybe_mask_arr
-            display_with_mask(window, name, directory, mask_arr, args.ct2pi)
+            display_with_mask(window, name, directory, mask_arr, args.correspond_to2pi)
             continue
         if command[:2] == 'c':
             print("in mode for displaying instant calibration holograms")
