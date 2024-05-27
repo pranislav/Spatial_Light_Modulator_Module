@@ -20,7 +20,7 @@ def GS(target: np.array, path_to_incomming_intensity: str, tolerance: float, max
     produces input for SLM for creating 'target' image
     '''
 
-    incomming_intensity = np.array(im.open(path_to_incomming_intensity, "L"))
+    incomming_intensity = np.array(im.open(path_to_incomming_intensity))
     incomming_amplitude = np.sqrt(incomming_intensity)
     w, l = target.shape
     space_norm = w * l
@@ -118,12 +118,12 @@ def GS_without_fftshift(target: np.array, tolerance: float, max_loops: int, plot
     return phase_for_slm, exp_tar_for_slm
 
 
-def GD(demanded_output: np.array, path_to_inicomming_intensity: str, learning_rate: float, enhance_mask: np.array,\
+def GD(demanded_output: np.array, path_to_incomming_intensity: str, learning_rate: float, enhance_mask: np.array,\
        mask_relevance: float, tolerance: float, max_loops: int, unsettle, gif_info: gif_struct, plot_error: bool=False,\
        correspond_to2pi: int=256) -> Tuple[np.array, np.array, int]:
     
-    incomming_intensity = np.array(im.open(path_to_inicomming_intensity, "L"))
-    incomming_amplitude = np.sqrt(incomming_amplitude)
+    incomming_intensity = np.array(im.open(path_to_incomming_intensity))
+    incomming_amplitude = np.sqrt(incomming_intensity)
     w, l = demanded_output.shape
     space_norm = w * l
     initial_input = generate_initial_input(l, w)
