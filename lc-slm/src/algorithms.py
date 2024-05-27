@@ -23,39 +23,35 @@ def GS(target: np.array, path_to_incomming_intensity: str, tolerance: float, max
     incomming_intensity = np.array(im.open(path_to_incomming_intensity))
     incomming_amplitude = np.sqrt(incomming_intensity)
     w, l = target.shape
+    target_amplitude = np.sqrt(target)
     space_norm = w * l
     error = tolerance + 1
     error_evolution = []
     do_gif = gif_info.type
     skip_frames = gif_info.skip_frames
     n = 0
-    A = ifft2(target)
+    A = ifft2(target_amplitude)
     while error > tolerance and n < max_loops:
         B = incomming_amplitude * np.exp(1j * np.angle(A))
         C = fftshift(fft2(B))
-        D = np.abs(target) * np.exp(1j * np.angle(C))
+        D = np.abs(target_amplitude) * np.exp(1j * np.angle(C))
         A = (ifft2(ifftshift(D)))
-        exp_tar = np.abs(C) # np.abs(fftshift(fft2(A/abs(A))))
-        scale = np.sqrt(255)/exp_tar.max()
-        exp_tar *= scale
-        error = error_f(exp_tar**2, target**2, space_norm)
+        expected_outcome = np.abs(C)**2
+        expected_outcome *= 255 / expected_outcome.max()
+        error = error_f(expected_outcome, target, space_norm)
         error_evolution.append(error)
         if do_gif and n % skip_frames == 0:
             if do_gif == 'h':
                 img = im.fromarray((np.angle(A) + np.pi) * correspond_to2pi / (2*np.pi))
             if do_gif == 'i':
-                exp_tar **= 2
-                phase_for_slm = exp_tar * 255/np.amax(exp_tar)
-                img = im.fromarray(phase_for_slm)
+                img = im.fromarray(expected_outcome)
             img.convert("RGB").save(f"{gif_info.source_address}/{n // skip_frames}.jpg")
         n+=1
         if n % 10 == 0: print("-", end='')
     print()
     printout(error, n, error_evolution, "asdf", plot_error)
     phase_for_slm = (np.angle(A) + np.pi) * correspond_to2pi / (2*np.pi) # converts phase to color value, input for SLM
-    exp_tar = exp_tar**2
-    exp_tar_for_slm = exp_tar * 255/np.amax(exp_tar) # what the outcome from SLM should look like
-    return phase_for_slm, exp_tar_for_slm, n
+    return phase_for_slm, expected_outcome, n
 
 
 def GS_for_moving_traps(target: np.array, tolerance: float, max_loops: int, correspond_to2pi: int=256) -> np.array:
@@ -63,59 +59,56 @@ def GS_for_moving_traps(target: np.array, tolerance: float, max_loops: int, corr
     '''
 
     w, l = target.shape
+    target_amplitude = np.sqrt(target)
     space_norm = w * l
     error = tolerance + 1
     error_evolution = []
     n = 0
-    A = ifft2(target)
-    # print(is_zero(A))
+    A = ifft2(target_amplitude)
     while error > tolerance and n < max_loops:
         B = np.exp(1j * np.angle(A)) # our source amplitude is 1 everywhere
         C = fftshift(fft2(B))
-        D = np.abs(target) * np.exp(1j * np.angle(C))
+        D = np.abs(target_amplitude) * np.exp(1j * np.angle(C))
         A = (ifft2(ifftshift(D)))
-        exp_tar = np.abs(C) # np.abs(fftshift(fft2(A/abs(A))))
-        scale = np.sqrt(255)/exp_tar.max()
-        exp_tar *= scale
-        error = error_f(exp_tar**2, target**2, space_norm)
+        expected_outcome = np.abs(C) ** 2
+        expected_outcome *= 255 / expected_outcome.max()
+        error = error_f(expected_outcome, target, space_norm)
         error_evolution.append(error)
         n+=1
         if n % 10 == 0: print("-", end='')
     print()
     phase_for_slm = (np.angle(A) + np.pi) * correspond_to2pi / (2*np.pi) # converts phase to color value, input for SLM
-    exp_tar = exp_tar**2
-    exp_tar_for_slm = exp_tar * 255/np.amax(exp_tar) # what the outcome from SLM should look like
-    return phase_for_slm, exp_tar_for_slm, error_evolution
+    return phase_for_slm, expected_outcome, error_evolution
 
-def GS_without_fftshift(target: np.array, tolerance: float, max_loops: int, plot_error: bool=False, correspond_to2pi: int=256) -> np.array:
-    '''classical Gerchberg-Saxton algorithm
-    produces input for SLM for creating 'target' image
-    '''
+# def GS_without_fftshift(target: np.array, tolerance: float, max_loops: int, plot_error: bool=False, correspond_to2pi: int=256) -> np.array:
+#     '''classical Gerchberg-Saxton algorithm
+#     produces input for SLM for creating 'target' image
+#     '''
 
-    w, l = target.shape
-    space_norm = w * l
-    error = tolerance + 1
-    error_evolution = []
-    n = 0
-    A = ifft2(target)
-    while error > tolerance and n < max_loops:
-        n+=1
-        B = A/abs(A) # our source amplitude is 1 everywhere
-        C = fft2(B)
-        D = np.abs(target) * C/abs(C)
-        A = ifft2(D)
-        exp_tar = np.abs(C) # np.abs(fftshift(fft2(A/abs(A))))
-        scale = np.sqrt(255)/exp_tar.max()
-        exp_tar *= scale
-        error = error_f(exp_tar**2, target**2, space_norm)
-        error_evolution.append(error)
-        if n % 10 == 0: print("-", end='')
-    print()
-    printout(error, n, error_evolution, "asdf", plot_error)
-    phase_for_slm = np.angle(A) * correspond_to2pi / (2*np.pi) # converts phase to color value, input for SLM
-    exp_tar = exp_tar**2
-    exp_tar_for_slm = exp_tar * 255/np.amax(exp_tar) # what the outcome from SLM should look like
-    return phase_for_slm, exp_tar_for_slm
+#     w, l = target.shape
+#     space_norm = w * l
+#     error = tolerance + 1
+#     error_evolution = []
+#     n = 0
+#     A = ifft2(target)
+#     while error > tolerance and n < max_loops:
+#         n+=1
+#         B = A/abs(A) # our source amplitude is 1 everywhere
+#         C = fft2(B)
+#         D = np.abs(target) * C/abs(C)
+#         A = ifft2(D)
+#         expected_outcome = np.abs(C) # np.abs(fftshift(fft2(A/abs(A))))
+#         scale = np.sqrt(255)/expected_outcome.max()
+#         expected_outcome *= scale
+#         error = error_f(expected_outcome**2, target**2, space_norm)
+#         error_evolution.append(error)
+#         if n % 10 == 0: print("-", end='')
+#     print()
+#     printout(error, n, error_evolution, "asdf", plot_error)
+#     phase_for_slm = np.angle(A) * correspond_to2pi / (2*np.pi) # converts phase to color value, input for SLM
+#     expected_outcome = expected_outcome**2
+#     exp_tar_for_slm = expected_outcome * 255/np.amax(expected_outcome) # what the outcome from SLM should look like
+#     return phase_for_slm, exp_tar_for_slm
 
 
 def GD(demanded_output: np.array, path_to_incomming_intensity: str, learning_rate: float, enhance_mask: np.array,\
@@ -138,12 +131,12 @@ def GD(demanded_output: np.array, path_to_incomming_intensity: str, learning_rat
     while error > tolerance and i < max_loops:
         med_output = fft2(input/abs(input) * incomming_amplitude)
         output_unnormed = abs(med_output) **2
-        output = output_unnormed / np.amax(output_unnormed) * norm**2 # toto prip. zapocitat do grad. zostupu
+        output = output_unnormed / np.amax(output_unnormed) * norm # toto prip. zapocitat do grad. zostupu
         mask = 1 + mask_relevance * enhance_mask
-        dEdF = ifft2(mask * med_output * (output - demanded_output**2)) * incomming_amplitude
+        dEdF = ifft2(mask * med_output * (output - demanded_output)) * incomming_amplitude
         dEdX = np.array(list(map(dEdX_complex, dEdF, input)))
         input -= learning_rate * dEdX
-        error = error_f(output, demanded_output**2, space_norm)
+        error = error_f(output, demanded_output, space_norm)
         error_evolution.append(error)
         if do_gif and i % skip_frames == 0:
             if do_gif == 'h':
@@ -203,10 +196,10 @@ def GD_for_moving_traps(demanded_output: np.array, initial_input: np.array, lear
         output_unnormed = abs(med_output) **2
         output = output_unnormed / np.amax(output_unnormed) * norm**2 # toto prip. zapocitat do grad. zostupu
         mask = 1 + mask_relevance * demanded_output/255
-        dEdF = ifft2(mask * med_output * (output - demanded_output**2))
+        dEdF = ifft2(mask * med_output * (output - demanded_output))
         dEdX = np.array(list(map(dEdX_complex, dEdF, input)))
         input -= learning_rate * dEdX
-        error = error_f(output, demanded_output**2, space_norm)
+        error = error_f(output, demanded_output, space_norm)
         error_evolution.append(error)
         i += 1
         if unsettle and i % int(max_loops / unsettle) == 0:

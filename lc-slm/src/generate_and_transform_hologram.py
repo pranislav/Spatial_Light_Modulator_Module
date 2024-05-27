@@ -52,10 +52,10 @@ if invert:
     target_img = PIL.ImageOps.invert(target_img)
 if quarterize:
     target_img = hf.quarter(target_img)
-target = np.sqrt(np.array(target_img)) # toto musi ist prec to je picovina. a upravit algoritmy
+target = np.array(target_img) # toto musi ist prec to je picovina. a upravit algoritmy
 
 
-enhance_mask = np.array(target_img) / 255 # normed to 1 | enhance the error to get lower on light areas
+enhance_mask = target / 255 # normed to 1 | enhance the error to get lower on light areas
 
 # creating gif data structure (primarily for GD arguments reducing)
 gif = hf.gif_struct()
