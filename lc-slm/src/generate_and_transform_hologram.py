@@ -9,6 +9,7 @@ import constants as c
 import generate_and_transform_hologram_lib as hf
 import argparse
 import os
+import imageio
 
 
 
@@ -123,9 +124,25 @@ def make_hologram(args):
     algorithm = GS if args.alg == "GS" else GD
     target = prepare_target(args.img_name, args)
     args.path_to_incomming_intensity = "lc-slm/images/incomming_intensity_images/paper_shade_01_intensity_mask.png"
-    hologram = algorithm(target, args)
+    add_gif_source_address(args)
+    hologram, expected_outcome = algorithm(target, args)
+    if args.gif:
+        create_gif(args.gif_source_address, TODO)
     save_hologram(hologram, args)
+    if args.preview:
+        expected_outcome.show()
     
+
+def add_gif_source_address(args):
+    if not args.gif:
+        args.gif_source_address = None
+        return
+    if args.gif_type == "h":
+        args.gif_source_address = "lc-slm/holograms/gif_source"
+    elif args.gif_type == "i":
+        args.gif_source_address = "lc-slm/images/gif_source"
+        
+
 def prepare_target(img_name, args):
     target_img = im.open(f"lc-slm/images/{img_name}.png").convert('L').resize((int(c.slm_width), int(c.slm_height)))
     if args.invert:
@@ -141,6 +158,8 @@ def save_hologram(hologram, args):
         os.makedirs(dest_dir)
     delattr(args, "img_name")
     delattr(args, "destination_directory")
+    delattr(args, "gif_source_address")
+    delattr(args, "preview")
     hologram_name = make_hologram_name(args, img_name)
     hologram.convert("L").save(f"{dest_dir}/{hologram_name}.png")
 
@@ -158,6 +177,47 @@ def args_to_string(args):
     arg_string = arg_string.rstrip('_')
     return arg_string
 
+def quarter(image: im) -> im:
+    '''returns mostly blank image with original image pasted in upper-left corner
+    when generated hologram for such a transformed image, there will be no overlap
+    between different diffraction order of displayed image
+    '''
+    w, h = image.size
+    resized = image.resize((w // 2, h // 2))
+    ground = im.new("L", (w, h))
+    ground.paste(resized)
+    return ground
+
+
+def transform_hologram(hologram, angle, focal_len):
+    x_angle, y_angle = angle
+    hologram_screen = sc.Screen(hologram)
+    if x_angle:
+        hologram_screen.decline('x', x_angle)
+    if y_angle:
+        hologram_screen.decline('y', y_angle)
+    if focal_len:
+        hologram_screen.lens(focal_len)
+    return hologram_screen
+    
+
+def create_gif(img_dir, outgif_path):
+    '''creates gif from images in img_dir
+    and saves it as outgif_path
+    '''
+    with imageio.get_writer(outgif_path, mode='I') as writer:
+        for file in os.listdir(img_dir):
+            image = imageio.imread(f"{img_dir}/{file}")
+            writer.append_data(image)
+
+
+def remove_files_in_dir(dir: str):
+    '''removes all files in given directory'''
+    for file in os.listdir(dir):
+        os.remove(f"{dir}/{file}")
+
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("img_name", type=str, help="name of the target image")
@@ -173,8 +233,9 @@ if __name__ == "__main__":
     parser.add_argument("-unsettle", default=0, type=int, help="unsettle for GD algorithm; learning rate is (unsettle - 1) times doubled")
     parser.add_argument("-gif", action="store_true", help="create gif from hologram computing evolution")
     parser.add_argument("-gif_t", "--gif_type", choices=["h", "i"], help="type of gif: h for hologram, i for image (result)")
-    parser.add_argument("-gif_skip", default=2, type=int, help="each gif_skip-th frame will be in gif")
+    parser.add_argument("-gif_skip", default=1, type=int, help="each gif_skip-th frame will be in gif")
     parser.add_argument("-plot_error", action="store_true", help="plot error evolution")
+    parser.add_argument("-p", "--preview", action="store_true", help="show expected outcome at the end of the program run")
     args = parser.parse_args()
 
     make_hologram(args)
