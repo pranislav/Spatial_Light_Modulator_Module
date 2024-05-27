@@ -7,6 +7,7 @@ import os
 import sys
 import explore_calibration as e
 import phase_mask_smoothing as pms
+import time
 
 
 def produce_phase_mask(phase_mask, args):
@@ -327,6 +328,8 @@ def display_image_on_external_screen(window, image_path):
     # Update the window to display the new image
     window.update()
 
+    time.sleep(0.033)
+
 
 def display_image_on_external_screen_img(window, image):
     """
@@ -354,3 +357,5 @@ def display_image_on_external_screen_img(window, image):
 
     # Update the window to display the new image
     window.update()
+
+    time.sleep(0.033)
