@@ -13,17 +13,17 @@ import cv2
 import calibration_lib as cl
 
 
-# def main(phase_mask_name, correspond_to_2pi, subdomain_size):
-#     phase_mask = read_phase_mask(phase_mask_name)
-#     small_phase_mask = subdomain_to_pixel(phase_mask, subdomain_size)
-#     unwrapped_mask = unwrap_phase_picture(small_phase_mask, correspond_to_2pi, subdomain_size)
-#     unwrapped_mask_original_frame = original_frame(small_phase_mask, unwrapped_mask.data)
-#     original_size_unwrapped_mask = pixel_to_subdomain(unwrapped_mask_original_frame, subdomain_size)
-#     blurred_unwrapped_mask = circular_box_blur(original_size_unwrapped_mask, subdomain_size // 2)
-#     time_name = time.strftime("%Y-%m-%d_%H-%M-%S")
-#     save_blurred_mask_unwrapped(copy.deepcopy(blurred_unwrapped_mask), phase_mask_name, time_name)
-#     save_blurred_mask(blurred_unwrapped_mask, phase_mask_name, time_name, correspond_to_2pi)
 def main(args):
+    phase_mask = read_phase_mask(args.phase_mask_name)
+    small_phase_mask = shrink_phase_mask(phase_mask, args.subdomain_size)
+    unwrapped_mask = unwrap_phase_picture(small_phase_mask, args.correspond_to_2pi)
+    upscaled_unwrapped_mask = im.fromarray(unwrapped_mask).resize((c.slm_width, c.slm_height), im.BICUBIC)
+    upscaled_unwrapped_mask = np.array(upscaled_unwrapped_mask)
+    time_name = time.strftime("%Y-%m-%d_%H-%M-%S")
+    save_smoothed_mask_unwrapped(copy.deepcopy(upscaled_unwrapped_mask), args.phase_mask_name[:-4], time_name)
+    save_smoothed_mask(upscaled_unwrapped_mask, args.phase_mask_name[:-4], time_name, args.correspond_to_2pi)
+
+def main_blur(args):
     phase_mask = read_phase_mask(args.phase_mask_name)
     small_phase_mask = shrink_phase_mask(phase_mask, args.subdomain_size)
     unwrapped_mask = unwrap_phase_picture(small_phase_mask, args.correspond_to_2pi)
@@ -32,9 +32,8 @@ def main(args):
     # original_size_unwrapped_mask_img = im.fromarray(original_size_unwrapped_mask, mode='L')
     blurred_unwrapped_mask = circular_box_blur(original_size_unwrapped_mask, args.subdomain_size // 2)
     time_name = time.strftime("%Y-%m-%d_%H-%M-%S")
-    save_blurred_mask_unwrapped(copy.deepcopy(blurred_unwrapped_mask), args.phase_mask_name, time_name)
-    save_blurred_mask(blurred_unwrapped_mask, args.phase_mask_name, time_name, args.correspond_to_2pi)
-
+    save_smoothed_mask_unwrapped(copy.deepcopy(blurred_unwrapped_mask), args.phase_mask_name, time_name)
+    save_smoothed_mask(blurred_unwrapped_mask, args.phase_mask_name, time_name, args.correspond_to_2pi)
 
 def original_frame(phase_mask, unwrapped_mask):
     mask = circular_hole_inclusive(phase_mask.shape)
@@ -42,15 +41,15 @@ def original_frame(phase_mask, unwrapped_mask):
     frame = phase_mask * mask
     return unwrapped_mask_without_frame #+ frame
 
-def save_blurred_mask_unwrapped(blurred_mask, name, time_name):
-    blurred_mask = blurred_mask / max(blurred_mask.flatten()) * 255
-    blurred_mask_unwrapped = im.fromarray(blurred_mask)
-    blurred_mask_unwrapped.convert("L").save(f"{name}_blurred_unwrapped_{time_name}.png")
+def save_smoothed_mask_unwrapped(smoothed_mask, name, time_name):
+    smoothed_mask = smoothed_mask / max(smoothed_mask.flatten()) * 255
+    smoothed_mask_unwrapped = im.fromarray(smoothed_mask)
+    smoothed_mask_unwrapped.convert("L").save(f"{name}_smoothed_unwrapped_{time_name}.png")
 
-def save_blurred_mask(blurred_mask, name, time_name, correspond_to_2pi):
-    blurred_mask = blurred_mask % correspond_to_2pi
-    blurred_mask = im.fromarray(blurred_mask)
-    blurred_mask.convert("L").save(f"{name}_blurred_{time_name}.png")
+def save_smoothed_mask(smoothed_mask, name, time_name, correspond_to_2pi):
+    smoothed_mask = smoothed_mask % correspond_to_2pi
+    smoothed_mask = im.fromarray(smoothed_mask)
+    smoothed_mask.convert("L").save(f"{name}_smoothed_{time_name}.png")
 
 
 # def fit_and_eval(unwrapped_mask, polynom_degree):
