@@ -47,10 +47,8 @@ def main(args):
             fit_params_dict = iniciate_fit_params_dict(fit_func)
             intensity_lists = []
             cam.set_exposure(cam.get_exposure() * 0.9)
-            with open(file_name, "a") as file:
-                file.write(f"incomplete run ({i} loops):\n")
-            avg_params, std = cp.average_fit_params(fit_params_dict)
-            cp.params_printout(avg_params, std, file_name)
+            # if i > 0: 
+            #     record_incomplete_run(file_name, i, fit_params_dict)
             i = 0
             continue
         intensity_lists.append(intensity_list)
@@ -64,19 +62,27 @@ def main(args):
     cp.params_printout(avg_params, std, file_name)
     if args.fix_params:
         if args.floor:
-            fit_func = f. positive_cos_wavelength_only(amplitude_shift=0, *[avg_params[param] for param in f.positive_cos_wavelength_only.__code__.co_varnames[1:]])
+            fit_func = f. positive_cos_wavelength_only(amplitude_shift=0, amplitude=avg_params["amplitude"], phase_shift=avg_params["phase_shift"])
         else:
             fit_func = f.positive_cos_wavelength_only(*[avg_params[param] for param in f.positive_cos_wavelength_only.__code__.co_varnames])
         fit_params_dict = iniciate_fit_params_dict(fit_func)
+        i
         for intensity_list in intensity_lists:
             param_dict = f.fit_intensity_general(intensity_list, fit_func)
             make_plot(intensity_list, fit_func, param_dict, time_name+"fixed", i)
             cp.fill_fit_params_dict(fit_params_dict, param_dict)
+            i += 1
         avg_params, std = cp.average_fit_params(fit_params_dict)
         with open(file_name, "a") as file:
             file.write("fit with fixed parameters\n")
         cp.params_printout(avg_params, std, file_name)
 
+
+def record_incomplete_run(file_name, i, fit_params_dict):
+    with open(file_name, "a") as file:
+        file.write(f"incomplete run ({i} loops):\n")
+        avg_params, std = cp.average_fit_params(fit_params_dict)
+        cp.params_printout(avg_params, std, file_name)
 
 def iniciate_fit_params_dict(fit_func):
     return {param: [] for param in fit_func.__code__.co_varnames[1:]}
