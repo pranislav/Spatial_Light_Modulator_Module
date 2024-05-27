@@ -141,3 +141,303 @@ amplitude: 218.44050374296782 +- 15.24390721236352
 wavelength: 248.6613653468624 +- 8.792539498201508
 phase_shift: 9.379187115707365 +- 5.502090505730929
 
+2024-05-23_14-59-08
+precision: 32
+subdomain_size: 512
+correspond_to2pi: 256
+runs: 100
+floor: False
+wait: 0
+fix_params: True
+
+2024-05-23_14-59-59
+precision: 32
+subdomain_size: 512
+correspond_to2pi: 256
+runs: 20
+floor: False
+wait: 0
+fix_params: True
+
+average fit parameters:
+amplitude_shift: 203.92501423597477 +- 14.9618515095116
+amplitude: 3.58187854608895 +- 2.8263932307365436
+wavelength: 257.0000758266119 +- 58.94943557608381
+phase_shift: 34.07165209226931 +- 28.732730726843805
+
+fit with fixed parameters
+average fit parameters:
+wavelength: 246.49595912325995 +- 57.685916002910744
+
+
+
+2024-05-23_15-13-45
+precision: 32
+subdomain_size: 100
+correspond_to2pi: 256
+runs: 20
+floor: False
+wait: 0
+fix_params: True
+
+average fit parameters:
+amplitude_shift: 13.242588787883639 +- 4.200965437157878
+amplitude: 195.44644548589542 +- 7.147640750878828
+wavelength: 247.5873320992389 +- 9.079224098817173
+phase_shift: 5.202724739626553 +- 4.430340442769044
+
+fit with fixed parameters
+average fit parameters:
+wavelength: 247.70100644828554 +- 7.449703658094957
+
+2024-05-23_15-20-00
+precision: 32
+subdomain_size: 100
+correspond_to2pi: 256
+runs: 3
+floor: False
+wait: 0
+fix_params: True
+
+2024-05-23_15-20-21
+precision: 32
+subdomain_size: 100
+correspond_to2pi: 256
+runs: 3
+floor: False
+wait: 0
+fix_params: True
+
+average fit parameters:
+amplitude_shift: 12.331863166664625 +- 5.40877347557588
+amplitude: 210.56537176548716 +- 10.89085691597693
+wavelength: 245.90919224216262 +- 4.506169263619174
+phase_shift: 6.76294626377907 +- 4.782473949545151
+
+fit with fixed parameters
+average fit parameters:
+wavelength: 246.1307667197708 +- 8.128964691659826
+
+2024-05-23_15-23-54
+precision: 32
+subdomain_size: 100
+correspond_to2pi: 256
+runs: 50
+floor: False
+wait: 0
+fix_params: True
+
+average fit parameters:
+
+incomplete run (13 loops):
+average fit parameters:
+amplitude_shift: 11.746820320093027 +- 5.039112340653765
+amplitude: 175.0534500598537 +- 10.077277828116546
+wavelength: 251.92020558887162 +- 11.937953689969486
+phase_shift: 6.771664053144069 +- 5.320464909738752
+
+fit with fixed parameters
+average fit parameters:
+wavelength: 252.13713255041282 +- 7.630310032162471
+
+2024-05-23_15-37-30
+precision: 32
+subdomain_size: 100
+correspond_to2pi: 256
+runs: 50
+floor: False
+wait: 0
+fix_params: True
+
+average fit parameters:
+amplitude_shift: 17.68975436940703 +- 4.600327940433321
+amplitude: 196.6817199904639 +- 14.558199838321354
+wavelength: 248.7797793380631 +- 8.822815908612101
+phase_shift: 7.657989709709064 +- 5.1747428537545455
+
+fit with fixed parameters
+average fit parameters:
+wavelength: 249.03656740199963 +- 8.74723991882828
+
+2024-05-23_15-46-09
+precision: 32
+subdomain_size: 100
+correspond_to2pi: 256
+runs: 50
+floor: True
+wait: 0
+fix_params: True
+
+average fit parameters:
+amplitude: 226.84981484646872 +- 4.970843487999403
+wavelength: 237.25398255629636 +- 5.785277942884221
+phase_shift: 16.46729390517654 +- 3.541310841772839
+
+2024-05-23_16-00-26
+precision: 32
+subdomain_size: 100
+correspond_to2pi: 256
+runs: 20
+floor: True
+wait: 0
+fix_params: True
+
+average fit parameters:
+amplitude: 186.909924234823 +- 2.7139657116754967
+wavelength: 237.17585220688812 +- 2.9794073952823905
+phase_shift: 0.019837232304946224 +- 0.08646848015769085
+
+fit with fixed parameters
+average fit parameters:
+wavelength: 237.20023041608138 +- 3.1954701361189026
+
+2024-05-23_16-06-22
+precision: 32
+subdomain_size: 100
+correspond_to2pi: 240
+runs: 100
+floor: True
+wait: 0
+fix_params: True
+
+average fit parameters:
+amplitude: 224.6477944271098 +- 3.9144930040553145
+wavelength: 244.90026522292155 +- 4.644406205569485
+phase_shift: 14.31114354218938 +- 2.772297609036019
+
+fit with fixed parameters
+average fit parameters:
+wavelength: 244.92999948282718 +- 2.9760496152457248
+
+2024-05-23_16-17-39
+precision: 32
+subdomain_size: 100
+correspond_to2pi: 245
+runs: 100
+floor: False
+wait: 0
+fix_params: True
+
+2024-05-23_16-18-05
+precision: 32
+subdomain_size: 100
+correspond_to2pi: 245
+runs: 100
+floor: False
+wait: 0
+fix_params: True
+
+average fit parameters:
+amplitude_shift: 11.343877866745558 +- 3.11554695365997
+amplitude: 202.1639571221856 +- 6.551785749433474
+wavelength: 250.29435316982756 +- 5.293067087196532
+phase_shift: 1.614502226022925 +- 2.769507169652333
+
+fit with fixed parameters
+average fit parameters:
+wavelength: 250.34564202627098 +- 5.1439194088919455
+
+2024-05-23_16-30-48
+precision: 32
+subdomain_size: 100
+correspond_to2pi: 250
+runs: 100
+floor: False
+wait: 0
+fix_params: True
+
+average fit parameters:
+amplitude_shift: 224.47705050357828 +- 7.601658374078905
+amplitude: 1.834641642122442 +- 1.2625422614553967
+wavelength: 224.0039295751194 +- 64.51042211913419
+phase_shift: 47.26845518804641 +- 49.0111626718586
+
+fit with fixed parameters
+average fit parameters:
+wavelength: 215.83144331317942 +- 57.56352093222646
+
+2024-05-23_16-45-51
+precision: 32
+subdomain_size: 100
+correspond_to2pi: 250
+runs: 100
+floor: False
+wait: 0
+fix_params: True
+
+2024-05-23_19-12-09
+precision: 32
+subdomain_size: 100
+correspond_to2pi: 250
+runs: 100
+floor: False
+wait: 0
+fix_params: True
+
+average fit parameters:
+amplitude_shift: 31.787378668033615 +- 4.01840227068437
+amplitude: 200.1336734559748 +- 8.051129968860094
+wavelength: 255.9021068420315 +- 7.597572774652733
+phase_shift: 11.181829855562812 +- 4.119058453048505
+
+fit with fixed parameters
+average fit parameters:
+wavelength: 255.9172119217386 +- 4.580535703534687
+
+2024-05-23_19-24-58
+precision: 32
+subdomain_size: 100
+correspond_to2pi: 250
+runs: 10
+floor: False
+wait: 0
+fix_params: True
+
+average fit parameters:
+amplitude_shift: 25.128867873479415 +- 5.2791861928235795
+amplitude: 214.9414631010512 +- 7.344592782891295
+wavelength: 255.2138305808474 +- 8.47192337312143
+phase_shift: 7.153778370293955 +- 3.8437529603075262
+
+fit with fixed parameters
+average fit parameters:
+wavelength: 255.21997636260394 +- 4.54093690424612
+
+2024-05-23_19-31-16
+precision: 32
+subdomain_size: 100
+correspond_to2pi: 250
+runs: 10
+floor: False
+wait: 0
+fix_params: True
+
+average fit parameters:
+amplitude_shift: 22.487658615455636 +- 3.5568728843267605
+amplitude: 212.91551997324322 +- 7.4263954061805615
+wavelength: 253.01309689105605 +- 4.321203838036883
+phase_shift: 11.752613717705387 +- 2.00961550742276
+
+fit with fixed parameters
+average fit parameters:
+wavelength: 253.03416168772748 +- 2.8990782956739025
+
+2024-05-23_19-33-27
+precision: 32
+subdomain_size: 100
+correspond_to2pi: 250
+runs: 10
+floor: False
+wait: 0
+fix_params: True
+
+average fit parameters:
+amplitude_shift: 21.258356031225578 +- 3.068402988355067
+amplitude: 212.87701677613524 +- 7.848958967460308
+wavelength: 249.6207738010828 +- 5.090531831799466
+phase_shift: 2.407641006336402 +- 2.5471950996910424
+
+fit with fixed parameters
+average fit parameters:
+wavelength: 249.68239144087525 +- 2.4229552253476547
+
