@@ -19,7 +19,7 @@ def produce_phase_mask(phase_mask, args):
     if args.smooth_phase_mask:
         # big_phase_mask = pms.circular_box_blur(phase_mask_unwrapped, args.subdomain_size // 2)
         big_phase_mask = im.fromarray(phase_mask_unwrapped).resize((c.slm_width, c.slm_height), im.BICUBIC)
-        save_phase_mask(np.array(big_phase_mask) % args.ct2pi, dest_dir, "smoothed_"+specification)
+        save_phase_mask(np.array(big_phase_mask) % args.correspond_to2pi, dest_dir, "smoothed_"+specification)
 
 def make_specification(args):
     return f"size_{args.subdomain_size}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref{args.reference_coordinates}_avg{args.num_to_avg}_{args.calibration_name}"
@@ -31,29 +31,6 @@ def naive(phase_list):
     opt_index = phase_list[1].index(max(phase_list[1]))
     return phase_list[0][opt_index]
 
-# def fit_phase_shift(phase_list):
-#     try:
-#         _, _, _, phase_shift = e.fit_intensity(phase_list)
-#     except:
-#         print("fit unsuccessful")
-#         phase_shift = 0
-#     return int(phase_shift)
-
-# def fit_amplitude(phase_list):
-#     try:
-#         _, amplitude, _, _ = e.fit_intensity(phase_list)
-#     except:
-#         print("fit unsuccessful")
-#         amplitude = 0
-#     return int(amplitude)
-
-# def fit_phase_shift_fixed_wavelength(phase_list, wavelength):
-#     try:
-#         _, _, phase_shift = e.fit_intensity_fixed_wavelength(phase_list, wavelength)
-#     except:
-#         print("fit unsuccessful")
-#         phase_shift = 0
-#     return int(phase_shift)
 
 def trick(phase_list):
     pass
@@ -328,7 +305,7 @@ def display_image_on_external_screen(window, image_path):
     # Update the window to display the new image
     window.update()
 
-    time.sleep(0.033)
+    time.sleep(0.017) # cca 1/60 s which is the refresh rate of the SLM (60 Hz
 
 
 def display_image_on_external_screen_img(window, image):
@@ -358,4 +335,4 @@ def display_image_on_external_screen_img(window, image):
     # Update the window to display the new image
     window.update()
 
-    time.sleep(0.033)
+    time.sleep(0.017) # cca 1/60 s which is the refresh rate of the SLM

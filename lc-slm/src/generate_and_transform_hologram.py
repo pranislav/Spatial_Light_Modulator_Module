@@ -6,113 +6,113 @@ from PIL import Image as im
 import PIL.ImageOps
 import slm_screen as sc
 import constants as c
-import generate_and_transform_hologram_lib as hf
 import argparse
 import os
 import imageio
+import calibration_lib as cl
 
 
 
-# SETTINGS
-# name and type of image which should be projected by SLM
-target_name = "multidecline_grating_1x1_dot" # "moving_traps/two_circulating_traps_radius1px/3" # "multidecline_user_defined_5432_dot_2x2"
-target_type = "png"
-#
-path_to_incomming_intensity = "lc-slm/images/incomming_intensity_images/paper_shade_01_intensity_mask.png"
-# ...
-save_result = True
-preview = False
-plot_error = True
-# other settings
-invert = False
-quarterize = True # original image is reduced to quarter and pasted to black image of its original size | helpful when imaging - there is no overlap between diffraction maxima of different order
-algorithm = "GS"    # GD for gradient descent, GS for Gerchberg-Saxton
-# stopping parameters
-tolerance = 0.0001 # algorithm stops when error descends under tolerance
-max_loops = 42 # algorithm performs no more than max_loops loops no matter what error it is
-# transform parameters
-x_decline = 0
-y_decline = 0
-unit = c.u # c.u for one quarter of 1st diff maximum, 1 for radians | ubiquity in filename - units not in the name
-focal_len = False
-# for GD:
-learning_rate = 0.005 # how far our solution jump in direction of the gradient. Too low - slow convergence; too high - oscilations or even none reasonable improvement at all
-mask_relevance = 100 # very helpful when target is predominantly black (multidecline dots)
-unsettle = 0 # learning rate is (unsettle - 1) times doubled. it may improve algorithm performance, and it also may cause peaks in error evolution
-# gif creation
-gif_target = "" # "h" for hologram, "i" for image (result) and empty string for no gif
-gif_skip = 2 # each gif_skip-th frame will be in gif
+# # SETTINGS
+# # name and type of image which should be projected by SLM
+# target_name = "multidecline_grating_1x1_dot" # "moving_traps/two_circulating_traps_radius1px/3" # "multidecline_user_defined_5432_dot_2x2"
+# target_type = "png"
+# #
+# path_to_incomming_intensity = "lc-slm/images/incomming_intensity_images/paper_shade_01_intensity_mask.png"
+# # ...
+# save_result = True
+# preview = False
+# plot_error = True
+# # other settings
+# invert = False
+# quarterize = True # original image is reduced to quarter and pasted to black image of its original size | helpful when imaging - there is no overlap between diffraction maxima of different order
+# algorithm = "GS"    # GD for gradient descent, GS for Gerchberg-Saxton
+# # stopping parameters
+# tolerance = 0.0001 # algorithm stops when error descends under tolerance
+# max_loops = 42 # algorithm performs no more than max_loops loops no matter what error it is
+# # transform parameters
+# x_decline = 0
+# y_decline = 0
+# unit = c.u # c.u for one quarter of 1st diff maximum, 1 for radians | ubiquity in filename - units not in the name
+# focal_len = False
+# # for GD:
+# learning_rate = 0.005 # how far our solution jump in direction of the gradient. Too low - slow convergence; too high - oscilations or even none reasonable improvement at all
+# mask_relevance = 100 # very helpful when target is predominantly black (multidecline dots)
+# unsettle = 0 # learning rate is (unsettle - 1) times doubled. it may improve algorithm performance, and it also may cause peaks in error evolution
+# # gif creation
+# gif_target = "" # "h" for hologram, "i" for image (result) and empty string for no gif
+# gif_skip = 2 # each gif_skip-th frame will be in gif
 
-correspond_to2pi = 256 # color value corresponding to 2pi phase change on SLM
-
-
-
-# loading image and creating array target
-target_img = im.open(f"lc-slm/images/{target_name}.{target_type}").convert('L').resize((int(c.slm_width), int(c.slm_height)))
-if invert:
-    target_img = PIL.ImageOps.invert(target_img)
-if quarterize:
-    target_img = hf.quarter(target_img)
-target = np.array(target_img) # toto musi ist prec to je picovina. a upravit algoritmy
+# correspond_to2pi = 256 # color value corresponding to 2pi phase change on SLM
 
 
-enhance_mask = target / 255 # normed to 1 | enhance the error to get lower on light areas
 
-# creating gif data structure (primarily for GD arguments reducing)
-gif = hf.gif_struct()
-gif.type = gif_target
-gif.skip_frames = gif_skip
-
-if gif_target:
-    directory = "images" if gif_target == "i" else "holograms"
-    gif.source_address = f"{directory}/gif_source"
-    # making place for gif images
-    hf.remove_files_in_dir(gif.source_address)
+# # loading image and creating array target
+# target_img = im.open(f"lc-slm/images/{target_name}.{target_type}").convert('L').resize((int(c.slm_width), int(c.slm_height)))
+# if invert:
+#     target_img = PIL.ImageOps.invert(target_img)
+# if quarterize:
+#     target_img = quarter(target_img)
+# target = np.array(target_img)
 
 
-# compouting phase distribution
-if algorithm == "GS":
-    source_phase_array, exp_tar_array, loops = GS(target, path_to_incomming_intensity, tolerance, max_loops, gif, plot_error, correspond_to2pi)
+# enhance_mask = target / 255 # normed to 1 | enhance the error to get lower on light areas
 
-if algorithm == "GD":
-    source_phase_array, exp_tar_array, loops = GD(target, path_to_incomming_intensity, learning_rate, enhance_mask,\
-                    mask_relevance, tolerance, max_loops, unsettle, gif, plot_error, correspond_to2pi)
+# # creating gif data structure (primarily for GD arguments reducing)
+# gif = gif_struct()
+# gif.type = gif_target
+# gif.skip_frames = gif_skip
+
+# if gif_target:
+#     directory = "images" if gif_target == "i" else "holograms"
+#     gif.source_address = f"{directory}/gif_source"
+#     # making place for gif images
+#     remove_files_in_dir(gif.source_address)
 
 
-source_phase = im.fromarray(source_phase_array) # this goes into SLM
-expected_target = im.fromarray(exp_tar_array)
+# # compouting phase distribution
+# if algorithm == "GS":
+#     source_phase_array, exp_tar_array, loops = GS(target, path_to_incomming_intensity, tolerance, max_loops, gif, plot_error, correspond_to2pi)
+
+# if algorithm == "GD":
+#     source_phase_array, exp_tar_array, loops = GD(target, path_to_incomming_intensity, learning_rate, enhance_mask,\
+#                     mask_relevance, tolerance, max_loops, unsettle, gif, plot_error, correspond_to2pi)
 
 
-are_transforms = x_decline or y_decline or focal_len
-if are_transforms:
-    hologram = hf.transform_hologram(source_phase, (x_decline*unit, y_decline*unit), focal_len)
-    def u_name(unit):
-        return "u" if unit==c.u else "rad"
-    transforms = f"x={x_decline}{u_name(unit)}_y={y_decline}{u_name(unit)}_lens={focal_len}"
-else:
-    hologram = sc.Screen(source_phase)
-    transforms = ""
+# source_phase = im.fromarray(source_phase_array) # this goes into SLM
+# expected_target = im.fromarray(exp_tar_array)
 
-if algorithm == "GD":
-    alg_params = f"_learning_rate={learning_rate}_mask_relevance={mask_relevance}_unsettle={unsettle}"
-else:
-    alg_params = ""
 
-target_transforms = f"inverted={invert}_quarter={quarterize}"
-general_params = f"loops={loops}_ct2pi={correspond_to2pi}"
+# are_transforms = x_decline or y_decline or focal_len
+# if are_transforms:
+#     hologram = transform_hologram(source_phase, (x_decline*unit, y_decline*unit), focal_len)
+#     def u_name(unit):
+#         return "u" if unit==c.u else "rad"
+#     transforms = f"x={x_decline}{u_name(unit)}_y={y_decline}{u_name(unit)}_lens={focal_len}"
+# else:
+#     hologram = sc.Screen(source_phase)
+#     transforms = ""
 
-if save_result:
-    hologram_name = f"{target_name}_{target_transforms}_{transforms}_hologram_alg={algorithm}_{general_params}_{alg_params}"
-    hologram.img.convert("L").save(f"lc-slm/holograms/{hologram_name}.png")
-    expected_target.convert("L").save(f"lc-slm/images/{hologram_name}_exp_tar.png")
+# if algorithm == "GD":
+#     alg_params = f"_learning_rate={learning_rate}_mask_relevance={mask_relevance}_unsettle={unsettle}"
+# else:
+#     alg_params = ""
 
-if gif_target:
-    hf.create_gif(gif.source_address, f"{directory}/gif_{hologram_name}.gif")
+# target_transforms = f"inverted={invert}_quarter={quarterize}"
+# general_params = f"loops={loops}_ct2pi={correspond_to2pi}"
 
-# preview of results: what goes into SLM and what it should look like
-if preview:
-    source_phase.show()
-    expected_target.show()
+# if save_result:
+#     hologram_name = f"{target_name}_{target_transforms}_{transforms}_hologram_alg={algorithm}_{general_params}_{alg_params}"
+#     hologram.img.convert("L").save(f"lc-slm/holograms/{hologram_name}.png")
+#     expected_target.convert("L").save(f"lc-slm/images/{hologram_name}_exp_tar.png")
+
+# if gif_target:
+#     create_gif(gif.source_address, f"{directory}/gif_{hologram_name}.gif")
+
+# # preview of results: what goes into SLM and what it should look like
+# if preview:
+#     source_phase.show()
+#     expected_target.show()
 
 
 # TODO: make algs eat nonsqrted target image and return just hologram as im object
@@ -126,9 +126,7 @@ def make_hologram(args):
     args.path_to_incomming_intensity = "lc-slm/images/incomming_intensity_images/paper_shade_01_intensity_mask.png"
     add_gif_source_address(args)
     hologram, expected_outcome = algorithm(target, args)
-    if args.gif:
-        create_gif(args.gif_source_address, TODO)
-    save_hologram(hologram, args)
+    save_hologram_and_gif(hologram, args)
     if args.preview:
         expected_outcome.show()
     
@@ -148,20 +146,23 @@ def prepare_target(img_name, args):
     if args.invert:
         target_img = PIL.ImageOps.invert(target_img)
     if args.quarterize:
-        target_img = hf.quarter(target_img)
+        target_img = quarter(target_img)
     return np.array(target_img)
 
-def save_hologram(hologram, args):
+def save_hologram_and_gif(hologram, args):
     img_name = os.basename(args.img_name).split(".")[0]
     dest_dir = args.destination_directory
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
     delattr(args, "img_name")
     delattr(args, "destination_directory")
+    gif_source_address = args.gif_source_address
     delattr(args, "gif_source_address")
     delattr(args, "preview")
     hologram_name = make_hologram_name(args, img_name)
     hologram.convert("L").save(f"{dest_dir}/{hologram_name}.png")
+    if args.gif:
+        create_gif(gif_source_address, hologram_name)
 
 
 def make_hologram_name(args, img_name):
@@ -189,16 +190,26 @@ def quarter(image: im) -> im:
     return ground
 
 
-def transform_hologram(hologram, angle, focal_len):
-    x_angle, y_angle = angle
-    hologram_screen = sc.Screen(hologram)
-    if x_angle:
-        hologram_screen.decline('x', x_angle)
-    if y_angle:
-        hologram_screen.decline('y', y_angle)
-    if focal_len:
-        hologram_screen.lens(focal_len)
-    return hologram_screen
+# def transform_hologram(hologram, angle, focal_len):
+#     x_angle, y_angle = angle
+#     hologram_screen = sc.Screen(hologram)
+#     if x_angle:
+#         hologram_screen.decline('x', x_angle)
+#     if y_angle:
+#         hologram_screen.decline('y', y_angle)
+#     if focal_len:
+#         hologram_screen.lens(focal_len)
+#     return hologram_screen
+
+def decline_hologram(hologram: np.array, angle: tuple, correspond_to2pi: int=256):
+    '''declines hologram by angle, returns declined hologram
+    '''
+    decline = cl.decline(angle, 0, correspond_to2pi)
+    declined_hologram = (hologram + decline) % correspond_to2pi
+    return declined_hologram
+
+def add_lens(hologram: np.array, focal_len: float, correspond_to2pi: int=256):
+    pass
     
 
 def create_gif(img_dir, outgif_path):
