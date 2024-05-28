@@ -49,13 +49,13 @@ def display_instant_calibration_holograms(window):
     while True:
         get_params(params)
         # print(params)
-        sample_hologram = cl.decline(params["decline"], 0, params["correspond_to_2pi"])
+        sample_hologram = cl.decline(params["decline"], params["correspond_to_2pi"])
         hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
         reference_position = e.real_subdomain_position(params["reference_position"], params["subdomain_size"])
         subdomain_position = e.real_subdomain_position(params["subdomain_position"], params["subdomain_size"])
         hologram = cl.add_subdomain(hologram, sample_hologram, reference_position, params["subdomain_size"])
         if params["phase_shift"] != 0:
-            sample_hologram = cl.decline(params["decline"], params["phase_shift"], params["correspond_to_2pi"])
+            sample_hologram = cl.decline(params["decline"], params["correspond_to_2pi"]) + params["phase_shift"]
         hologram = cl.add_subdomain(hologram, sample_hologram, subdomain_position, params["subdomain_size"])
         cl.display_image_on_external_screen_img(window, hologram)
         command = input("press enter to continue, type 'q' to quit this mode >> ")

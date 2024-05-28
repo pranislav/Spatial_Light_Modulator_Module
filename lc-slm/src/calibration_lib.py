@@ -40,20 +40,21 @@ def trick(phase_list):
 # TODO: nice but could be faster. compare if consistent with same-name function in explore and replace
 
 def make_sample_holograms(angle, precision, ct2pi):
-    angle = angle.split("_")
-    sample_holograms = []
-    for i in range(precision):
-        sample_holograms.append(decline(angle, i * 256 // precision, ct2pi))
-    return sample_holograms
+    sample = []
+    sample.append(decline(angle, 0, ct2pi))
+    for i in range(1, precision):
+        offset = i * 256 // precision
+        sample.append((sample[0] + offset) % 256)
+    return sample
 
-def decline(angle, offset, ct2pi):
+def decline(angle, ct2pi):
     x_angle, y_angle = angle
     hologram = np.zeros((c.slm_height, c.slm_width))
     const = ct2pi * c.px_distance / c.wavelength
     for i in range(c.slm_height):
         for j in range(c.slm_width):
             new_phase = const * (np.sin(float(y_angle) * c.u) * i + np.sin(float(x_angle) * c.u) * j)
-            hologram[i, j] = int((new_phase + offset) % ct2pi)
+            hologram[i, j] = int(new_phase % ct2pi)
     return hologram
 
 

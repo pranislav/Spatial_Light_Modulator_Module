@@ -50,7 +50,7 @@ def explore(args):
             angle = last_nonempty(params["decline"])
             precision = last_nonempty(params["precision"])
             correspond_to_2pi = last_nonempty(params["correspond_to_2pi"])
-            sample_list = make_sample_holograms(angle, precision, correspond_to_2pi)
+            sample_list = cl.make_sample_holograms(angle, precision, correspond_to_2pi)
         if params["subdomain_size"][-1] or params["reference_position"][-1]:
             subdomain_size = last_nonempty(params["subdomain_size"])
             reference_position = real_subdomain_position(last_nonempty(params["reference_position"]), subdomain_size)
@@ -120,17 +120,6 @@ def plot_fit(params, fit_func=f.positive_cos):
     ydata = fit_func(xdata, *params.values())
     return xdata, ydata
 
-
-# --------- # ---------- #
-
-# TODO: this one compare with the one in cl, if same functionality, move it there, this should be faster
-def make_sample_holograms(angle, precision, ct2pi):
-    sample = []
-    sample.append(cl.decline(angle, 0, ct2pi))
-    for i in range(1, precision):
-        offset = i * 256 // precision
-        sample.append((sample[0] + offset) % 256)
-    return sample
 
 
 # ------------ parameters stuff ------------- #

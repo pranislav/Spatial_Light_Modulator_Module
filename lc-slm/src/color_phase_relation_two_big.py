@@ -27,7 +27,7 @@ def main(args):
     cam = uc480.UC480Camera()
     window = cl.create_tk_window()
     # subdomain_size = int(np.sqrt(1 / 5) * c.slm_height)
-    sample_list = e.make_sample_holograms((1, 1), args.precision, args.correspond_to2pi)
+    sample_list = cl.make_sample_holograms((1, 1), args.precision, args.correspond_to2pi)
     upper_left_corner = np.array((c.slm_width // 2 - args.subdomain_size, (c.slm_height - args.subdomain_size) // 2))
     black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
     reference = cl.add_subdomain(black_hologram, sample_list[0], upper_left_corner, args.subdomain_size)

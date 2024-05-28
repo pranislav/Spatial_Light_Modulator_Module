@@ -204,7 +204,7 @@ def quarter(image: im) -> im:
 def decline_hologram(hologram: np.array, angle: tuple, correspond_to2pi: int=256):
     '''declines hologram by angle, returns declined hologram
     '''
-    decline = cl.decline(angle, 0, correspond_to2pi)
+    decline = cl.decline(angle, correspond_to2pi)
     declined_hologram = (hologram + decline) % correspond_to2pi
     return declined_hologram
 
