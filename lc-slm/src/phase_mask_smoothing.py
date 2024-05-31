@@ -72,8 +72,8 @@ def preview_img(arr):
     im.fromarray((arr / arr.max()) * 255).show()
 
 
-def read_phase_mask(phase_mask_path):
-    phase_mask = im.open(phase_mask_path)
+def read_phase_mask(phase_mask_name):
+    phase_mask = im.open(f"lc-slm/holograms/calibration_phase_masks/{phase_mask_name}")
     phase_mask_arr = np.array(phase_mask).astype(float)
     return phase_mask_arr
 
@@ -105,6 +105,7 @@ def mask_mask(phase_mask):
     mask = circular_hole_inclusive(phase_mask.shape)
     return ma.masked_array(phase_mask, mask)
 
+
 def circular_hole_inclusive(shape):
     h, w = shape
     R = h // 2 + 1
@@ -113,6 +114,7 @@ def circular_hole_inclusive(shape):
     return mask
 
 def transform_to_color_values(phase_mask, correspond_to_2pi):
+    # phase_mask += np.pi
     offset = determine_offset(phase_mask.min())
     positive_phase_mask = (phase_mask + offset) * correspond_to_2pi / (2 * np.pi)
     return positive_phase_mask
@@ -145,7 +147,7 @@ def show_negative(arr):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("phase_mask_name", type=str, help='full path to the phase mask')
+    parser.add_argument("phase_mask_name", type=str, help='name of a phase mask in directory lc-slm/holograms/calibration_phase_masks')
     parser.add_argument("-ct2pi", "--correspond_to_2pi", type=int, default=256, help="value of pixel corresponding to 2pi phase shift")
     parser.add_argument("-ss", "--subdomain_size", type=int, default=32, help="subdomain size used to create the phase mask")
     args = parser.parse_args()
