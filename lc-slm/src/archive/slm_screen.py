@@ -23,8 +23,8 @@ pi = np.pi
 x_size = c.slm_width
 y_size = c.slm_height
 a = c.px_distance
-conversion_factor = 255 / (2*pi)    # converts from rad to greyscale number
-cf = conversion_factor
+conversion_factor = 255 / (2*pi)    # je to zbytocne, neprehladne a este aj off by one
+cf = conversion_factor              # no comment
 
 
 class Screen:
