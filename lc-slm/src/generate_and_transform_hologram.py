@@ -10,6 +10,8 @@ import argparse
 import os
 import imageio
 import calibration_lib as cl
+import analytical_holograms as ah
+import time
 
 
 
@@ -120,29 +122,45 @@ import calibration_lib as cl
 # what about final loop number?
 
 
+def main(args):
+    hologram, expected_outcome = make_hologram(args)
+    if args.preview:
+        expected_outcome.show()
+    hologram = transform_hologram(hologram, args)
+    save_hologram_and_gif(hologram, args)
+
+
+
 def make_hologram(args):
-    algorithm = GS if args.alg == "GS" else GD
+    algorithm = GS if args.algorithm == "GS" else GD
     target = prepare_target(args.img_name, args)
     args.path_to_incomming_intensity = "lc-slm/images/incomming_intensity_images/paper_shade_01_intensity_mask.png"
     add_gif_source_address(args)
     hologram, expected_outcome = algorithm(target, args)
-    save_hologram_and_gif(hologram, args)
-    if args.preview:
-        expected_outcome.show()
-    
+    return hologram, expected_outcome
+
+def transform_hologram(hologram, args):
+    if args.decline != (0, 0):
+        hologram = decline_hologram(hologram, args.decline, args.correspond_to2pi)
+    if args.lens:
+        hologram = add_lens(hologram, args.lens, args.correspond_to2pi)
+    return hologram
+
 
 def add_gif_source_address(args):
     if not args.gif:
-        args.gif_source_address = None
+        args.gif_dir = None
         return
     if args.gif_type == "h":
-        args.gif_source_address = "lc-slm/holograms/gif_source"
+        args.gif_dir = "lc-slm/holograms"
     elif args.gif_type == "i":
-        args.gif_source_address = "lc-slm/images/gif_source"
+        args.gif_dir = "lc-slm/images"
+    if not os.path.exists(args.gif_dir):
+        os.makedirs(args.gif_dir)
         
 
 def prepare_target(img_name, args):
-    target_img = im.open(f"lc-slm/images/{img_name}.png").convert('L').resize((int(c.slm_width), int(c.slm_height)))
+    target_img = im.open(f"lc-slm/images/{img_name}").convert('L').resize((int(c.slm_width), int(c.slm_height)))
     if args.invert:
         target_img = PIL.ImageOps.invert(target_img)
     if args.quarterize:
@@ -150,30 +168,37 @@ def prepare_target(img_name, args):
     return np.array(target_img)
 
 def save_hologram_and_gif(hologram, args):
-    img_name = os.basename(args.img_name).split(".")[0]
+    img_name = os.path.basename(args.img_name).split(".")[0]
     dest_dir = args.destination_directory
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
-    delattr(args, "img_name")
-    delattr(args, "destination_directory")
-    gif_source_address = args.gif_source_address
-    delattr(args, "gif_source_address")
-    delattr(args, "preview")
     hologram_name = make_hologram_name(args, img_name)
-    hologram.convert("L").save(f"{dest_dir}/{hologram_name}.png")
+    im.fromarray(hologram).convert("L").save(f"{dest_dir}/{hologram_name}.png")
     if args.gif:
-        create_gif(gif_source_address, hologram_name)
+        create_gif(f"{args.gif_dir}/gif_source", f"{args.gif_dir}/{hologram_name}.gif")
 
 
 def make_hologram_name(args, img_name):
-    arg_string = args_to_string(args)
-    return f"hologram_{img_name}_{arg_string}"
+    alg_params = ""
+    transforms = ""
+    img_transforms = ""
+    if args.lens or args.decline != (0, 0):
+        transforms += f"_decline_x{args.decline[0]}_y{args.decline[1]}_lens_{args.lens}"
+    if args.algorithm == "GD":
+        alg_params += f"_lr{args.learning_rate}_mr{args.mask_relevance}_unsettle{args.unsettle}"
+    if args.quarterize:
+        img_transforms += "_quarter"
+    if args.invert:
+        img_transforms += "_inverted"
+    time_name = time.strftime("%Y-%m-%d_%H-%M-%S")
+    return f"{img_name}{img_transforms}_{args.algorithm}{alg_params}__ct2pi{args.correspond_to2pi}_loops{args.max_loops}{transforms}_{time_name}"
+
 
 def args_to_string(args):
     arg_string = ""
     for arg_name, arg_value in vars(args).items():
         if arg_value is not None:
-            arg_string += f"{arg_name}={arg_value}_"
+            arg_string += f"{arg_name}_{arg_value}_"
     # Remove the trailing underscore
     arg_string = arg_string.rstrip('_')
     return arg_string
@@ -209,7 +234,7 @@ def decline_hologram(hologram: np.array, angle: tuple, correspond_to2pi: int=256
     return declined_hologram
 
 def add_lens(hologram: np.array, focal_len: float, correspond_to2pi: int=256):
-    pass
+    return (hologram + ah.lens(focal_len, correspond_to2pi, hologram.shape)) % correspond_to2pi
     
 
 def create_gif(img_dir, outgif_path):
@@ -231,12 +256,12 @@ def remove_files_in_dir(dir: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("img_name", type=str, help="name of the target image")
+    parser.add_argument("img_name", type=str, help="path to the target image from lc-slm/images directory")
     parser.add_argument("-dest_dir", "--destination_directory", type=str, default="lc-slm/holograms", help="directory where the hologram will be saved")
     parser.add_argument("-q", "--quarterize", action="store_true", help="original image is reduced to quarter and pasted to black image of its original size ")
     parser.add_argument("-i", "--invert", action="store_true", help="invert colors of the target image")
     parser.add_argument("-alg", "--algorithm", default="GS", choices=["GS", "GD"], help="algorithm to use: GS for Gerchberg-Saxton, GD for gradient descent")
-    parser.add_argument("-correspond_to2pi", default=256, type=int, help="color value corresponding to 2pi phase change on SLM")
+    parser.add_argument("-ct2pi", "--correspond_to2pi", default=256, type=int, help="color value corresponding to 2pi phase change on SLM")
     parser.add_argument("-tol", "--tolerance", default=0, type=float, help="error tolerance")
     parser.add_argument("-loops", "--max_loops", default=42, type=int, help="maximum number of loops")
     parser.add_argument("-lr", "--learning_rate", default=0.005, type=float, help="learning rate for GD algorithm (how far the solution jumps in direction of the gradient)")
@@ -247,6 +272,8 @@ if __name__ == "__main__":
     parser.add_argument("-gif_skip", default=1, type=int, help="each gif_skip-th frame will be in gif")
     parser.add_argument("-plot_error", action="store_true", help="plot error evolution")
     parser.add_argument("-p", "--preview", action="store_true", help="show expected outcome at the end of the program run")
+    parser.add_argument("-decline", nargs=2, default=(0, 0), help="decline hologram by given angle in units of quarter of first diffraction maximum ")
+    parser.add_argument("-lens", default=None, type=float, help="add lens to hologram with given focal length in meters")
     args = parser.parse_args()
 
-    make_hologram(args)
+    main(args)
