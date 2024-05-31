@@ -130,7 +130,7 @@ def GD(demanded_output: np.array, args) -> Tuple[np.array, np.array, int]:
         mask = 1 + args.mask_relevance * demanded_output/255
         dEdF = ifft2(mask * med_output * (output - demanded_output)) * incomming_amplitude
         dEdX = np.array(list(map(dEdX_complex, dEdF, input)))
-        input -= learning_rate * dEdX
+        input -= args.learning_rate * dEdX
         error = error_f(output, demanded_output, space_norm)
         error_evolution.append(error)
         if args.gif and i % args.gif_skip == 0:
@@ -143,10 +143,11 @@ def GD(demanded_output: np.array, args) -> Tuple[np.array, np.array, int]:
         if args.unsettle and i % int(args.max_loops / args.unsettle) == 0:
             learning_rate *= 2
         if i % 10 == 0: print("-", end='')
-    printout(error, i, error_evolution, f"learning_rate: {learning_rate}", args.plot_error)
+    print()
+    printout(error, i, error_evolution, f"learning_rate: {args.learning_rate}", args.plot_error)
     phase_for_slm = complex_to_real_phase(input, args.correspond_to2pi)
     exp_tar_for_slm = output
-    return phase_for_slm, exp_tar_for_slm, i
+    return phase_for_slm, exp_tar_for_slm
 
 
 def error_f(actual, correct, norm):

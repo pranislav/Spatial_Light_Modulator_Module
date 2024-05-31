@@ -15,14 +15,14 @@ def produce_phase_mask(phase_mask, args):
     dest_dir = "lc-slm/holograms/calibration_phase_masks"
     big_phase_mask = expand_phase_mask(phase_mask, args.subdomain_size)
     save_phase_mask(big_phase_mask, dest_dir, specification)
-    phase_mask_unwrapped = pms.unwrap_phase_picture(big_phase_mask, args.correspond_to2pi)
+    phase_mask_unwrapped = pms.unwrap_phase_picture(phase_mask, args.correspond_to2pi)
     if args.smooth_phase_mask:
         # big_phase_mask = pms.circular_box_blur(phase_mask_unwrapped, args.subdomain_size // 2)
         big_phase_mask = im.fromarray(phase_mask_unwrapped).resize((c.slm_width, c.slm_height), im.BICUBIC)
         save_phase_mask(np.array(big_phase_mask) % args.correspond_to2pi, dest_dir, "smoothed_"+specification)
 
 def make_specification(args):
-    return f"size_{args.subdomain_size}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref{args.reference_coordinates}_avg{args.num_to_avg}_{args.calibration_name}"
+    return f"{args.calibration_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref_{args.reference_coordinates}_intensity_coords_{args.intensity_coordinates}"
 
 
 # ----------- best phase() -------------- #
@@ -37,11 +37,10 @@ def trick(phase_list):
 
 
 # ---------- sample holograms ----------- #
-# TODO: nice but could be faster. compare if consistent with same-name function in explore and replace
 
 def make_sample_holograms(angle, precision, ct2pi):
     sample = []
-    sample.append(decline(angle, 0, ct2pi))
+    sample.append(decline(angle, ct2pi))
     for i in range(1, precision):
         offset = i * 256 // precision
         sample.append((sample[0] + offset) % 256)
@@ -86,14 +85,17 @@ def extract_reference_coordinates(reference_hologram_coordinates_ratio, subdomai
     x_coord = subdomain_size * (int(x_numerator) * W // int(x_denominator))
     return (y_coord, x_coord)
 
-def read_reference_coordinates(reference_coordinates_str):
+def read_reference_coordinates(reference_coordinates_str, shape):
+    if reference_coordinates_str == "center":
+        H, W = shape
+        return W // 2, H // 2
     x, y = reference_coordinates_str.split('_')
     return int(x), int(y)
 
 
 def get_number_of_subdomains(subdomain_size):
     if c.slm_height % subdomain_size != 0 or c.slm_width % subdomain_size != 0:
-        print(f"some of the SLM pixels won't be covered, you better choose number which divides {c.slm_height} and {c.slm_width}")
+        print(f"some of the SLM pixels won't be covered, you better choose subdomain size which divides {c.slm_height} and {c.slm_width}")
     return c.slm_height//subdomain_size, c.slm_width//subdomain_size
 
 
@@ -231,6 +233,13 @@ def set_exposure_wrt_reference_img_path(cam, window, intensity_range, hologram_p
     display_image_on_external_screen(window, hologram_path)
     set_exposure(cam, intensity_range, num_to_avg)
 
+def get_intensity_coords(cam, window, reference_hologram, args):
+    if not args.intensity_coordinates:
+        get_highest_intensity_coordinates_img(cam, window, reference_hologram, args.num_to_avg) 
+    else:
+        x, y = args.intensity_coordinates.split("_")
+        return (int(x), int(y))
+
 
 def get_highest_intensity_coordinates(cam, window, hologram_path, num_to_avg):
     display_image_on_external_screen(window, hologram_path)
@@ -238,6 +247,7 @@ def get_highest_intensity_coordinates(cam, window, hologram_path, num_to_avg):
     return find_highest_value_coordinates(img)
 
 def get_highest_intensity_coordinates_img(cam, window, hologram, num_to_avg):
+    print("getting highest intensity coordinates")
     display_image_on_external_screen_img(window, hologram)
     img = average_frames(cam, max(8, num_to_avg))
     return find_highest_value_coordinates(img)
