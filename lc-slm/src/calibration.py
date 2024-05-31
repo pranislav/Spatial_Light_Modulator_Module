@@ -92,7 +92,7 @@ def make_loop_args(args):
     # for i in range(50):
     #     coords += get_highest_intensity_coordinates_img(cam, window, reference_hologram, args.num_to_avg)
     # print(coords / 50)
-    loop_args["intensity_coord"] = get_intensity_coords(cam, window, reference_hologram, args)
+    loop_args["intensity_coord"] = get_intensity_coords(cam, window, samples_list[0], args)
     print(f"intensity coordinates: {loop_args['intensity_coord']}")
     loop_args["precision"] = args.precision
     loop_args["subdomain_size"] = subdomain_size

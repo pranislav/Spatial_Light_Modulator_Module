@@ -116,7 +116,19 @@ def mean_position_of_white_pixel(picture):
             sum += np.array([y, x]) * picture[y, x]
             norm += picture[y, x]
     a, b = sum / norm
-    return (int(a), int(b))
+    return (int(round(a)), int(round(b)))
+
+def mean_position_of_overflow_pixel(picture):
+    h, w = picture.shape
+    sum = np.array([0, 0])
+    norm = 0
+    for y in range(h):
+        for x in range(w):
+            if picture[y, x] == 255:
+                sum += np.array([y, x])
+                norm += 1
+    a, b = sum / norm
+    return (int(round(a)), int(round(b)))
 
 def deviation_of_bright_pixels(picture, mean):
     h, w = picture.shape
@@ -233,9 +245,12 @@ def set_exposure_wrt_reference_img_path(cam, window, intensity_range, hologram_p
     display_image_on_external_screen(window, hologram_path)
     set_exposure(cam, intensity_range, num_to_avg)
 
-def get_intensity_coords(cam, window, reference_hologram, args):
+def get_intensity_coords(cam, window, hologram, args):
     if not args.intensity_coordinates:
-        get_highest_intensity_coordinates_img(cam, window, reference_hologram, args.num_to_avg) 
+        # get_highest_intensity_coordinates_img(cam, window, reference_hologram, args.num_to_avg) 
+        display_image_on_external_screen_img(window, hologram)
+        img = cam.snap()
+        return mean_position_of_overflow_pixel(img)
     else:
         x, y = args.intensity_coordinates.split("_")
         return (int(x), int(y))
