@@ -1,21 +1,35 @@
-import slm_screen as ss
+# import slm_screen as ss
 import PIL.Image as im
 import constants as c
 import calibration_lib as cl
 import argparse
+import numpy as np
 
-hologram = ss.Screen()
+# hologram = ss.Screen()
 
-hologram.decline("x", 1 * c.u).decline("y", 1 * c.u)
+# hologram.decline("x", 1 * c.u).decline("y", 1 * c.u)
 
-hologram.img.save("lc-slm/holograms/analytical/decline_x1u_y1u.png")
+# hologram.img.save("lc-slm/holograms/analytical/decline_x1u_y1u.png")
 
 # hologram.lens(0.6)
 # hologram.img.save("holograms/analytical_xdecline_2u.jpg")
 
+def lens(focal_length, correspond_to2pi, shape):
+    '''simultes lens with focal length 'focal_length' in meters
+    '''
+    w, h = shape
+    hologram = np.zeros((h, w), dtype=np.uint8)
+    for i in range(w):
+        for j in range(h):
+            r = c.px_distance * np.sqrt((i - w / 2) ** 2 + (j - h / 2) ** 2)
+            phase_shift = 2 * np.pi * focal_length / c.wavelength * \
+                (1 - np.sqrt(1 + r ** 2 / focal_length ** 2))
+            hologram[i, j] = (phase_shift * correspond_to2pi / (2 * np.pi)) % correspond_to2pi
+    return hologram
+
 def create_decline_hologram(args):
     angle = args.angle.split("_")
-    hologram = cl.decline(angle, 0, args.correspond_to2pi)
+    hologram = cl.decline(angle, args.correspond_to2pi)
     im.fromarray(hologram).convert("L").save(f"{args.directory}/decline_{args.angle}_ct2pi_{args.correspond_to2pi}.png")
 
 
