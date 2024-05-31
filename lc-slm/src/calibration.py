@@ -33,27 +33,15 @@ def calibrate(args):
     loop_args = make_loop_args(args) # & set exposure
     fit = lambda x: f.fit_intensity_general(x, f.positive_cos_fixed_wavelength(args.correspond_to2pi))  # TODO other options?
     best_phase = compose_func(return_phase, fit)
-    H, W = get_number_of_subdomains(args.subdomain_size)
-    j0, i0 = read_reference_coordinates(args.reference_coordinates)
-    phase_mask = np.zeros((H, W))
-    skip = args.skip_subdomains_out_of_inscribed_circle
-    if skip:
-        skip_subdomain = pms.circular_hole_inclusive((H, W))
-    else:
-        skip_subdomain = np.zeros((H, W))
-    start_loops = time()
+    phase_mask = np.zeros(get_number_of_subdomains(args.subdomain_size))
+    coordinates_list = make_coordinates_list(args)
     print("mainloop start.")
-    if not skip: print("estimate of remaining time comes after first row. actual row:")
-    for i in range(H):
-        if i == 1 and not skip: print_estimate(H, start_loops)
-        print(f"{i + 1}/{H}")
-        for j in range(W):
-            if i == i0 and j == j0:
-                continue
-            if skip_subdomain[i, j]:
-                continue
-            intensity_list = calibration_loop(i, j, loop_args)
-            phase_mask[i, j] = best_phase(intensity_list)
+    count = 0
+    for i, j in coordinates_list:
+        print(f"\rcalibrating subdomain {count + 1}/{len(coordinates_list)}", end="")
+        intensity_list = calibration_loop(i, j, loop_args)
+        phase_mask[i, j] = best_phase(intensity_list)
+        count += 1
     produce_phase_mask(phase_mask, args)
 
 
@@ -62,6 +50,24 @@ def compose_func(func1, func2):
     
 def return_phase(dict):
     return dict["phase_shift"]
+
+
+def make_coordinates_list(args):
+    H, W = get_number_of_subdomains(args.subdomain_size)
+    j0, i0 = read_reference_coordinates(args.reference_coordinates, (H, W))
+    if args.skip_subdomains_out_of_inscribed_circle:
+        coordinates_list = [(i, j) for i in range(H) for j in range(W) if circular_hole_inclusive_condition(i, j, (H, W)) and not (i == i0 and j == j0)]
+    else:
+        coordinates_list = [(i, j) for i in range(H) for j in range(W) if not (i == i0 and j == j0)]
+    if args.shuffle:
+        np.random.shuffle(coordinates_list)
+    return coordinates_list
+
+def circular_hole_inclusive_condition(i, j, shape):
+    h, w = shape
+    R = h // 2 + 1
+    i0, j0 = h // 2, w // 2
+    return (i - i0)**2 + (j - j0)**2 < R**2
 
 def print_estimate(outer_loops_num, start_loops):
     time_elapsed = time() - start_loops
@@ -74,15 +80,20 @@ def make_loop_args(args):
     cam = uc480.UC480Camera()
     window = create_tk_window()
     print("creating sample holograms...")
-    samples_list = make_sample_holograms(args.angle, args.precision, args.correspond_to2pi)
-    rx, ry = read_reference_coordinates(args.reference_coordinates)
+    samples_list = make_sample_holograms(args.angle.split("_"), args.precision, args.correspond_to2pi)
+    rx, ry = read_reference_coordinates(args.reference_coordinates, get_number_of_subdomains(args.subdomain_size))
     real_reference_coordinates = (rx * subdomain_size, ry * subdomain_size)
     black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
     reference_hologram = add_subdomain(black_hologram, samples_list[0], real_reference_coordinates, subdomain_size)
     print("adjusting exposure time...")
     set_exposure_wrt_reference_img(cam, window, (256 / 4 - 20, 256 / 4), reference_hologram, args.num_to_avg) # in fully-constructive interference the value of amplitude could be twice as high, therefore intensity four times as high 
     # cam.set_exposure(0.001)
-    loop_args["intensity_coord"] = get_highest_intensity_coordinates_img(cam, window, reference_hologram, args.num_to_avg)
+    # coords = np.array((0, 0))
+    # for i in range(50):
+    #     coords += get_highest_intensity_coordinates_img(cam, window, reference_hologram, args.num_to_avg)
+    # print(coords / 50)
+    loop_args["intensity_coord"] = get_intensity_coords(cam, window, reference_hologram, args)
+    print(f"intensity coordinates: {loop_args['intensity_coord']}")
     loop_args["precision"] = args.precision
     loop_args["subdomain_size"] = subdomain_size
     loop_args["samples_list"] = samples_list
@@ -134,13 +145,15 @@ if __name__ == "__main__":
     parser.add_argument('-ss', '--subdomain_size', type=int, default=32)
     parser.add_argument('-p', '--precision', type=int, default=8, help='"color depth" of the phase mask')
     parser.add_argument('-a', '--angle', type=str, default="1_1", help="use form: xdecline_ydecline (angles in constants.u unit)")
-    parser.add_argument('-c', '--reference_coordinates', type=str, default="16_12", help=help_ref_coord)
+    parser.add_argument('-c', '--reference_coordinates', type=str, default="center", help=help_ref_coord)
     parser.add_argument('-avg', '--num_to_avg', type=int, default=1, help="number of frames to average when measuring intensity")
     parser.add_argument('-ct2pi', '--correspond_to2pi', type=int, default=256, help="value of pixel corresponding to 2pi phase shift")
     parser.add_argument('-skip', '--skip_subdomains_out_of_inscribed_circle', action="store_true", help="subdomains out of the inscribed circle will not be callibrated. use when the SLM is not fully illuminated and the light beam is circular.")
     parser.add_argument('-smooth', '--smooth_phase_mask', action="store_true", help="the phase mask will be smoothed")
+    parser.add_argument("-shuffle", action="store_true", help="subdomains will be calibrated in random order")
+    parser.add_argument('-ic', "--intensity_coordinates", type=str, default="396_631", help="coordinates of the point where intensity is measured in form x_y. if not provided, the point will be found automatically (if argument not stated, default will be used).")
 
     args = parser.parse_args()
     start = time()
     calibrate(args)
-    print("execution_time: ", round((time() - start) / 60, 1),  " min")
+    print("\nexecution_time: ", round((time() - start) / 60, 1),  " min")
