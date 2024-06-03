@@ -92,7 +92,7 @@ def make_loop_args(args):
     # for i in range(50):
     #     coords += get_highest_intensity_coordinates_img(cam, window, reference_hologram, args.num_to_avg)
     # print(coords / 50)
-    loop_args["intensity_coord"] = get_intensity_coords(cam, window, samples_list[0], args)
+    loop_args["intensity_coord"] = get_intensity_coords(cam, window, im.fromarray(samples_list[0]), args)
     print(f"intensity coordinates: {loop_args['intensity_coord']}")
     loop_args["precision"] = args.precision
     loop_args["subdomain_size"] = subdomain_size
@@ -151,7 +151,7 @@ if __name__ == "__main__":
     parser.add_argument('-skip', '--skip_subdomains_out_of_inscribed_circle', action="store_true", help="subdomains out of the inscribed circle will not be callibrated. use when the SLM is not fully illuminated and the light beam is circular.")
     parser.add_argument('-smooth', '--smooth_phase_mask', action="store_true", help="the phase mask will be smoothed")
     parser.add_argument("-shuffle", action="store_true", help="subdomains will be calibrated in random order")
-    parser.add_argument('-ic', "--intensity_coordinates", type=str, default="396_631", help="coordinates of the point where intensity is measured in form x_y. if not provided, the point will be found automatically (if argument not stated, default will be used).")
+    parser.add_argument('-ic', "--intensity_coordinates", type=str, default=None, help="coordinates of the point where intensity is measured in form x_y. if not provided, the point will be found automatically.")
 
     args = parser.parse_args()
     start = time()
