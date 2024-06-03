@@ -57,7 +57,7 @@ def display_instant_calibration_holograms(window):
         if params["phase_shift"] != 0:
             sample_hologram = cl.decline(params["decline"], params["correspond_to_2pi"]) + params["phase_shift"]
         hologram = cl.add_subdomain(hologram, sample_hologram, subdomain_position, params["subdomain_size"])
-        cl.display_image_on_external_screen_img(window, hologram)
+        cl.display_image_on_external_screen(window, hologram)
         command = input("press enter to continue, type 'q' to quit this mode >> ")
         if command == 'q':
             print("leaving mode for displaying instant calibration holograms")
@@ -88,7 +88,7 @@ def display_with_mask(window, name, directory, mask_arr, ct2pi):
     if path is None:
         return 
     if mask_arr is not None:
-        cl.display_image_on_external_screen_img(window, mask_hologram(path, mask_arr, ct2pi))
+        cl.display_image_on_external_screen(window, mask_hologram(path, mask_arr, ct2pi))
     else:
         cl.display_image_on_external_screen(window, path)
 

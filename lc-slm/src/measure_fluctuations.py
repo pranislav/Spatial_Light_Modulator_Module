@@ -25,7 +25,7 @@ def measure_fluctuations(args):
     else:
         cl.set_exposure_wrt_reference_img(cam, window, (210, 240), hologram, 1)
     intensity_coords = cl.get_highest_intensity_coordinates_img(cam, window, hologram, 1)
-    cl.display_image_on_external_screen_img(window, hologram)
+    cl.display_image_on_external_screen(window, hologram)
     intensity_evolution = {"time": [], "intensity": []}
     start = time.time()
     while time.time() - start < args.time:

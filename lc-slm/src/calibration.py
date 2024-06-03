@@ -115,7 +115,7 @@ def calibration_loop(i, j, loop_args):
     intensity_list = [[], []]
     while k < precision:
         loop_args["hologram"] = add_subdomain(loop_args["hologram"], loop_args["samples_list"][k], (j_real, i_real), subdomain_size)
-        display_image_on_external_screen_img(loop_args["window"], loop_args["hologram"]) # displays hologram on an external dispaly (SLM)
+        display_image_on_external_screen(loop_args["window"], loop_args["hologram"]) # displays hologram on an external dispaly (SLM)
         intensity = 0
         for _ in range(loop_args["num_to_avg"]):
             frame = cam.snap()

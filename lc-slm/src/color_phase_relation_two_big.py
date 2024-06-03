@@ -101,7 +101,7 @@ def two_big_loop(precision, cam, window, hologram_set, intensity_coords):
     intensity_list = [[], []]
     k = 0
     while k < precision:
-        cl.display_image_on_external_screen_img(window, hologram_set[k])
+        cl.display_image_on_external_screen(window, hologram_set[k])
         frame = cam.snap()
         intensity = cl.get_intensity_on_coordinates(frame, intensity_coords)
         if intensity == 255:

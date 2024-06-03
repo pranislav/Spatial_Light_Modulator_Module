@@ -238,15 +238,15 @@ def average_frames(cam, num_to_avg):
     return frame
 
 def set_exposure_wrt_reference_img(cam, window, intensity_range, hologram, num_to_avg):
-    display_image_on_external_screen_img(window, hologram)
+    display_image_on_external_screen(window, hologram)
     set_exposure(cam, intensity_range, num_to_avg)
 
-def set_exposure_wrt_reference_img_path(cam, window, intensity_range, hologram_path, num_to_avg):
-    display_image_on_external_screen(window, hologram_path)
-    set_exposure(cam, intensity_range, num_to_avg)
+# def set_exposure_wrt_reference_img_path(cam, window, intensity_range, hologram_path, num_to_avg):
+#     display_image_on_external_screen(window, hologram_path)
+#     set_exposure(cam, intensity_range, num_to_avg)
 
 def get_intensity_coords(cam, window, hologram, args):
-    display_image_on_external_screen_img(window, hologram)
+    display_image_on_external_screen(window, hologram)
     img = cam.snap()
     if args.intensity_coordinates is None:
         # get_highest_intensity_coordinates_img(cam, window, reference_hologram, args.num_to_avg) 
@@ -271,7 +271,7 @@ def get_highest_intensity_coordinates(cam, window, hologram_path, num_to_avg):
 
 def get_highest_intensity_coordinates_img(cam, window, hologram, num_to_avg):
     print("getting highest intensity coordinates")
-    display_image_on_external_screen_img(window, hologram)
+    display_image_on_external_screen(window, hologram)
     img = average_frames(cam, max(8, num_to_avg))
     return find_highest_value_coordinates(img)
 
@@ -310,7 +310,7 @@ def create_tk_window():
     return window
 
 
-def display_image_on_external_screen(window, image_path):
+def display_image_on_external_screen(window, image):
     """
     Display an image on an external screen without borders or decorations.
 
@@ -325,38 +325,8 @@ def display_image_on_external_screen(window, image_path):
     for widget in window.winfo_children():
             widget.destroy()
 
-    # Load the image
-    image = im.open(image_path)
-
-    # Create a Tkinter PhotoImage object
-    photo = ImageTk.PhotoImage(image)
-
-    # Create a label to display the image
-    label = tk.Label(window, image=photo)
-    label.pack()
-    label.photo = photo # makes the image to persist through a while cycle
-
-    # Update the window to display the new image
-    window.update()
-
-    time.sleep(0.017) # cca 1/60 s which is the refresh rate of the SLM (60 Hz
-
-
-def display_image_on_external_screen_img(window, image):
-    """
-    Display an image on an external screen without borders or decorations.
-    DIffers from the other function by datatype of the second argument
-
-    Parameters:
-    - image (Image object): The path to the image file to be displayed.
-
-    Returns:
-    None
-    """
-
-    # Destroy the existing window if it exists
-    for widget in window.winfo_children():
-            widget.destroy()
+    if not isinstance(image, im.Image):
+        image = im.open(image)
 
     # Create a Tkinter PhotoImage object
     photo = ImageTk.PhotoImage(image)
@@ -370,3 +340,33 @@ def display_image_on_external_screen_img(window, image):
     window.update()
 
     time.sleep(0.017) # cca 1/60 s which is the refresh rate of the SLM
+
+
+# def display_image_on_external_screen_img(window, image):
+#     """
+#     Display an image on an external screen without borders or decorations.
+#     DIffers from the other function by datatype of the second argument
+
+#     Parameters:
+#     - image (Image object): The path to the image file to be displayed.
+
+#     Returns:
+#     None
+#     """
+
+#     # Destroy the existing window if it exists
+#     for widget in window.winfo_children():
+#             widget.destroy()
+
+#     # Create a Tkinter PhotoImage object
+#     photo = ImageTk.PhotoImage(image)
+
+#     # Create a label to display the image
+#     label = tk.Label(window, image=photo)
+#     label.pack()
+#     label.photo = photo # makes the image to persist through a while cycle
+
+#     # Update the window to display the new image
+#     window.update()
+
+#     time.sleep(0.017) # cca 1/60 s which is the refresh rate of the SLM
