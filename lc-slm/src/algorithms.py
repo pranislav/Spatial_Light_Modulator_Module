@@ -122,12 +122,12 @@ def GD(demanded_output: np.array, args) -> Tuple[np.array, np.array, int]:
     input = initial_input
     error = args.tolerance + 1
     i = 0
+    mask = 1 + args.mask_relevance * demanded_output/255
     print("computing hologram (one bar for 10 loops)", ' ')
     while error > args.tolerance and i < args.max_loops:
         med_output = fft2(input/abs(input) * incomming_amplitude)
         output_unnormed = abs(med_output) **2
         output = output_unnormed * norm / np.amax(output_unnormed) # toto prip. zapocitat do grad. zostupu
-        mask = 1 + args.mask_relevance * demanded_output/255
         dEdF = ifft2(mask * med_output * (output - demanded_output)) * incomming_amplitude
         dEdX = np.array(list(map(dEdX_complex, dEdF, input)))
         input -= args.learning_rate * dEdX
@@ -186,12 +186,12 @@ def GD_for_moving_traps(demanded_output: np.array, initial_input: np.array, lear
     norm = np.amax(demanded_output)
     input = initial_input
     error = tolerance + 1
+    mask = 1 + mask_relevance * demanded_output/255
     i = 0
     while error > tolerance and i < max_loops:
         med_output = fft2(input/abs(input))
         output_unnormed = abs(med_output) **2
         output = output_unnormed / np.amax(output_unnormed) * norm**2 # toto prip. zapocitat do grad. zostupu
-        mask = 1 + mask_relevance * demanded_output/255
         dEdF = ifft2(mask * med_output * (output - demanded_output))
         dEdX = np.array(list(map(dEdX_complex, dEdF, input)))
         input -= learning_rate * dEdX
