@@ -43,7 +43,7 @@ def make_sample_holograms(angle, precision, ct2pi):
     sample.append(decline(angle, ct2pi))
     for i in range(1, precision):
         offset = i * 256 // precision
-        sample.append((sample[0] + offset) % 256)
+        sample.append((sample[0] + offset) % ct2pi)
     return sample
 
 def decline(angle, ct2pi):
