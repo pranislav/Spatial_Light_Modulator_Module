@@ -5,14 +5,14 @@ from screeninfo import get_monitors
 import numpy as np
 import os
 import sys
-import explore_calibration as e
+import explore_wavefront_correction as e
 import phase_mask_smoothing as pms
 import time
 
 
 def produce_phase_mask(phase_mask, args):
     specification = "phase_mask_" + make_specification(args)
-    dest_dir = "lc-slm/holograms/calibration_phase_masks"
+    dest_dir = "lc-slm/holograms/wavefront_correction_phase_masks"
     big_phase_mask = expand_phase_mask(phase_mask, args.subdomain_size)
     save_phase_mask(big_phase_mask, dest_dir, specification)
     phase_mask_unwrapped = pms.unwrap_phase_picture(phase_mask, args.correspond_to2pi)
@@ -22,7 +22,7 @@ def produce_phase_mask(phase_mask, args):
         save_phase_mask(np.array(big_phase_mask) % args.correspond_to2pi, dest_dir, "smoothed_"+specification)
 
 def make_specification(args):
-    return f"{args.calibration_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref_{args.reference_coordinates}_intensity_coords_{args.intensity_coordinates}"
+    return f"{args.wavefront_correction_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref_{args.reference_coordinates}_intensity_coords_{args.intensity_coordinates}"
 
 
 # ----------- best phase() -------------- #

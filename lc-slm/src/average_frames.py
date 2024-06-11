@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image as im
 from pylablib.devices import uc480
-from calibration_lib import display_image_on_external_screen, set_exposure
+from wavefront_correction_lib import display_image_on_external_screen, set_exposure
 
 def average_frames(hologram_path):
     cam = uc480.UC480Camera()

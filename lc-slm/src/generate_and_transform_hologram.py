@@ -4,12 +4,12 @@ from algorithms import GS, GD
 import numpy as np
 from PIL import Image as im
 import PIL.ImageOps
-import slm_screen as sc
+# import slm_screen as sc
 import constants as c
 import argparse
 import os
 import imageio
-import calibration_lib as cl
+import wavefront_correction_lib as cl
 import analytical_holograms as ah
 import time
 

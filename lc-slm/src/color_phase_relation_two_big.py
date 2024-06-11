@@ -5,8 +5,8 @@ that intensity is equally divided between them
 subdomains are significantly big'''
 
 
-import explore_calibration as e
-import calibration_lib as cl
+import explore_wavefront_correction as e
+import wavefront_correction_lib as cl
 import color_phase_relation as cp
 import constants as c
 import numpy as np

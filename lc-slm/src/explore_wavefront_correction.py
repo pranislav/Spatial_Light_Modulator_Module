@@ -1,12 +1,12 @@
 '''script which interacts with the experiment and provides
 an insight into the experiment response to variaous parameters change
-it displays a calibration hologram specified by user on the SLM
+it displays a wavefront_correction hologram specified by user on the SLM
 and then shows the hologram, an image from camera and
 evolution of intensity with respect to phase shift of current subdomain
 fitted with cosine and prints out fitted parameters
 
 main goal is to help the user to estimate optimal configuration for
-calibration and color-phase relation search
+wavefront_correction and color-phase relation search
 
 parameters to be changed:
 - subdomain size
@@ -20,7 +20,7 @@ parameters to be changed:
 # TODO: subdomain_position degeneration (real & input one)
 
 import constants as c
-import calibration_lib as cl
+import wavefront_correction_lib as cl
 import display_holograms as dh
 import numpy as np
 from PIL import Image as im
@@ -62,7 +62,7 @@ def explore(args):
             intensity_coord = cl.get_highest_intensity_coordinates_img(cam, window, reference_hologram, num_to_avg)
         hologram = reference_hologram
         subdomain_position = real_subdomain_position(last_nonempty(params["subdomain_position"]), subdomain_size)
-        frames, intensity_data = calibration_loop_explore(window, cam, hologram, sample_list, subdomain_position, subdomain_size, precision, intensity_coord, num_to_avg)
+        frames, intensity_data = wavefront_correction_loop_explore(window, cam, hologram, sample_list, subdomain_position, subdomain_size, precision, intensity_coord, num_to_avg)
         fit_params = f.fit_intensity_general(intensity_data, f.positive_cos)
         print_fit_params(fit_params)
         intensity_fit = plot_fit(fit_params)
@@ -79,7 +79,7 @@ def explore(args):
         get_params(params)
 
 
-def calibration_loop_explore(window, cam, hologram, sample, subdomain_position, subdomain_size, precision, coordinates, num_to_avg):
+def wavefront_correction_loop_explore(window, cam, hologram, sample, subdomain_position, subdomain_size, precision, coordinates, num_to_avg):
     intensity_list = [[], []]
     images_list = []
     k = 0
@@ -388,7 +388,7 @@ def images_to_video(image_list, video_name, fps, output_path="."):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser("script for simulating and visualizing calibration loops")
+    parser = argparse.ArgumentParser("script for simulating and visualizing wavefront_correction loops")
     parser.add_argument('-m', '--mode', choices=['i', 'v'], default='i', type=str, help="i for images, v for video output")
     args = parser.parse_args()
 

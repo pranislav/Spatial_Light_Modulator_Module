@@ -1,9 +1,9 @@
-'''script for measuring impact of observed fluctuations of the light on the calibration procedure
+'''script for measuring impact of observed fluctuations of the light on the wavefront_correction procedure
 motivation: - set_intensity is unstable, probably because of the light fluctuations. need to prove or disprove it
 '''
 
 
-import calibration_lib as cl
+import wavefront_correction_lib as cl
 import display_holograms as dh
 import constants as c
 import argparse
@@ -19,7 +19,7 @@ import os
 def measure_fluctuations(args):
     cam = uc480.UC480Camera()
     window = cl.create_tk_window()
-    hologram = create_calibration_hologram(args)
+    hologram = create_wavefront_correction_hologram(args)
     if args.exposure is not None:
         cam.set_exposure(args.exposure)
     else:
@@ -52,7 +52,7 @@ def plot_and_save(intensity_evolution, expo):
     # plt.show()
 
 
-def create_calibration_hologram(args):
+def create_wavefront_correction_hologram(args):
     black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width), dtype=np.uint8))
     angle = tuple(map(int, args.angle.split("_")))
     sample = cl.decline(angle, 256)
@@ -67,7 +67,7 @@ def read_adn_expand_coords(coords, subdomain_size):
     return int(x) * subdomain_size, int(y) * subdomain_size
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Script for measuring impact of fluctuations of the light on the calibration procedure")
+    parser = argparse.ArgumentParser(description="Script for measuring impact of fluctuations of the light on the wavefront_correction procedure")
     parser.add_argument('-t', '--time', type=int, default=5, help="time of the measurement in seconds")
     parser.add_argument('-ss', '--subdomain_size', type=int, default=32)
     parser.add_argument('-a', '--angle', type=str, default="1_1", help="use form: xdecline_ydecline (angles in constants.u unit)")

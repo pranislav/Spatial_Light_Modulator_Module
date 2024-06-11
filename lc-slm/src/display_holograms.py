@@ -1,12 +1,12 @@
-import calibration_lib as cl
+import wavefront_correction_lib as cl
 from PIL import Image as im
 import numpy as np
 import argparse
 import os
-import explore_calibration as e
+import explore_wavefront_correction as e
 import constants as c
 
-mask_dir = "lc-slm/holograms/calibration_phase_masks"
+mask_dir = "lc-slm/holograms/wavefront_correction_phase_masks"
 default_hologram_dir = "lc-slm/holograms"
 
 def display_holograms(args):
@@ -37,14 +37,14 @@ def display_holograms(args):
             display_with_mask(window, name, directory, mask_arr, args.correspond_to2pi)
             continue
         if command[:2] == 'c':
-            print("in mode for displaying instant calibration holograms")
-            display_instant_calibration_holograms(window)
+            print("in mode for displaying instant wavefront_correction holograms")
+            display_instant_wavefront_correction_holograms(window)
             continue
         name = command
         display_with_mask(window, name, directory, mask_arr, args.correspond_to2pi)
 
 
-def display_instant_calibration_holograms(window):
+def display_instant_wavefront_correction_holograms(window):
     params = default_params()
     while True:
         get_params(params)
@@ -60,7 +60,7 @@ def display_instant_calibration_holograms(window):
         cl.display_image_on_external_screen(window, hologram)
         command = input("press enter to continue, type 'q' to quit this mode >> ")
         if command == 'q':
-            print("leaving mode for displaying instant calibration holograms")
+            print("leaving mode for displaying instant wavefront_correction holograms")
             break
 
 
@@ -75,7 +75,7 @@ def default_params():
     return params
 
 def get_params(params):
-    print("enter parameters for calibration")
+    print("enter parameters for wavefront_correction")
     print("press enter to leave current value")
     for key in params.keys():
         value = input(f"{key} (current: {params[key]}) >> ")
@@ -104,7 +104,7 @@ def print_help():
     print(f"- cd <directory> - change directory, enter {directory_help}")
     print("- <hologram_name> - display hologram in current directory")
     print(f"- cm <mask_name> - change mask - {mask_help}")
-    print("- c - enter mode for displaying instant calibration holograms")
+    print("- c - enter mode for displaying instant wavefront_correction holograms")
     print("- help - display this message")
     print("- q - quit")
 

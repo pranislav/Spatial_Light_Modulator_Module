@@ -1,7 +1,7 @@
 # import slm_screen as ss
 import PIL.Image as im
 import constants as c
-import calibration_lib as cl
+import wavefront_correction_lib as cl
 import argparse
 import numpy as np
 

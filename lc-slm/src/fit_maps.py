@@ -1,5 +1,5 @@
-from calibration_lib import *
-from calibration import *
+from wavefront_correction_lib import *
+from wavefront_correction import *
 import numpy as np
 import argparse
 from time import time
@@ -19,7 +19,7 @@ def fit_maps(args):
         for j in range(W):
             if i == i0 and j == j0:
                 continue
-            intensity_list = calibration_loop(i, j, loop_args)
+            intensity_list = wavefront_correction_loop(i, j, loop_args)
             param_dict = f.fit_intensity_general(intensity_list, fit_func)
             fill_maps(param_maps, param_dict, (i, j))
     create_param_maps(param_maps, args.subdomain_size)
@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
     help_ref_coord = "pseudo coordinates of reference subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size"
 
-    parser.add_argument('calibration_name', type=str)
+    parser.add_argument('wavefront_correction_name', type=str)
     parser.add_argument('-ss', '--subdomain_size', type=int, default=32)
     parser.add_argument('-p', '--precision', type=int, default=8, help='"color depth" of the phase mask')
     parser.add_argument('-a', '--angle', type=str, default="1_1", help="use form: xdecline_ydecline (angles in constants.u unit)")

@@ -20,7 +20,7 @@ measuring intensity at the end of the optical path with a camera
 
 # ! working in constants.u units
 
-from calibration_lib import *
+from wavefront_correction_lib import *
 import numpy as np
 import argparse
 from pylablib.devices import uc480
@@ -40,7 +40,7 @@ def calibrate(args):
     count = 0
     for i, j in coordinates_list:
         print(f"\rcalibrating subdomain {count + 1}/{len(coordinates_list)}", end="")
-        intensity_list = calibration_loop(i, j, loop_args)
+        intensity_list = wavefront_correction_loop(i, j, loop_args)
         phase_mask[i, j] = best_phase(intensity_list)
         count += 1
     produce_phase_mask(phase_mask, args)
@@ -105,7 +105,7 @@ def make_loop_args(args):
     return loop_args
 
 
-def calibration_loop(i, j, loop_args):
+def wavefront_correction_loop(i, j, loop_args):
     subdomain_size = loop_args["subdomain_size"]
     precision = loop_args["precision"]
     cam = loop_args["cam"]
@@ -142,7 +142,7 @@ if __name__ == "__main__":
 
     help_ref_coord = "pseudo coordinates of reference subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size"
 
-    parser.add_argument('calibration_name', type=str)
+    parser.add_argument('wavefront_correction_name', type=str)
     parser.add_argument('-ss', '--subdomain_size', type=int, default=32)
     parser.add_argument('-p', '--precision', type=int, default=8, help='"color depth" of the phase mask')
     parser.add_argument('-a', '--angle', type=str, default="1_1", help="use form: xdecline_ydecline (angles in constants.u unit)")

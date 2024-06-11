@@ -1,5 +1,5 @@
-# import explore_calibration as e
-# import calibration_lib as cl
+# import explore_wavefront_correction as e
+# import wavefront_correction_lib as cl
 import numpy as np
 import argparse
 import time
@@ -13,7 +13,7 @@ def main(args):
     after_cl = time.time()
     sample_e = make_sample_holograms_e(angle_e, args.precision, args.correspond_to2pi)
     after_e = time.time()
-    print(f"in calibration_lib: {after_cl - start}, in explore_calibration: {after_e - after_cl}")
+    print(f"in wavefront_correction_lib: {after_cl - start}, in explore_wavefront_correction: {after_e - after_cl}")
     for i in range(len(sample_cl)):
         difference = sample_cl[i] - sample_e[i]
         im.fromarray(difference).show()

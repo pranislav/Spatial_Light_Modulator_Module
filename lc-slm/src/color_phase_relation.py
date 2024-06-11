@@ -2,8 +2,8 @@
 a value of a pixel in a hologram and real phase shift that SLM applies on the pixel'''
 
 import argparse
-import calibration as ca
-from calibration_lib import *
+import wavefront_correction as ca
+from wavefront_correction_lib import *
 from functools import partial
 import fit_stuff as fs
 import time
@@ -11,7 +11,7 @@ import time
 
 def main(args):
     loop_args = ca.make_loop_args(args)
-    calibration_loop = partial(ca.calibration_loop, loop_args=loop_args)
+    wavefront_correction_loop = partial(ca.wavefront_correction_loop, loop_args=loop_args)
     fit_func = fs.positive_cos_floor() if args.floor else fs.positive_cos
     fit_params_dict = {param: [] for param in fit_func.__code__.co_varnames[1:]}
     intensity_lists = []
@@ -24,7 +24,7 @@ def main(args):
             if i == i0 and j == j0:
                 continue
             if do_loop(i, j):
-                intensity_lists.append(calibration_loop(i, j))
+                intensity_lists.append(wavefront_correction_loop(i, j))
                 try: # TODO: catch just the exception that is thrown when fitting is unsuccessful
                     param_dict = fs.fit_intensity_general(intensity_lists[-1], fit_func)
                 except:
