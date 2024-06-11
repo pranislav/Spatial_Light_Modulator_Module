@@ -148,7 +148,7 @@ def show_negative(arr):
 
 
 if __name__ == "__main__":
-    source_dir = "lc-slm/holograms/calibration_phase_masks/"
+    source_dir = "lc-slm/holograms/wavefront_correction_phase_masks/"
     parser = argparse.ArgumentParser()
     parser.add_argument("phase_mask_name", type=str, help=f'name of a phase mask in directory {source_dir}')
     parser.add_argument("-ct2pi", "--correspond_to_2pi", type=int, default=256, help="value of pixel corresponding to 2pi phase shift")
