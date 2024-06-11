@@ -10,21 +10,22 @@ import time
 import copy
 from polyfit2d import polyfit2d
 import cv2
-import calibration_lib as cl
+import wavefront_correction_lib as cl
 
 
 def main(args):
-    phase_mask = read_phase_mask(args.phase_mask_name)
+    phase_mask = read_phase_mask(args.phase_mask_name, args.source_dir)
     small_phase_mask = shrink_phase_mask(phase_mask, args.subdomain_size)
     unwrapped_mask = unwrap_phase_picture(small_phase_mask, args.correspond_to_2pi)
-    upscaled_unwrapped_mask = im.fromarray(unwrapped_mask).resize((c.slm_width, c.slm_height), im.BICUBIC)
+    resample = im.BICUBIC if args.smoothing == "bcubic" else im.BILINEAR
+    upscaled_unwrapped_mask = im.fromarray(unwrapped_mask).resize((c.slm_width, c.slm_height), resample=resample)
     upscaled_unwrapped_mask = np.array(upscaled_unwrapped_mask)
     time_name = time.strftime("%Y-%m-%d_%H-%M-%S")
-    save_smoothed_mask_unwrapped(copy.deepcopy(upscaled_unwrapped_mask), args.phase_mask_name[:-4], time_name)
-    save_smoothed_mask(upscaled_unwrapped_mask, args.phase_mask_name[:-4], time_name, args.correspond_to_2pi)
+    save_smoothed_mask_unwrapped(copy.deepcopy(upscaled_unwrapped_mask), args.phase_mask_name[:-4], time_name, args.source_dir)
+    save_smoothed_mask(upscaled_unwrapped_mask, args.phase_mask_name[:-4], time_name, args.correspond_to_2pi, args.source_dir)
 
 def main_blur(args):
-    phase_mask = read_phase_mask(args.phase_mask_name)
+    phase_mask = read_phase_mask(args.phase_mask_name, args.source_dir)
     small_phase_mask = shrink_phase_mask(phase_mask, args.subdomain_size)
     unwrapped_mask = unwrap_phase_picture(small_phase_mask, args.correspond_to_2pi)
     # unwrapped_mask_original_frame = original_frame(small_phase_mask, unwrapped_mask.data)
@@ -41,15 +42,16 @@ def original_frame(phase_mask, unwrapped_mask):
     frame = phase_mask * mask
     return unwrapped_mask_without_frame #+ frame
 
-def save_smoothed_mask_unwrapped(smoothed_mask, name, time_name):
+def save_smoothed_mask_unwrapped(smoothed_mask, name, time_name, source_dir):
     smoothed_mask = smoothed_mask / max(smoothed_mask.flatten()) * 255
     smoothed_mask_unwrapped = im.fromarray(smoothed_mask)
-    smoothed_mask_unwrapped.convert("L").save(f"{name}_smoothed_unwrapped_{time_name}.png")
+    smoothed_mask_unwrapped.convert("L").save(f"{source_dir}/{name}_smoothed_unwrapped_{time_name}.png")
 
-def save_smoothed_mask(smoothed_mask, name, time_name, correspond_to_2pi):
+def save_smoothed_mask(smoothed_mask, name, time_name, correspond_to_2pi, source_dir):
     smoothed_mask = smoothed_mask % correspond_to_2pi
     smoothed_mask = im.fromarray(smoothed_mask)
-    smoothed_mask.convert("L").save(f"{name}_smoothed_{time_name}.png")
+    print(f"{name}_smoothed_{time_name}.png")
+    smoothed_mask.convert("L").save(f"{source_dir}/{name}_smoothed_{time_name}.png")
 
 
 # def fit_and_eval(unwrapped_mask, polynom_degree):
@@ -72,8 +74,8 @@ def preview_img(arr):
     im.fromarray((arr / arr.max()) * 255).show()
 
 
-def read_phase_mask(phase_mask_name):
-    phase_mask = im.open(f"lc-slm/holograms/calibration_phase_masks/{phase_mask_name}")
+def read_phase_mask(phase_mask_name, source_dir):
+    phase_mask = im.open(f"{source_dir}/{phase_mask_name}")
     phase_mask_arr = np.array(phase_mask).astype(float)
     return phase_mask_arr
 
@@ -146,10 +148,13 @@ def show_negative(arr):
 
 
 if __name__ == "__main__":
+    source_dir = "lc-slm/holograms/calibration_phase_masks/"
     parser = argparse.ArgumentParser()
-    parser.add_argument("phase_mask_name", type=str, help='name of a phase mask in directory lc-slm/holograms/calibration_phase_masks')
+    parser.add_argument("phase_mask_name", type=str, help=f'name of a phase mask in directory {source_dir}')
     parser.add_argument("-ct2pi", "--correspond_to_2pi", type=int, default=256, help="value of pixel corresponding to 2pi phase shift")
     parser.add_argument("-ss", "--subdomain_size", type=int, default=32, help="subdomain size used to create the phase mask")
+    parser.add_argument("-smoothing", "--smoothing", type=str, options=["bilinear", "bcubic"], default="bilinear", help="smoothing method used to upscale the unwrapped phase mask")
     args = parser.parse_args()
+    args.source_dir = source_dir
     main(args)
     # main("lc-slm/holograms/fit_maps/phase_shift_size_32_precision_8_x1_y__ref16_12_avg1_try_lab_may10.png", 256, 32)
