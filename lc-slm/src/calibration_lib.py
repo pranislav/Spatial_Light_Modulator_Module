@@ -32,8 +32,16 @@ def naive(phase_list):
     return phase_list[0][opt_index]
 
 
-def trick(phase_list):
-    pass
+def trick(phase_intensity_list, ct2pi):
+    imaginary_part = trick_function(phase_intensity_list, np.sin, ct2pi)
+    real_part = trick_function(phase_intensity_list, np.cos, ct2pi)
+    return np.angle(real_part + 1j * imaginary_part) * ct2pi / (2 * np.pi)
+
+def trick_function(phase_intensity_list, fun, ct2pi):
+    phase_list = phase_intensity_list[0]
+    intensity_list = phase_intensity_list[1]
+    return sum([intensity_list[i] * fun(2 * np.pi / ct2pi * phase_list[i]) for i in range(len(phase_list))])
+
 
 
 # ---------- sample holograms ----------- #

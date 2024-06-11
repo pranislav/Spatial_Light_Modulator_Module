@@ -31,7 +31,8 @@ import phase_mask_smoothing as pms
 
 def calibrate(args):
     loop_args = make_loop_args(args) # & set exposure
-    fit = lambda x: f.fit_intensity_general(x, f.positive_cos_fixed_wavelength(args.correspond_to2pi))  # TODO other options?
+    # fit = lambda lst: f.fit_intensity_general(lst, f.positive_cos_fixed_wavelength(args.correspond_to2pi))  # TODO other options?
+    fit = lambda lst: trick(lst, args.correspond_to2pi)
     best_phase = compose_func(return_phase, fit)
     phase_mask = np.zeros(get_number_of_subdomains(args.subdomain_size))
     coordinates_list = make_coordinates_list(args)
