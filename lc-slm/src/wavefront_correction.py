@@ -30,7 +30,7 @@ import phase_mask_smoothing as pms
 
 
 def calibrate(args):
-    loop_args = make_loop_args(args) # & set exposure
+    initialize(args) # & set exposure
     best_phase = choose_phase(args)
     phase_mask = np.zeros(get_number_of_subdomains(args.subdomain_size))
     coordinates_list = make_coordinates_list(args)
@@ -38,7 +38,7 @@ def calibrate(args):
     count = 0
     for i, j in coordinates_list:
         print(f"\rcalibrating subdomain {count + 1}/{len(coordinates_list)}", end="")
-        intensity_list = wavefront_correction_loop(i, j, loop_args)
+        intensity_list = wavefront_correction_loop(i, j, args)
         phase_mask[i, j] = best_phase(intensity_list)
         count += 1
     produce_phase_mask(phase_mask, args)
@@ -81,66 +81,47 @@ def print_estimate(outer_loops_num, start_loops):
     time_interval = (outer_loops_num - 1) * time_elapsed
     print(f"estimated remaining time is {round(time_interval / 60, 1)} min")
 
-def make_loop_args(args):
-    loop_args = {}
-    subdomain_size = args.subdomain_size
-    cam = uc480.UC480Camera()
-    window = create_tk_window()
+def initialize(args):
+    args.cam = uc480.UC480Camera()
+    args.window = create_tk_window()
     print("creating sample holograms...")
     args.angle = read_angle(args.angle)
-    samples_list = make_sample_holograms(args.angle, args.precision, args.correspond_to2pi)
+    args.samples_list = make_sample_holograms(args.angle, args.precision, args.correspond_to2pi)
     rx, ry = read_reference_coordinates(args.reference_coordinates, get_number_of_subdomains(args.subdomain_size))
-    real_reference_coordinates = (rx * subdomain_size, ry * subdomain_size)
+    args.real_reference_coordinates = (rx * args.subdomain_size, ry * args.subdomain_size)
     black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
-    reference_hologram = add_subdomain(black_hologram, samples_list[0], real_reference_coordinates, subdomain_size)
+    reference_hologram = add_subdomain(black_hologram, args.samples_list[0], args.real_reference_coordinates, args.subdomain_size)
     print("adjusting exposure time...")
-    set_exposure_wrt_reference_img(cam, window, (256 / 4 - 20, 256 / 4), reference_hologram, args.num_to_avg) # in fully-constructive interference the value of amplitude could be twice as high, therefore intensity four times as high 
-    # cam.set_exposure(0.001)
-    # coords = np.array((0, 0))
-    # for i in range(50):
-    #     coords += get_highest_intensity_coordinates_img(cam, window, reference_hologram, args.num_to_avg)
-    # print(coords / 50)
-    loop_args["intensity_coord"] = get_intensity_coords(cam, window, im.fromarray(samples_list[0]), args)
-    loop_args["precision"] = args.precision
-    loop_args["subdomain_size"] = subdomain_size
-    loop_args["samples_list"] = samples_list
-    loop_args["cam"] = cam
-    loop_args["window"] = window
-    loop_args["hologram"] = reference_hologram
-    loop_args["num_to_avg"] = args.num_to_avg
-    loop_args["correspond_to2pi"] = args.correspond_to2pi
-    return loop_args
+    set_exposure_wrt_reference_img(args.cam, args.window, (256 / 4 - 20, 256 / 4), reference_hologram, args.num_to_avg) # in fully-constructive interference the value of amplitude could be twice as high, therefore intensity four times as high 
+    args.intensity_coord = get_intensity_coords(args.cam, args.window, im.fromarray(args.samples_list[0]), args)
+    args.hologram = reference_hologram
 
 
-def wavefront_correction_loop(i, j, loop_args):
-    subdomain_size = loop_args["subdomain_size"]
-    precision = loop_args["precision"]
-    cam = loop_args["cam"]
-    hologram = loop_args["hologram"] # TODO: find out whether this works
-    i_real = i * subdomain_size
-    j_real = j * subdomain_size
+def wavefront_correction_loop(i, j, args):
+    i_real = i * args.subdomain_size
+    j_real = j * args.subdomain_size
     k = 0
     intensity_list = [[], []]
-    while k < precision:
-        loop_args["hologram"] = add_subdomain(loop_args["hologram"], loop_args["samples_list"][k], (j_real, i_real), subdomain_size)
-        display_image_on_external_screen(loop_args["window"], loop_args["hologram"]) # displays hologram on an external dispaly (SLM)
+    while k < args.precision:
+        args.hologram = add_subdomain(args.hologram, args.samples_list[k], (j_real, i_real), args.subdomain_size)
+        display_image_on_external_screen(args.window, args.hologram) # displays hologram on an external dispaly (SLM)
         intensity = 0
-        for _ in range(loop_args["num_to_avg"]):
-            frame = cam.snap()
-            intensity += get_intensity_on_coordinates(frame, loop_args["intensity_coord"])
-        intensity /= loop_args["num_to_avg"]
+        for _ in range(args.num_to_avg):
+            frame = args.cam.snap()
+            intensity += get_intensity_on_coordinates(frame, args.intensity_coord)
+        intensity /= args.num_to_avg
         # intensity = get_intensity_coordinates(average_frames(cam, loop_args["num_to_avg"]), loop_args["intensity_coord"])
         if intensity == 255:
             print("maximal intensity was reached, adapting...")
-            cam.set_exposure(cam.get_exposure() * 0.9) # 10 % decrease of exposure time
+            args.cam.set_exposure(args.cam.get_exposure() * 0.9) # 10 % decrease of exposure time
             k = 0
             intensity_list = [[], []]
             continue
-        phase = k * loop_args["correspond_to2pi"] // precision
+        phase = k * args.correspond_to2pi // args.precision
         intensity_list[0].append(phase)
         intensity_list[1].append(intensity)
         k += 1
-    clear_subdomain(loop_args["hologram"], (i_real, j_real), subdomain_size)
+    clear_subdomain(args.hologram, (i_real, j_real), args.subdomain_size)
     return intensity_list
 
 
