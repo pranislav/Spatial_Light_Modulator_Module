@@ -15,10 +15,11 @@ def produce_phase_mask(phase_mask, args):
     dest_dir = "lc-slm/holograms/wavefront_correction_phase_masks"
     big_phase_mask = expand_phase_mask(phase_mask, args.subdomain_size)
     save_phase_mask(big_phase_mask, dest_dir, specification)
-    phase_mask_unwrapped = pms.unwrap_phase_picture(phase_mask, args.correspond_to2pi)
     if args.smooth_phase_mask:
+        phase_mask_unwrapped = pms.unwrap_phase_picture(phase_mask, args.correspond_to2pi)
         # big_phase_mask = pms.circular_box_blur(phase_mask_unwrapped, args.subdomain_size // 2)
-        big_phase_mask = im.fromarray(phase_mask_unwrapped).resize((c.slm_width, c.slm_height), im.BICUBIC)
+        resize = im.BICUBIC if args.smoothing == "bcubic" else im.BILINEAR
+        big_phase_mask = im.fromarray(phase_mask_unwrapped).resize((c.slm_width, c.slm_height), resize=resize)
         save_phase_mask(np.array(big_phase_mask) % args.correspond_to2pi, dest_dir, "smoothed_"+specification)
 
 def make_specification(args):
@@ -35,7 +36,7 @@ def naive(phase_list):
 def trick(phase_intensity_list, ct2pi):
     imaginary_part = trick_function(phase_intensity_list, np.sin, ct2pi)
     real_part = trick_function(phase_intensity_list, np.cos, ct2pi)
-    return np.angle(real_part + 1j * imaginary_part) * ct2pi / (2 * np.pi)
+    return (np.angle(real_part + 1j * imaginary_part) + np.pi) * ct2pi / (2 * np.pi)
 
 def trick_function(phase_intensity_list, fun, ct2pi):
     phase_list = phase_intensity_list[0]
@@ -50,7 +51,7 @@ def make_sample_holograms(angle, precision, ct2pi):
     sample = []
     sample.append(decline(angle, ct2pi))
     for i in range(1, precision):
-        offset = i * 256 // precision
+        offset = i * ct2pi // precision
         sample.append((sample[0] + offset) % ct2pi)
     return sample
 
@@ -60,7 +61,7 @@ def decline(angle, ct2pi):
     const = ct2pi * c.px_distance / c.wavelength
     for i in range(c.slm_height):
         for j in range(c.slm_width):
-            new_phase = const * (np.sin(float(y_angle) * c.u) * i + np.sin(float(x_angle) * c.u) * j)
+            new_phase = const * (np.sin(y_angle * c.u) * i + np.sin(x_angle * c.u) * j)
             hologram[i, j] = int(new_phase % ct2pi)
     return hologram
 
@@ -99,6 +100,9 @@ def read_reference_coordinates(reference_coordinates_str, shape):
         return W // 2, H // 2
     x, y = reference_coordinates_str.split('_')
     return int(x), int(y)
+
+def read_angle(angle_str):
+    return tuple(map(float, angle_str.split("_")))
 
 
 def get_number_of_subdomains(subdomain_size):

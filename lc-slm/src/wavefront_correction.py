@@ -31,9 +31,7 @@ import phase_mask_smoothing as pms
 
 def calibrate(args):
     loop_args = make_loop_args(args) # & set exposure
-    # fit = lambda lst: f.fit_intensity_general(lst, f.positive_cos_fixed_wavelength(args.correspond_to2pi))  # TODO other options?
-    fit = lambda lst: trick(lst, args.correspond_to2pi)
-    best_phase = compose_func(return_phase, fit)
+    best_phase = choose_phase(args)
     phase_mask = np.zeros(get_number_of_subdomains(args.subdomain_size))
     coordinates_list = make_coordinates_list(args)
     print("mainloop start.")
@@ -45,6 +43,14 @@ def calibrate(args):
         count += 1
     produce_phase_mask(phase_mask, args)
 
+
+def choose_phase(args):
+    if args.choose_phase == "fit":
+        fit = lambda lst: f.fit_intensity_general(lst, f.positive_cos_fixed_wavelength(args.correspond_to2pi))  # TODO other options?
+        best_phase = compose_func(return_phase, fit)
+    elif args.choose_phase == "trick":
+        best_phase = lambda lst: trick(lst, args.correspond_to2pi)
+    return best_phase
 
 def compose_func(func1, func2):
     return lambda x: func1(func2(x))
@@ -81,7 +87,8 @@ def make_loop_args(args):
     cam = uc480.UC480Camera()
     window = create_tk_window()
     print("creating sample holograms...")
-    samples_list = make_sample_holograms(args.angle.split("_"), args.precision, args.correspond_to2pi)
+    args.angle = read_angle(args.angle)
+    samples_list = make_sample_holograms(args.angle, args.precision, args.correspond_to2pi)
     rx, ry = read_reference_coordinates(args.reference_coordinates, get_number_of_subdomains(args.subdomain_size))
     real_reference_coordinates = (rx * subdomain_size, ry * subdomain_size)
     black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
@@ -94,7 +101,6 @@ def make_loop_args(args):
     #     coords += get_highest_intensity_coordinates_img(cam, window, reference_hologram, args.num_to_avg)
     # print(coords / 50)
     loop_args["intensity_coord"] = get_intensity_coords(cam, window, im.fromarray(samples_list[0]), args)
-    print(f"intensity coordinates: {loop_args['intensity_coord']}")
     loop_args["precision"] = args.precision
     loop_args["subdomain_size"] = subdomain_size
     loop_args["samples_list"] = samples_list
@@ -102,6 +108,7 @@ def make_loop_args(args):
     loop_args["window"] = window
     loop_args["hologram"] = reference_hologram
     loop_args["num_to_avg"] = args.num_to_avg
+    loop_args["correspond_to2pi"] = args.correspond_to2pi
     return loop_args
 
 
@@ -129,7 +136,7 @@ def wavefront_correction_loop(i, j, loop_args):
             k = 0
             intensity_list = [[], []]
             continue
-        phase = k * 256 // precision
+        phase = k * loop_args["correspond_to2pi"] // precision
         intensity_list[0].append(phase)
         intensity_list[1].append(intensity)
         k += 1
@@ -153,6 +160,8 @@ if __name__ == "__main__":
     parser.add_argument('-smooth', '--smooth_phase_mask', action="store_true", help="the phase mask will be smoothed")
     parser.add_argument("-shuffle", action="store_true", help="subdomains will be calibrated in random order")
     parser.add_argument('-ic', "--intensity_coordinates", type=str, default=None, help="coordinates of the point where intensity is measured in form x_y. if not provided, the point will be found automatically.")
+    parser.add_argument('-choose_phase', type=str, choices=["trick", "fit"], default="fit", help="method of finding the optimal phase shift")
+    parser.add_argument('-resample', type=str, choices=["bilinear", "bicubic"], default="bilinear", help="smoothing method used to upscale the unwrapped phase mask")
 
     args = parser.parse_args()
     start = time()
