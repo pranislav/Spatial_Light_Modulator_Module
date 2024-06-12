@@ -49,7 +49,7 @@ def choose_phase(args):
         fit = lambda lst: f.fit_intensity_general(lst, f.positive_cos_fixed_wavelength(2 * np.pi), "2pi")  # TODO other options?
         best_phase = compose_func(return_phase, fit)
     elif args.choose_phase == "trick":
-        best_phase = lambda lst: trick(lst, args.correspond_to2pi)
+        best_phase = lambda lst: trick(lst)
     return best_phase
 
 def compose_func(func1, func2):

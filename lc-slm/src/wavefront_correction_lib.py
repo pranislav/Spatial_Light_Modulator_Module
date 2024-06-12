@@ -14,13 +14,14 @@ from skimage.restoration import unwrap_phase
 def produce_phase_mask(phase_mask, args):
     specification = "phase_mask_" + make_specification(args)
     dest_dir = "lc-slm/holograms/wavefront_correction_phase_masks"
-    big_phase_mask = expand_phase_mask(phase_mask * args.correspond_to2pi, args.subdomain_size)
+    if args.choose_phase == "trick": phase_mask += np.pi
+    big_phase_mask = expand_phase_mask(phase_mask * args.correspond_to2pi / (2 * np.pi), args.subdomain_size)
     save_phase_mask(big_phase_mask, dest_dir, specification)
     if args.smooth_phase_mask:
         phase_mask_unwrapped = unwrap_phase(phase_mask - np.pi)
         # big_phase_mask = pms.circular_box_blur(phase_mask_unwrapped, args.subdomain_size // 2)
-        resize = im.BICUBIC if args.smoothing == "bcubic" else im.BILINEAR
-        big_phase_mask = im.fromarray(phase_mask_unwrapped * args.correspond_to2pi).resize((c.slm_width, c.slm_height), resize=resize)
+        resample = im.BICUBIC if args.resample == "bicubic" else im.BILINEAR
+        big_phase_mask = im.fromarray(phase_mask_unwrapped * args.correspond_to2pi / (2 * np.pi)).resize((c.slm_width, c.slm_height), resample=resample)
         save_phase_mask(np.array(big_phase_mask) % args.correspond_to2pi, dest_dir, "smoothed_"+specification)
 
 def make_specification(args):
@@ -37,7 +38,7 @@ def naive(phase_list):
 def trick(phase_intensity_list):
     imaginary_part = trick_function(phase_intensity_list, np.sin)
     real_part = trick_function(phase_intensity_list, np.cos)
-    return (np.angle(real_part + 1j * imaginary_part) + np.pi)
+    return (np.angle(real_part + 1j * imaginary_part))
 
 def trick_function(phase_intensity_list, fun):
     phase_list = phase_intensity_list[0]
@@ -88,7 +89,7 @@ def convert_phase_holograms_to_color_holograms(sample, ct2pi):
     return [convert_phase_hologram_to_color_hologram(hologram, ct2pi) for hologram in sample]
 
 def convert_phase_hologram_to_color_hologram(hologram, ct2pi):
-    return round(hologram * ct2pi / (2 * np.pi)).astype(np.uint8)
+    return np.round(hologram * ct2pi / (2 * np.pi)).astype(np.uint8)
 
 
 # ----------- subdomain manipulation ------------ #

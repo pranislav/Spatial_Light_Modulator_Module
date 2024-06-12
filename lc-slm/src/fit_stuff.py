@@ -22,7 +22,7 @@ def bounds_N():
 def bounds_2pi():
     initial_guess = {"amplitude_shift": 0, "wavelength": 2 * np.pi, "phase_shift": np.pi, "amplitude": 256}
     lower_bounds = {"amplitude_shift": 0, "wavelength": 0.5, "phase_shift": 0, "amplitude": 0}
-    upper_bounds = {"amplitude_shift": 2 * np.pi, "wavelength": 3 * np.pi, "phase_shift": 2 * np.pi, "amplitude": 256}
+    upper_bounds = {"amplitude_shift": 256, "wavelength": 3 * np.pi, "phase_shift": 2 * np.pi, "amplitude": 256}
     return initial_guess, lower_bounds, upper_bounds
 
 

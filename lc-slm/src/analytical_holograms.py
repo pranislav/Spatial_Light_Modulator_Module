@@ -28,7 +28,7 @@ def lens(focal_length, correspond_to2pi, shape):
     return hologram
 
 def create_decline_hologram(args):
-    angle = args.angle.split("_")
+    angle = cl.read_angle(args.angle)
     hologram = cl.decline(angle, args.correspond_to2pi)
     im.fromarray(hologram).convert("L").save(f"{args.directory}/decline_{args.angle}_ct2pi_{args.correspond_to2pi}.png")
 
