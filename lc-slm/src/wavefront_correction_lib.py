@@ -8,18 +8,19 @@ import sys
 import explore_wavefront_correction as e
 import phase_mask_smoothing as pms
 import time
+from skimage.restoration import unwrap_phase
 
 
 def produce_phase_mask(phase_mask, args):
     specification = "phase_mask_" + make_specification(args)
     dest_dir = "lc-slm/holograms/wavefront_correction_phase_masks"
-    big_phase_mask = expand_phase_mask(phase_mask, args.subdomain_size)
+    big_phase_mask = expand_phase_mask(phase_mask * args.correspond_to2pi, args.subdomain_size)
     save_phase_mask(big_phase_mask, dest_dir, specification)
     if args.smooth_phase_mask:
-        phase_mask_unwrapped = pms.unwrap_phase_picture(phase_mask, args.correspond_to2pi)
+        phase_mask_unwrapped = unwrap_phase(phase_mask - np.pi)
         # big_phase_mask = pms.circular_box_blur(phase_mask_unwrapped, args.subdomain_size // 2)
         resize = im.BICUBIC if args.smoothing == "bcubic" else im.BILINEAR
-        big_phase_mask = im.fromarray(phase_mask_unwrapped).resize((c.slm_width, c.slm_height), resize=resize)
+        big_phase_mask = im.fromarray(phase_mask_unwrapped * args.correspond_to2pi).resize((c.slm_width, c.slm_height), resize=resize)
         save_phase_mask(np.array(big_phase_mask) % args.correspond_to2pi, dest_dir, "smoothed_"+specification)
 
 def make_specification(args):
@@ -33,15 +34,15 @@ def naive(phase_list):
     return phase_list[0][opt_index]
 
 
-def trick(phase_intensity_list, ct2pi):
-    imaginary_part = trick_function(phase_intensity_list, np.sin, ct2pi)
-    real_part = trick_function(phase_intensity_list, np.cos, ct2pi)
-    return (np.angle(real_part + 1j * imaginary_part) + np.pi) * ct2pi / (2 * np.pi)
+def trick(phase_intensity_list):
+    imaginary_part = trick_function(phase_intensity_list, np.sin)
+    real_part = trick_function(phase_intensity_list, np.cos)
+    return (np.angle(real_part + 1j * imaginary_part) + np.pi)
 
-def trick_function(phase_intensity_list, fun, ct2pi):
+def trick_function(phase_intensity_list, fun):
     phase_list = phase_intensity_list[0]
     intensity_list = phase_intensity_list[1]
-    return sum([intensity_list[i] * fun(2 * np.pi / ct2pi * phase_list[i]) for i in range(len(phase_list))])
+    return sum([intensity_list[i] * fun(phase_list[i]) for i in range(len(phase_list))])
 
 
 
@@ -64,6 +65,30 @@ def decline(angle, ct2pi):
             new_phase = const * (np.sin(y_angle * c.u) * i + np.sin(x_angle * c.u) * j)
             hologram[i, j] = int(new_phase % ct2pi)
     return hologram
+
+
+def make_sample_holograms_2pi(angle, phase_list):
+    sample = []
+    sample.append(decline_2pi(angle))
+    for phase in phase_list:
+        sample.append((sample[0] + phase) % (2 * np.pi))
+    return sample
+
+def decline_2pi(angle):
+    x_angle, y_angle = angle
+    hologram = np.zeros((c.slm_height, c.slm_width))
+    const = 2 * np.pi * c.px_distance / c.wavelength
+    for i in range(c.slm_height):
+        for j in range(c.slm_width):
+            new_phase = const * (np.sin(y_angle * c.u) * i + np.sin(x_angle * c.u) * j)
+            hologram[i, j] = new_phase % (2 * np.pi)
+    return hologram
+
+def convert_phase_holograms_to_color_holograms(sample, ct2pi):
+    return [convert_phase_hologram_to_color_hologram(hologram, ct2pi) for hologram in sample]
+
+def convert_phase_hologram_to_color_hologram(hologram, ct2pi):
+    return round(hologram * ct2pi / (2 * np.pi)).astype(np.uint8)
 
 
 # ----------- subdomain manipulation ------------ #

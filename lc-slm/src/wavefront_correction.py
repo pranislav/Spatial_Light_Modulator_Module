@@ -30,7 +30,7 @@ import phase_mask_smoothing as pms
 
 
 def calibrate(args):
-    initialize(args) # & set exposure
+    initialize(args)
     best_phase = choose_phase(args)
     phase_mask = np.zeros(get_number_of_subdomains(args.subdomain_size))
     coordinates_list = make_coordinates_list(args)
@@ -39,14 +39,14 @@ def calibrate(args):
     for i, j in coordinates_list:
         print(f"\rcalibrating subdomain {count + 1}/{len(coordinates_list)}", end="")
         intensity_list = wavefront_correction_loop(i, j, args)
-        phase_mask[i, j] = best_phase(intensity_list)
+        phase_mask[i, j] = best_phase([args.phase_list, intensity_list])
         count += 1
     produce_phase_mask(phase_mask, args)
 
 
 def choose_phase(args):
     if args.choose_phase == "fit":
-        fit = lambda lst: f.fit_intensity_general(lst, f.positive_cos_fixed_wavelength(args.correspond_to2pi))  # TODO other options?
+        fit = lambda lst: f.fit_intensity_general(lst, f.positive_cos_fixed_wavelength(2 * np.pi), "2pi")  # TODO other options?
         best_phase = compose_func(return_phase, fit)
     elif args.choose_phase == "trick":
         best_phase = lambda lst: trick(lst, args.correspond_to2pi)
@@ -86,7 +86,9 @@ def initialize(args):
     args.window = create_tk_window()
     print("creating sample holograms...")
     args.angle = read_angle(args.angle)
-    args.samples_list = make_sample_holograms(args.angle, args.precision, args.correspond_to2pi)
+    args.phase_list = [i * 2 * np.pi / args.precision for i in range(args.precision)]
+    sample_list_2pi = make_sample_holograms_2pi(args.angle, args.phase_list)
+    args.samples_list = convert_phase_holograms_to_color_holograms(sample_list_2pi, args.correspond_to2pi)
     rx, ry = read_reference_coordinates(args.reference_coordinates, get_number_of_subdomains(args.subdomain_size))
     args.real_reference_coordinates = (rx * args.subdomain_size, ry * args.subdomain_size)
     black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
@@ -101,8 +103,8 @@ def wavefront_correction_loop(i, j, args):
     i_real = i * args.subdomain_size
     j_real = j * args.subdomain_size
     k = 0
-    intensity_list = [[], []]
-    while k < args.precision:
+    intensity_list = []
+    while k < len(args.phase_list):
         args.hologram = add_subdomain(args.hologram, args.samples_list[k], (j_real, i_real), args.subdomain_size)
         display_image_on_external_screen(args.window, args.hologram) # displays hologram on an external dispaly (SLM)
         intensity = 0
@@ -110,16 +112,13 @@ def wavefront_correction_loop(i, j, args):
             frame = args.cam.snap()
             intensity += get_intensity_on_coordinates(frame, args.intensity_coord)
         intensity /= args.num_to_avg
-        # intensity = get_intensity_coordinates(average_frames(cam, loop_args["num_to_avg"]), loop_args["intensity_coord"])
         if intensity == 255:
             print("maximal intensity was reached, adapting...")
             args.cam.set_exposure(args.cam.get_exposure() * 0.9) # 10 % decrease of exposure time
             k = 0
-            intensity_list = [[], []]
+            intensity_list = []
             continue
-        phase = k * args.correspond_to2pi // args.precision
-        intensity_list[0].append(phase)
-        intensity_list[1].append(intensity)
+        intensity_list.append(intensity)
         k += 1
     clear_subdomain(args.hologram, (i_real, j_real), args.subdomain_size)
     return intensity_list

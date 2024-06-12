@@ -2,10 +2,8 @@ import numpy as np
 from scipy.optimize import curve_fit
 
 
-def fit_intensity_general(intensity_data, func):
-    initial_guess = {"amplitude_shift": 0, "wavelength": 256, "phase_shift": 100, "amplitude": 256}
-    lower_bounds = {"amplitude_shift": 0, "wavelength": 100, "phase_shift": 0, "amplitude": 0}
-    upper_bounds = {"amplitude_shift": 256, "wavelength": 300, "phase_shift": 256, "amplitude": 256}
+def fit_intensity_general(intensity_data, func, bounds="N"):
+    initial_guess, lower_bounds, upper_bounds = bounds_N() if bounds == "N" else bounds_2pi()
     xdata, ydata = intensity_data
     param_names = func.__code__.co_varnames[1:] # first parameter is independent variable
     p0 = [initial_guess[key] for key in param_names]
@@ -14,6 +12,18 @@ def fit_intensity_general(intensity_data, func):
     params, _ = curve_fit(func, xdata, ydata, p0=p0, bounds=(lower_bounds, upper_bounds))
     params_dict = dict(zip(param_names, params))
     return params_dict
+
+def bounds_N():
+    initial_guess = {"amplitude_shift": 0, "wavelength": 256, "phase_shift": 100, "amplitude": 256}
+    lower_bounds = {"amplitude_shift": 0, "wavelength": 100, "phase_shift": 0, "amplitude": 0}
+    upper_bounds = {"amplitude_shift": 256, "wavelength": 300, "phase_shift": 256, "amplitude": 256}
+    return initial_guess, lower_bounds, upper_bounds
+
+def bounds_2pi():
+    initial_guess = {"amplitude_shift": 0, "wavelength": 2 * np.pi, "phase_shift": np.pi, "amplitude": 256}
+    lower_bounds = {"amplitude_shift": 0, "wavelength": 0.5, "phase_shift": 0, "amplitude": 0}
+    upper_bounds = {"amplitude_shift": 2 * np.pi, "wavelength": 3 * np.pi, "phase_shift": 2 * np.pi, "amplitude": 256}
+    return initial_guess, lower_bounds, upper_bounds
 
 
 def positive_cos(x, amplitude_shift, amplitude, wavelength, phase_shift):
