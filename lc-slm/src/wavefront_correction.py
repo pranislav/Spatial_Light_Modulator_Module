@@ -39,7 +39,7 @@ def calibrate(args):
     for i, j in coordinates_list:
         print(f"\rcalibrating subdomain {count + 1}/{len(coordinates_list)}", end="")
         intensity_list = wavefront_correction_loop(i, j, args)
-        phase_mask[i, j] = best_phase([args.phase_list, intensity_list])
+        phase_mask[i, j] = mean_best_phase(intensity_list, best_phase, args)
         count += 1
     produce_phase_mask(phase_mask, args)
 
@@ -97,28 +97,32 @@ def initialize(args):
     set_exposure_wrt_reference_img(args.cam, args.window, (256 / 4 - 20, 256 / 4), reference_hologram, args.num_to_avg) # in fully-constructive interference the value of amplitude could be twice as high, therefore intensity four times as high 
     args.intensity_coord = get_intensity_coords(args.cam, args.window, im.fromarray(args.samples_list[0]), args)
     args.hologram = reference_hologram
+    args.upper_left_corner = get_corner_coords(args.intensity_coordinates, args.sqrted_number_of_source_pixels, "upper_left")
+    args.lower_right_corner = get_corner_coords(args.intensity_coordinates, args.sqrted_number_of_source_pixels)
 
 
 def wavefront_correction_loop(i, j, args):
     i_real = i * args.subdomain_size
     j_real = j * args.subdomain_size
     k = 0
-    intensity_list = []
+    nsp = args.sqrted_number_of_source_pixels
+    intensity_lists = [[] for _ in range(nsp ** 2)]
     while k < len(args.phase_list):
         args.hologram = add_subdomain(args.hologram, args.samples_list[k], (j_real, i_real), args.subdomain_size)
         display_image_on_external_screen(args.window, args.hologram) # displays hologram on an external dispaly (SLM)
-        intensity = 0
-        for _ in range(args.num_to_avg):
-            frame = args.cam.snap()
-            intensity += get_intensity_on_coordinates(frame, args.intensity_coord)
-        intensity /= args.num_to_avg
-        if intensity == 255:
+        # intensity = 0
+        # for _ in range(args.num_to_avg):
+        frame = args.cam.snap()
+        relevant_pixels = square_selection(frame, args.upper_left_corner, args.lower_right_corner)
+            # intensity = get_intensity_on_coordinates(frame, coords)
+        # intensity /= args.num_to_avg
+        if max(relevant_pixels) == 255:
             print("maximal intensity was reached, adapting...")
             args.cam.set_exposure(args.cam.get_exposure() * 0.9) # 10 % decrease of exposure time
             k = 0
             intensity_list = []
             continue
-        intensity_list.append(intensity)
+        intensity_list.append(relevant_pixels)
         k += 1
     clear_subdomain(args.hologram, (i_real, j_real), args.subdomain_size)
     return intensity_list
@@ -134,7 +138,7 @@ if __name__ == "__main__":
     parser.add_argument('-p', '--precision', type=int, default=8, help='"color depth" of the phase mask')
     parser.add_argument('-a', '--angle', type=str, default="1_1", help="use form: xdecline_ydecline (angles in constants.u unit)")
     parser.add_argument('-c', '--reference_coordinates', type=str, default="center", help=help_ref_coord)
-    parser.add_argument('-avg', '--num_to_avg', type=int, default=1, help="number of frames to average when measuring intensity")
+    # parser.add_argument('-avg', '--num_to_avg', type=int, default=1, help="number of frames to average when measuring intensity")
     parser.add_argument('-ct2pi', '--correspond_to2pi', type=int, default=256, help="value of pixel corresponding to 2pi phase shift")
     parser.add_argument('-skip', '--skip_subdomains_out_of_inscribed_circle', action="store_true", help="subdomains out of the inscribed circle will not be callibrated. use when the SLM is not fully illuminated and the light beam is circular.")
     parser.add_argument('-smooth', '--smooth_phase_mask', action="store_true", help="the phase mask will be smoothed")
@@ -142,6 +146,7 @@ if __name__ == "__main__":
     parser.add_argument('-ic', "--intensity_coordinates", type=str, default=None, help="coordinates of the point where intensity is measured in form x_y. if not provided, the point will be found automatically.")
     parser.add_argument('-choose_phase', type=str, choices=["trick", "fit"], default="fit", help="method of finding the optimal phase shift")
     parser.add_argument('-resample', type=str, choices=["bilinear", "bicubic"], default="bilinear", help="smoothing method used to upscale the unwrapped phase mask")
+    parser.add_argument('-nsp', '--sqrted_number_of_source_pixels', type=int, default=1, help='number of pixel of side of square area on photo from which intensity is taken')
 
     args = parser.parse_args()
     start = time()

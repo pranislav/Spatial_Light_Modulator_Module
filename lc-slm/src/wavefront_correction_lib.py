@@ -28,6 +28,31 @@ def make_specification(args):
     return f"{args.wavefront_correction_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref_{args.reference_coordinates}_intensity_coords_{args.intensity_coordinates}"
 
 
+
+def get_corner_coords(middle_coords, square_size, corner="lower_right"):
+    x, y = middle_coords
+    half_square = (square_size - 1) // 2
+    if corner == "upper_left": half_square *= - 1
+    x_lc = x + half_square
+    y_lc = y + half_square
+    return x_lc, y_lc
+
+def square_selection(frame, upper_left_corner, lower_right_corner):
+    i_ul, j_ul = upper_left_corner
+    i_lr, j_lr = lower_right_corner
+    return frame[i_ul:i_lr, j_ul:j_lr]
+
+
+def mean_best_phase(intensity_list, best_phase, args):
+    mean_best_phase = 0
+    h, w = intensity_list[0].shape
+    for i in range(h):
+        for j in range(w):
+            intensity_list_ij = [intensity[i, j] for intensity in intensity_list]
+            mean_best_phase += best_phase([args.phase_list, intensity_list_ij])
+    return mean_best_phase / (h * w)
+
+
 # ----------- best phase() -------------- #
 
 def naive(phase_list):
