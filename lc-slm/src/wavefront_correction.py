@@ -27,6 +27,10 @@ from pylablib.devices import uc480
 from time import time
 import fit_stuff as f
 import phase_mask_smoothing as pms
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from queue import Queue
+from threading import Thread
+
 
 
 def wavefront_correction(args):
@@ -42,6 +46,43 @@ def wavefront_correction(args):
         fill_pixel_phase_masks(phase_masks, intensity_list, best_phase, i, j, args)
         # = mean_best_phase(intensity_list, best_phase, args)
         count += 1
+    produce_phase_mask(phase_masks, args)
+
+def wavefront_correction_parallelized(args):
+    initialize(args)
+    best_phase = choose_phase(args)
+    phase_masks = [np.zeros(get_number_of_subdomains(args.subdomain_size)) for _ in range(args.sqrted_number_of_source_pixels ** 2)]
+    coordinates_list = make_coordinates_list(args)
+    print("mainloop start.")
+
+    results_queue = Queue()
+
+    def wavefront_correction_worker(i, j):
+        intensity_list = wavefront_correction_loop(i, j, args)
+        results_queue.put((i, j, intensity_list))
+
+    def fill_pixel_phase_masks_worker():
+        while True:
+            i, j, intensity_list = results_queue.get()
+            if (i, j, intensity_list) is None:
+                break
+            fill_pixel_phase_masks(phase_masks, intensity_list, best_phase, i, j, args)
+            results_queue.task_done()
+
+    # Start the worker thread for fill_pixel_phase_masks
+    fill_thread = Thread(target=fill_pixel_phase_masks_worker)
+    fill_thread.start()
+
+    count = 0
+    for i, j in coordinates_list:
+        print(f"\rcalibrating subdomain {count + 1}/{len(coordinates_list)}", end="")
+        wavefront_correction_worker(i, j)  # Call directly to ensure it's on the main thread
+        count += 1
+
+    results_queue.join()
+    results_queue.put((None, None, None))  # Signal the fill thread to stop
+    fill_thread.join()
+    
     produce_phase_mask(phase_masks, args)
 
 
@@ -126,6 +167,7 @@ def wavefront_correction_loop(i, j, args):
         intensity_list.append(relevant_pixels)
         k += 1
     clear_subdomain(args.hologram, (i_real, j_real), args.subdomain_size)
+    # print("+", end="")
     return intensity_list
 
 
@@ -148,8 +190,12 @@ if __name__ == "__main__":
     parser.add_argument('-choose_phase', type=str, choices=["trick", "fit"], default="fit", help="method of finding the optimal phase shift")
     parser.add_argument('-resample', type=str, choices=["bilinear", "bicubic"], default="bilinear", help="smoothing method used to upscale the unwrapped phase mask")
     parser.add_argument('-nsp', '--sqrted_number_of_source_pixels', type=int, default=1, help='number of pixel of side of square area on photo from which intensity is taken')
+    parser.add_argument('-parallel', action="store_true", help="use parallelization")
 
     args = parser.parse_args()
     start = time()
-    wavefront_correction(args)
+    if args.parallel:
+        wavefront_correction_parallelized(args)
+    else:
+        wavefront_correction(args)
     print("\nexecution_time: ", round((time() - start) / 60, 1),  " min")

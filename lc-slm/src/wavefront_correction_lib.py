@@ -114,6 +114,7 @@ def fill_pixel_phase_masks(phase_masks, intensity_list, best_phase, i, j, args):
     for k in range(len(phase_masks)):
         intensity_list_k = [intensity.flatten()[k] for intensity in intensity_list]
         phase_masks[k][i, j] = best_phase([args.phase_list, intensity_list_k])
+        # print("*", end="")
 
 
 # ----------- best phase() -------------- #
