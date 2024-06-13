@@ -29,19 +29,20 @@ import fit_stuff as f
 import phase_mask_smoothing as pms
 
 
-def calibrate(args):
+def wavefront_correction(args):
     initialize(args)
     best_phase = choose_phase(args)
-    phase_mask = np.zeros(get_number_of_subdomains(args.subdomain_size))
+    phase_masks = [np.zeros(get_number_of_subdomains(args.subdomain_size)) for _ in range(args.sqrted_number_of_source_pixels ** 2)]
     coordinates_list = make_coordinates_list(args)
     print("mainloop start.")
     count = 0
     for i, j in coordinates_list:
         print(f"\rcalibrating subdomain {count + 1}/{len(coordinates_list)}", end="")
         intensity_list = wavefront_correction_loop(i, j, args)
-        phase_mask[i, j] = mean_best_phase(intensity_list, best_phase, args)
+        fill_pixel_phase_masks(phase_masks, intensity_list, best_phase, i, j, args)
+        # = mean_best_phase(intensity_list, best_phase, args)
         count += 1
-    produce_phase_mask(phase_mask, args)
+    produce_phase_mask(phase_masks, args)
 
 
 def choose_phase(args):
@@ -94,11 +95,11 @@ def initialize(args):
     black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
     reference_hologram = add_subdomain(black_hologram, args.samples_list[0], args.real_reference_coordinates, args.subdomain_size)
     print("adjusting exposure time...")
-    set_exposure_wrt_reference_img(args.cam, args.window, (256 / 4 - 20, 256 / 4), reference_hologram, args.num_to_avg) # in fully-constructive interference the value of amplitude could be twice as high, therefore intensity four times as high 
-    args.intensity_coord = get_intensity_coords(args.cam, args.window, im.fromarray(args.samples_list[0]), args)
+    set_exposure_wrt_reference_img(args.cam, args.window, (256 / 4 - 20, 256 / 4), reference_hologram) # in fully-constructive interference the value of amplitude could be twice as high, therefore intensity four times as high 
+    args.intensity_coordinates = get_intensity_coords(args.cam, args.window, im.fromarray(args.samples_list[0]), args)
     args.hologram = reference_hologram
-    args.upper_left_corner = get_corner_coords(args.intensity_coordinates, args.sqrted_number_of_source_pixels, "upper_left")
-    args.lower_right_corner = get_corner_coords(args.intensity_coordinates, args.sqrted_number_of_source_pixels)
+    args.upper_left_corner = get_upper_left_corner_coords(args.intensity_coordinates, args.sqrted_number_of_source_pixels)
+    args.lower_right_corner = get_lower_right_corner_coords(args.intensity_coordinates, args.sqrted_number_of_source_pixels)
 
 
 def wavefront_correction_loop(i, j, args):
@@ -106,7 +107,7 @@ def wavefront_correction_loop(i, j, args):
     j_real = j * args.subdomain_size
     k = 0
     nsp = args.sqrted_number_of_source_pixels
-    intensity_lists = [[] for _ in range(nsp ** 2)]
+    intensity_list = []
     while k < len(args.phase_list):
         args.hologram = add_subdomain(args.hologram, args.samples_list[k], (j_real, i_real), args.subdomain_size)
         display_image_on_external_screen(args.window, args.hologram) # displays hologram on an external dispaly (SLM)
@@ -116,7 +117,7 @@ def wavefront_correction_loop(i, j, args):
         relevant_pixels = square_selection(frame, args.upper_left_corner, args.lower_right_corner)
             # intensity = get_intensity_on_coordinates(frame, coords)
         # intensity /= args.num_to_avg
-        if max(relevant_pixels) == 255:
+        if relevant_pixels.max() == 255:
             print("maximal intensity was reached, adapting...")
             args.cam.set_exposure(args.cam.get_exposure() * 0.9) # 10 % decrease of exposure time
             k = 0
@@ -150,5 +151,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     start = time()
-    calibrate(args)
+    wavefront_correction(args)
     print("\nexecution_time: ", round((time() - start) / 60, 1),  " min")

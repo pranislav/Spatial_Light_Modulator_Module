@@ -9,30 +9,87 @@ import explore_wavefront_correction as e
 import phase_mask_smoothing as pms
 import time
 from skimage.restoration import unwrap_phase
+from scipy.optimize import leastsq
 
 
-def produce_phase_mask(phase_mask, args):
+def produce_phase_mask_single(phase_mask, args):
     specification = "phase_mask_" + make_specification(args)
     dest_dir = "lc-slm/holograms/wavefront_correction_phase_masks"
-    if args.choose_phase == "trick": phase_mask += np.pi
-    big_phase_mask = expand_phase_mask(phase_mask * args.correspond_to2pi / (2 * np.pi), args.subdomain_size)
+    # if args.choose_phase == "trick": phase_mask += np.pi
+    big_phase_mask = expand_phase_mask((phase_mask % (2 * np.pi)) * args.correspond_to2pi / (2 * np.pi), args.subdomain_size)
     save_phase_mask(big_phase_mask, dest_dir, specification)
     if args.smooth_phase_mask:
-        phase_mask_unwrapped = unwrap_phase(phase_mask - np.pi)
+        phase_mask_unwrapped = unwrap_phase(phase_mask)
         # big_phase_mask = pms.circular_box_blur(phase_mask_unwrapped, args.subdomain_size // 2)
         resample = im.BICUBIC if args.resample == "bicubic" else im.BILINEAR
         big_phase_mask = im.fromarray(phase_mask_unwrapped * args.correspond_to2pi / (2 * np.pi)).resize((c.slm_width, c.slm_height), resample=resample)
         save_phase_mask(np.array(big_phase_mask) % args.correspond_to2pi, dest_dir, "smoothed_"+specification)
+
+def combine_phase_masks(phase_masks):
+    mean_phase_mask = np.zeros(phase_masks[0].shape)
+    for phase_mask in phase_masks:
+        phase_mask = unwrap_phase(phase_mask - np.pi)
+        phase_mask = fit_and_subtract(phase_mask)
+        mean_phase_mask += phase_mask
+    mean_phase_mask /= len(phase_masks)
+    return mean_phase_mask
+
+def produce_phase_mask(phase_masks, args):
+    mean_phase_mask = combine_phase_masks(phase_masks)
+    produce_phase_mask_single(mean_phase_mask, args)
+
+
+def fit_and_subtract(array):
+    # Get the shape of the array
+    ny, nx = array.shape
+    
+    # Generate x and y coordinates
+    x, y = np.meshgrid(np.arange(nx), np.arange(ny))
+    
+    # Flatten the arrays
+    x_flat = x.flatten()
+    y_flat = y.flatten()
+    array_flat = array.flatten()
+    
+    # Define the linear function
+    def linear_func(params, x, y):
+        a, b, c = params
+        return a * x + b * y + c
+    
+    # Define the error function
+    def error_func(params, x, y, z):
+        return z - linear_func(params, x, y)
+    
+    # Initial guess for the parameters
+    initial_guess = [0, 0, 0]
+    
+    # Perform the least squares fitting
+    params, _ = leastsq(error_func, initial_guess, args=(x_flat, y_flat, array_flat))
+    
+    # Compute the fitted values
+    fitted_values = linear_func(params, x, y)
+    
+    # Subtract the fitted values from the original array
+    result_array = array - fitted_values
+    
+    return result_array
+
 
 def make_specification(args):
     return f"{args.wavefront_correction_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref_{args.reference_coordinates}_intensity_coords_{args.intensity_coordinates}"
 
 
 
-def get_corner_coords(middle_coords, square_size, corner="lower_right"):
+def get_upper_left_corner_coords(middle_coords, square_size):
     x, y = middle_coords
     half_square = (square_size - 1) // 2
-    if corner == "upper_left": half_square *= - 1
+    x_lc = x - half_square
+    y_lc = y - half_square
+    return x_lc, y_lc
+
+def get_lower_right_corner_coords(middle_coords, square_size):
+    x, y = middle_coords
+    half_square = square_size - ((square_size - 1) // 2)
     x_lc = x + half_square
     y_lc = y + half_square
     return x_lc, y_lc
@@ -51,6 +108,12 @@ def mean_best_phase(intensity_list, best_phase, args):
             intensity_list_ij = [intensity[i, j] for intensity in intensity_list]
             mean_best_phase += best_phase([args.phase_list, intensity_list_ij])
     return mean_best_phase / (h * w)
+
+
+def fill_pixel_phase_masks(phase_masks, intensity_list, best_phase, i, j, args):
+    for k in range(len(phase_masks)):
+        intensity_list_k = [intensity.flatten()[k] for intensity in intensity_list]
+        phase_masks[k][i, j] = best_phase([args.phase_list, intensity_list_k])
 
 
 # ----------- best phase() -------------- #
@@ -149,7 +212,10 @@ def read_reference_coordinates(reference_coordinates_str, shape):
     if reference_coordinates_str == "center":
         H, W = shape
         return W // 2, H // 2
-    x, y = reference_coordinates_str.split('_')
+    return read_coordinates(reference_coordinates_str)
+
+def read_coordinates(coordinates_str):
+    x, y = coordinates_str.split('_')
     return int(x), int(y)
 
 def read_angle(angle_str):
@@ -300,7 +366,7 @@ def average_frames(cam, num_to_avg):
     frame /= num_to_avg
     return frame
 
-def set_exposure_wrt_reference_img(cam, window, intensity_range, hologram, num_to_avg):
+def set_exposure_wrt_reference_img(cam, window, intensity_range, hologram, num_to_avg=8):
     display_image_on_external_screen(window, hologram)
     set_exposure(cam, intensity_range, num_to_avg)
 
