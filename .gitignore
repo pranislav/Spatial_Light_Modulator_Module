@@ -1,6 +1,7 @@
 # images
 images/
 holograms/
+lc-slm/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

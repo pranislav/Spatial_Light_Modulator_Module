@@ -1,6 +1,8 @@
 # Spatial Light Modulators Module
 
-A module for work with spatial light modulators - SLM (especially transparent liquid crystal based SLM - LC-SLM and Digital Micromirror Device - DMD)
+A module for work with spatial light modulators - SLM (especially transparent liquid crystal based SLM which was this project developed for)
+
+In the  folder is lc-slm (liquid-crystal based SLM), 
 
 Functionality LC-SLM part:
 - generate analytical hologram (light declining and focusing)
