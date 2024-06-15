@@ -17,7 +17,7 @@ def main(args):
     phase_mask = read_phase_mask(args.phase_mask_name, args.source_dir)
     small_phase_mask = shrink_phase_mask(phase_mask, args.subdomain_size)
     unwrapped_mask = unwrap_phase_picture(small_phase_mask, args.correspond_to_2pi)
-    resample = im.BICUBIC if args.smoothing == "bcubic" else im.BILINEAR
+    resample = im.BICUBIC if args.resample == "bicubic" else im.BILINEAR
     upscaled_unwrapped_mask = im.fromarray(unwrapped_mask).resize((c.slm_width, c.slm_height), resample=resample)
     upscaled_unwrapped_mask = np.array(upscaled_unwrapped_mask)
     time_name = time.strftime("%Y-%m-%d_%H-%M-%S")
@@ -79,7 +79,7 @@ def read_phase_mask(phase_mask_name, source_dir):
     phase_mask_arr = np.array(phase_mask).astype(float)
     return phase_mask_arr
 
-def shrink_phase_mask(phase_mask, subdomain_size):
+def shrink_phase_mask(phase_mask: np.array, subdomain_size: int):
     h, w = phase_mask.shape
     H, W = h // subdomain_size, w // subdomain_size
     small_phase_mask = np.zeros((H, W))
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     parser.add_argument("phase_mask_name", type=str, help=f'name of a phase mask in directory {source_dir}')
     parser.add_argument("-ct2pi", "--correspond_to_2pi", type=int, default=256, help="value of pixel corresponding to 2pi phase shift")
     parser.add_argument("-ss", "--subdomain_size", type=int, default=32, help="subdomain size used to create the phase mask")
-    parser.add_argument("-resample", type=str, choices=["bilinear", "bcubic"], default="bilinear", help="smoothing method used to upscale the unwrapped phase mask")
+    parser.add_argument("-resample", type=str, choices=["bilinear", "bicubic"], default="bilinear", help="smoothing method used to upscale the unwrapped phase mask")
     args = parser.parse_args()
     args.source_dir = source_dir
     main(args)
