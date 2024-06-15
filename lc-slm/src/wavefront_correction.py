@@ -137,10 +137,10 @@ def initialize(args):
     reference_hologram = add_subdomain(black_hologram, args.samples_list[0], args.real_reference_coordinates, args.subdomain_size)
     print("adjusting exposure time...")
     set_exposure_wrt_reference_img(args.cam, args.window, (256 / 4 - 20, 256 / 4), reference_hologram) # in fully-constructive interference the value of amplitude could be twice as high, therefore intensity four times as high 
-    args.intensity_coordinates = get_intensity_coords(args.cam, args.window, im.fromarray(args.samples_list[0]), args)
+    args.intensity_coordinates_tuple = get_intensity_coords(args.cam, args.window, im.fromarray(args.samples_list[0]), args)
     args.hologram = reference_hologram
-    args.upper_left_corner = get_upper_left_corner_coords(args.intensity_coordinates, args.sqrted_number_of_source_pixels)
-    args.lower_right_corner = get_lower_right_corner_coords(args.intensity_coordinates, args.sqrted_number_of_source_pixels)
+    args.upper_left_corner = get_upper_left_corner_coords(args.intensity_coordinates_tuple, args.sqrted_number_of_source_pixels)
+    args.lower_right_corner = get_lower_right_corner_coords(args.intensity_coordinates_tuple, args.sqrted_number_of_source_pixels)
 
 
 def wavefront_correction_loop(i, j, args):
@@ -191,6 +191,7 @@ if __name__ == "__main__":
     parser.add_argument('-resample', type=str, choices=["bilinear", "bicubic"], default="bilinear", help="smoothing method used to upscale the unwrapped phase mask")
     parser.add_argument('-nsp', '--sqrted_number_of_source_pixels', type=int, default=1, help='number of pixel of side of square area on photo from which intensity is taken')
     parser.add_argument('-parallel', action="store_true", help="use parallelization")
+    parser.add_argument('-rd', '--remove_defocus', action="store_true", help="remove defocus from the phase mask")
 
     args = parser.parse_args()
     start = time()

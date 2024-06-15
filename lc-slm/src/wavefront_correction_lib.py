@@ -29,17 +29,27 @@ def combine_phase_masks(phase_masks):
     mean_phase_mask = np.zeros(phase_masks[0].shape)
     for phase_mask in phase_masks:
         phase_mask = unwrap_phase(phase_mask - np.pi)
-        phase_mask = fit_and_subtract(phase_mask)
+        phase_mask = fit_and_subtract(phase_mask, linear_func, [0, 0, 0])
         mean_phase_mask += phase_mask
     mean_phase_mask /= len(phase_masks)
     return mean_phase_mask
 
 def produce_phase_mask(phase_masks, args):
     mean_phase_mask = combine_phase_masks(phase_masks)
+    if args.remove_defocus:
+        mean_phase_mask = fit_and_subtract(mean_phase_mask, quadratic_func, [0, 0])
     produce_phase_mask_single(mean_phase_mask, args)
 
+def linear_func(params, x, y):
+    a, b, c = params
+    return a * x + b * y + c
 
-def fit_and_subtract(array):
+def  quadratic_func(params, x, y):
+    a, b = params
+    return a * (x **2 + y ** 2) + b
+
+
+def fit_and_subtract(array, fit_func, initial_guess):
     # Get the shape of the array
     ny, nx = array.shape
     
@@ -51,23 +61,15 @@ def fit_and_subtract(array):
     y_flat = y.flatten()
     array_flat = array.flatten()
     
-    # Define the linear function
-    def linear_func(params, x, y):
-        a, b, c = params
-        return a * x + b * y + c
-    
     # Define the error function
     def error_func(params, x, y, z):
-        return z - linear_func(params, x, y)
-    
-    # Initial guess for the parameters
-    initial_guess = [0, 0, 0]
+        return z - fit_func(params, x, y)
     
     # Perform the least squares fitting
     params, _ = leastsq(error_func, initial_guess, args=(x_flat, y_flat, array_flat))
     
     # Compute the fitted values
-    fitted_values = linear_func(params, x, y)
+    fitted_values = fit_func(params, x, y)
     
     # Subtract the fitted values from the original array
     result_array = array - fitted_values
@@ -75,8 +77,9 @@ def fit_and_subtract(array):
     return result_array
 
 
+
 def make_specification(args):
-    return f"{args.wavefront_correction_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref_{args.reference_coordinates}_intensity_coords_{args.intensity_coordinates}"
+    return f"{args.wavefront_correction_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref_{args.reference_coordinates}_intensity_coords_{args.intensity_coordinates}_source_pxs_{args.sqrted_number_of_source_pixels}"
 
 
 
