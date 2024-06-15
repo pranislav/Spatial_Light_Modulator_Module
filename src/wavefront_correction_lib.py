@@ -14,7 +14,7 @@ from scipy.optimize import leastsq
 
 def produce_phase_mask_single(phase_mask, args):
     specification = "phase_mask_" + make_specification(args)
-    dest_dir = "lc-slm/holograms/wavefront_correction_phase_masks"
+    dest_dir = "holograms/wavefront_correction_phase_masks"
     # if args.choose_phase == "trick": phase_mask += np.pi
     big_phase_mask = expand_phase_mask((phase_mask % (2 * np.pi)) * args.correspond_to2pi / (2 * np.pi), args.subdomain_size)
     save_phase_mask(big_phase_mask, dest_dir, specification)

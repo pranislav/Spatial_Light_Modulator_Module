@@ -17,7 +17,7 @@ def create_tk_window():
 
     return window
 
-image_path = "lc-slm/images/example_image.jpg"
+image_path = "images/example_image.jpg"
 
 def display_image_on_external_screen(window, image_path):
     """
@@ -50,6 +50,6 @@ def display_image_on_external_screen(window, image_path):
 
 window = create_tk_window()
 
-for path in ["lc-slm/images/example_image.jpg", "lc-slm/images/aura1080p.jpg"]:
+for path in ["images/example_image.jpg", "images/aura1080p.jpg"]:
     display_image_on_external_screen(window, path)
     window.after(2000)

@@ -12,7 +12,7 @@ import numpy as np
 
 
 def circular_selection(args):
-    dest_dir = "lc-slm/holograms/wavefront_correction_phase_masks"
+    dest_dir = "holograms/wavefront_correction_phase_masks"
     img = np.array(im.open(f"{dest_dir}/{args.file_name}"))
     mask = circular_selection_mask(img.shape, args.circle_size_fraction)
     img = img * mask

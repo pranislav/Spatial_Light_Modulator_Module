@@ -2,9 +2,7 @@
 
 A module for work with spatial light modulators - SLM (especially transparent liquid crystal based SLM which was this project developed for)
 
-In the  folder is lc-slm (liquid-crystal based SLM), 
-
-Functionality LC-SLM part:
+Functionality:
 - generate analytical hologram (light declining and focusing)
 - generate general hologram (two algorithms - GS and GD)
 - transform hologram - mostly shifting of the image in Fourier plane
@@ -13,8 +11,5 @@ Functionality LC-SLM part:
 - handling non-uniform incomming intensity
 - calibrate optical path containing lc-slm
 - make hologram gif for moving traps based on parametrizations of trap paths
-
-Functionality DMD part:
-- wait for it...
 
 Usage 

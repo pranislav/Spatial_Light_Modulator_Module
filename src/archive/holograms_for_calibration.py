@@ -23,7 +23,7 @@ subdomains_number_y = c.slm_height // subdomain_size
 
 def make_holograms():
     hologram_set_name = f"size{subdomain_size}_precision{precision}_x{x_angle}_y{y_angle}"
-    dest_dir = f"lc-slm/holograms_for_calibration/{hologram_set_name}_wo_ref"
+    dest_dir = f"holograms_for_calibration/{hologram_set_name}_wo_ref"
     if not os.path.exists(dest_dir): os.makedirs(dest_dir)
     # reference_hologram = make_hologram(np.zeros((c.slm_height, c.slm_width)), reference_position)
     # im.fromarray(reference_hologram).convert("L").save(f"{dest_dir}/{reference_position}.png")

@@ -30,7 +30,7 @@ def fill_maps(param_maps, param_dict, coord): # if error, check if coord is in t
         param_maps[key][coord] = param_dict[key]
 
 def create_param_maps(param_maps, subdomain_size):
-    dest_dir = "lc-slm/holograms/fit_maps"
+    dest_dir = "holograms/fit_maps"
     for key in param_maps.keys():
         specification = key + "_" + make_specification(args)
         create_phase_mask(param_maps[key], subdomain_size, specification, dest_dir)

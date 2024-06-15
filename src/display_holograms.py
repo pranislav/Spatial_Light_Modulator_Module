@@ -6,8 +6,8 @@ import os
 import explore_wavefront_correction as e
 import constants as c
 
-mask_dir = "lc-slm/holograms/wavefront_correction_phase_masks"
-default_hologram_dir = "lc-slm/holograms"
+mask_dir = "holograms/wavefront_correction_phase_masks"
+default_hologram_dir = "holograms"
 
 def display_holograms(args):
     window = cl.create_tk_window()

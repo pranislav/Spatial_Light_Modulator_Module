@@ -42,7 +42,7 @@ def explore(args):
     window = cl.create_tk_window()
     cam = uc480.UC480Camera()
     internal_screen_resolution = get_internal_screen_resolution()
-    video_dir = "lc-slm/images/explore"
+    video_dir = "images/explore"
     if not os.path.exists(video_dir): os.makedirs(video_dir)
     while True:
         black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))

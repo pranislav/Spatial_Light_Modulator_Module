@@ -15,7 +15,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    source_dir = "lc-slm/holograms/wavefront_correction_phase_masks"
+    source_dir = "holograms/wavefront_correction_phase_masks"
     parser.add_argument("phase_mask_name", type=str, help=f"phase mask to remove defocus from {source_dir}")
     parser.add_argument("-s", "--subdomain_size", type=int, default=32, help="subdomain size used to create the phase mask")
     parser.add_argument("-ct2pi", "--correspond_to_2pi", type=int, default=245, help="value of pixel corresponding to 2pi phase shift")

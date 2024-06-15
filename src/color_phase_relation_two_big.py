@@ -37,7 +37,7 @@ def main(args):
     fit_params_dict = iniciate_fit_params_dict(fit_func)
     intensity_lists = []
     time_name = time.strftime("%Y-%m-%d_%H-%M-%S")
-    file_name = "lc-slm/fit_params_two_big.txt"
+    file_name = "fit_params_two_big.txt"
     cp.print_info(args, file_name)
     i = 0
     while i < args.runs:
@@ -90,7 +90,7 @@ def iniciate_fit_params_dict(fit_func):
 def make_plot(intensity_list, fit_func, fit_params_dict, time_name, i):
     intensity_fit = e.plot_fit(fit_params_dict, fit_func)
     plot_image = e.create_plot_img(intensity_list, intensity_fit, (500, 200), 0, 0)
-    dest_dir = f"lc-slm/images/fit_2big/{time_name}"
+    dest_dir = f"images/fit_2big/{time_name}"
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
     plot_image.save(f"{dest_dir}/{i}.png")

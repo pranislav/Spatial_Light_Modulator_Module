@@ -5,7 +5,7 @@ import constants as c
 
 # Generate some example data
 data = "paper_shade_01"
-Z = np.array(im.open(f"lc-slm/images/incomming_intensity_images/{data}.png").convert("L")) / 256
+Z = np.array(im.open(f"images/incomming_intensity_images/{data}.png").convert("L")) / 256
 y_len, x_len = Z.shape
 x_data = np.linspace(0, x_len, x_len)
 y_data = np.linspace(0, y_len, y_len)
@@ -74,6 +74,6 @@ def create_intensity_mask(a):
         for x in range(intensity_mask_arr.shape[1]):
             x_ = x * convert
             intensity_mask_arr[y, x] = 255 * gaussian_step_coord(x_, y_, a, x0*convert, y0*convert, R_slm*convert)
-    im.fromarray(intensity_mask_arr).convert("L").save(f"lc-slm/incomming_intensity_images/{data}_b=0_intensity_mask.png")
+    im.fromarray(intensity_mask_arr).convert("L").save(f"incomming_intensity_images/{data}_b=0_intensity_mask.png")
 
 create_intensity_mask(a_fit)

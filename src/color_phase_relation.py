@@ -32,7 +32,7 @@ def main(args):
                     continue
                 fill_fit_params_dict(fit_params_dict, param_dict)
     avg_params, std = average_fit_params(fit_params_dict)
-    file_name = "lc-slm/fit_params.txt"
+    file_name = "fit_params.txt"
     print_info(args, file_name)
     params_printout(avg_params, std, file_name)
     if args.fix_amplitude:

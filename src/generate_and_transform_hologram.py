@@ -20,7 +20,7 @@ import time
 # target_name = "multidecline_grating_1x1_dot" # "moving_traps/two_circulating_traps_radius1px/3" # "multidecline_user_defined_5432_dot_2x2"
 # target_type = "png"
 # #
-# path_to_incomming_intensity = "lc-slm/images/incomming_intensity_images/paper_shade_01_intensity_mask.png"
+# path_to_incomming_intensity = "images/incomming_intensity_images/paper_shade_01_intensity_mask.png"
 # # ...
 # save_result = True
 # preview = False
@@ -50,7 +50,7 @@ import time
 
 
 # # loading image and creating array target
-# target_img = im.open(f"lc-slm/images/{target_name}.{target_type}").convert('L').resize((int(c.slm_width), int(c.slm_height)))
+# target_img = im.open(f"images/{target_name}.{target_type}").convert('L').resize((int(c.slm_width), int(c.slm_height)))
 # if invert:
 #     target_img = PIL.ImageOps.invert(target_img)
 # if quarterize:
@@ -105,8 +105,8 @@ import time
 
 # if save_result:
 #     hologram_name = f"{target_name}_{target_transforms}_{transforms}_hologram_alg={algorithm}_{general_params}_{alg_params}"
-#     hologram.img.convert("L").save(f"lc-slm/holograms/{hologram_name}.png")
-#     expected_target.convert("L").save(f"lc-slm/images/{hologram_name}_exp_tar.png")
+#     hologram.img.convert("L").save(f"holograms/{hologram_name}.png")
+#     expected_target.convert("L").save(f"images/{hologram_name}_exp_tar.png")
 
 # if gif_target:
 #     create_gif(gif.source_address, f"{directory}/gif_{hologram_name}.gif")
@@ -134,7 +134,7 @@ def main(args):
 def make_hologram(args):
     algorithm = GS if args.algorithm == "GS" else GD
     target = prepare_target(args.img_name, args)
-    args.path_to_incomming_intensity = "lc-slm/images/incomming_intensity_images/paper_shade_01_intensity_mask.png"
+    args.path_to_incomming_intensity = "images/incomming_intensity_images/paper_shade_01_intensity_mask.png"
     add_gif_source_address(args)
     hologram, expected_outcome = algorithm(target, args)
     return hologram, expected_outcome
@@ -152,15 +152,15 @@ def add_gif_source_address(args):
         args.gif_dir = None
         return
     if args.gif_type == "h":
-        args.gif_dir = "lc-slm/holograms"
+        args.gif_dir = "holograms"
     elif args.gif_type == "i":
-        args.gif_dir = "lc-slm/images"
+        args.gif_dir = "images"
     if not os.path.exists(args.gif_dir):
         os.makedirs(args.gif_dir)
         
 
 def prepare_target(img_name, args):
-    target_img = im.open(f"lc-slm/images/{img_name}").convert('L').resize((int(c.slm_width), int(c.slm_height)))
+    target_img = im.open(f"images/{img_name}").convert('L').resize((int(c.slm_width), int(c.slm_height)))
     if args.invert:
         target_img = PIL.ImageOps.invert(target_img)
     if args.quarterize:
@@ -256,8 +256,8 @@ def remove_files_in_dir(dir: str):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("img_name", type=str, help="path to the target image from lc-slm/images directory")
-    parser.add_argument("-dest_dir", "--destination_directory", type=str, default="lc-slm/holograms", help="directory where the hologram will be saved")
+    parser.add_argument("img_name", type=str, help="path to the target image from images directory")
+    parser.add_argument("-dest_dir", "--destination_directory", type=str, default="holograms", help="directory where the hologram will be saved")
     parser.add_argument("-q", "--quarterize", action="store_true", help="original image is reduced to quarter and pasted to black image of its original size ")
     parser.add_argument("-i", "--invert", action="store_true", help="invert colors of the target image")
     parser.add_argument("-alg", "--algorithm", default="GS", choices=["GS", "GD"], help="algorithm to use: GS for Gerchberg-Saxton, GD for gradient descent")

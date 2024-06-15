@@ -28,7 +28,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    source_dir = "lc-slm/holograms/wavefront_correction_phase_masks"
+    source_dir = "holograms/wavefront_correction_phase_masks"
     parser = argparse.ArgumentParser()
     parser.add_argument("output_name", type=str)
     parser.add_argument("images", type=str, nargs="+", help=f"list of images to average from {source_dir}")

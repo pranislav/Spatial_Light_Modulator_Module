@@ -45,7 +45,7 @@ def plot_and_save(intensity_evolution, expo):
     expo_round = round(expo, 5)
     plt.title(f"Intensity evolution on static hologram, exposure time: {expo_round} s")
     time_name = time.strftime("%Y-%m-%d_%H-%M-%S")
-    dest_dir = "lc-slm/images/measure_fluctuations"
+    dest_dir = "images/measure_fluctuations"
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
     plt.savefig(f"{dest_dir}/fluctuations_{time_name}.png")
