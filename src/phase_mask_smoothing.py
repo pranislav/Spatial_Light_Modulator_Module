@@ -54,14 +54,6 @@ def save_smoothed_mask(smoothed_mask, name, time_name, correspond_to_2pi, source
     smoothed_mask.convert("L").save(f"{source_dir}/{name}_smoothed_{time_name}.png")
 
 
-# def fit_and_eval(unwrapped_mask, polynom_degree):
-#     h, w = unwrapped_mask.shape
-#     x = np.linspace(0, w, w)
-#     y = np.linspace(0, h, h)
-#     p = polyfit2d(x, y, unwrapped_mask, polynom_degree)
-#     fitted_mask = polyval(x, p)
-#     return fitted_mask.reshape(h, w)
-
 def unwrap_phase_picture(phase_mask, correspond_to_2pi):
     phase_mask = transform_to_phase_values(phase_mask, correspond_to_2pi)
     # phase_mask = mask_mask(phase_mask)
@@ -157,4 +149,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
     args.source_dir = source_dir
     main(args)
-    # main("holograms/fit_maps/phase_shift_size_32_precision_8_x1_y__ref16_12_avg1_try_lab_may10.png", 256, 32)

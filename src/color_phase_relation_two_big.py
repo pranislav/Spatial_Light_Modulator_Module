@@ -27,7 +27,7 @@ def main(args):
     cam = uc480.UC480Camera()
     window = cl.create_tk_window()
     # subdomain_size = int(np.sqrt(1 / 5) * c.slm_height)
-    sample_list = cl.make_sample_holograms((1, 1), args.precision, args.correspond_to2pi)
+    sample_list = cl.make_sample_holograms((1, 1), args.samples_per_period, args.correspond_to2pi)
     upper_left_corner = np.array((c.slm_width // 2 - args.subdomain_size, (c.slm_height - args.subdomain_size) // 2))
     black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
     reference = cl.add_subdomain(black_hologram, sample_list[0], upper_left_corner, args.subdomain_size)
@@ -42,7 +42,7 @@ def main(args):
     i = 0
     while i < args.runs:
         # print(cam.get_exposure())
-        intensity_list = two_big_loop(args.precision, cam, window, hologram_set, intensity_coords)
+        intensity_list = two_big_loop(args.samples_per_period, cam, window, hologram_set, intensity_coords)
         if intensity_list == "max_intensity_reached":
             fit_params_dict = iniciate_fit_params_dict(fit_func)
             intensity_lists = []
@@ -97,10 +97,10 @@ def make_plot(intensity_list, fit_func, fit_params_dict, time_name, i):
     plt.close()
 
 
-def two_big_loop(precision, cam, window, hologram_set, intensity_coords):
+def two_big_loop(samples_per_period, cam, window, hologram_set, intensity_coords):
     intensity_list = [[], []]
     k = 0
-    while k < precision:
+    while k < samples_per_period:
         cl.display_image_on_external_screen(window, hologram_set[k])
         frame = cam.snap()
         intensity = cl.get_intensity_on_coordinates(frame, intensity_coords)
@@ -108,7 +108,7 @@ def two_big_loop(precision, cam, window, hologram_set, intensity_coords):
             print("maximal intensity was reached, starting over.")
             cam.set_exposure(cam.get_exposure() * 0.9) # 10 % decrease of exposure time
             return "max_intensity_reached"
-        phase = k * 256 // precision
+        phase = k * 256 // samples_per_period # TODO: redo as it is in wavefront_correction.py
         intensity_list[0].append(phase)
         intensity_list[1].append(intensity)
         k += 1
@@ -125,7 +125,7 @@ def make_hologram_set(reference, sample_list, coords, subdomain_size):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--precision", type=int, default=32, help="number of different phase values to be tested")
+    parser.add_argument("-spp", "--samples_per_period", type=int, default=32, help="number of different phase values to be tested")
     parser.add_argument("-ss", "--subdomain_size", type=int, default=64, help="subdomain size")
     parser.add_argument('-ct2pi', '--correspond_to2pi', type=int, default=256, help="value of pixel corresponding to 2pi phase shift")
     parser.add_argument("-r", "--runs", type=int, default=8, help="number of runs to average the results")

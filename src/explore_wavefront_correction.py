@@ -46,11 +46,11 @@ def explore(args):
     if not os.path.exists(video_dir): os.makedirs(video_dir)
     while True:
         black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
-        if params["decline"][-1] or params["precision"][-1] or params["correspond_to_2pi"][-1]:
+        if params["decline"][-1] or params["samples_per_period"][-1] or params["correspond_to_2pi"][-1]:
             angle = last_nonempty(params["decline"])
-            precision = last_nonempty(params["precision"])
+            samples_per_period = last_nonempty(params["samples_per_period"])
             correspond_to_2pi = last_nonempty(params["correspond_to_2pi"])
-            sample_list = cl.make_sample_holograms(angle, precision, correspond_to_2pi)
+            sample_list = cl.make_sample_holograms(angle, samples_per_period, correspond_to_2pi)
         if params["subdomain_size"][-1] or params["reference_position"][-1]:
             subdomain_size = last_nonempty(params["subdomain_size"])
             reference_position = real_subdomain_position(last_nonempty(params["reference_position"]), subdomain_size)
@@ -62,7 +62,7 @@ def explore(args):
             intensity_coord = cl.get_highest_intensity_coordinates_img(cam, window, reference_hologram, num_to_avg)
         hologram = reference_hologram
         subdomain_position = real_subdomain_position(last_nonempty(params["subdomain_position"]), subdomain_size)
-        frames, intensity_data = wavefront_correction_loop_explore(window, cam, hologram, sample_list, subdomain_position, subdomain_size, precision, intensity_coord, num_to_avg)
+        frames, intensity_data = wavefront_correction_loop_explore(window, cam, hologram, sample_list, subdomain_position, subdomain_size, samples_per_period, intensity_coord, num_to_avg)
         fit_params = f.fit_intensity_general(intensity_data, f.positive_cos)
         print_fit_params(fit_params)
         intensity_fit = plot_fit(fit_params)
@@ -79,11 +79,11 @@ def explore(args):
         get_params(params)
 
 
-def wavefront_correction_loop_explore(window, cam, hologram, sample, subdomain_position, subdomain_size, precision, coordinates, num_to_avg):
+def wavefront_correction_loop_explore(window, cam, hologram, sample, subdomain_position, subdomain_size, samples_per_period, coordinates, num_to_avg):
     intensity_list = [[], []]
     images_list = []
     k = 0
-    while k < precision:
+    while k < samples_per_period:
         hologram = cl.add_subdomain(hologram, sample[k], subdomain_position, subdomain_size)
         cl.display_image_on_external_screen(window, hologram)
         # time.sleep(0.1)
@@ -100,7 +100,7 @@ def wavefront_correction_loop_explore(window, cam, hologram, sample, subdomain_p
             intensity_list = [[], []]
             images_list = []
             continue
-        phase = k * 256 // precision
+        phase = k * 256 // samples_per_period
         intensity_list[0].append(phase)
         intensity_list[1].append(intensity)
         k += 1
@@ -131,7 +131,7 @@ def default_params():
     params["reference_position"] = [(15, 11)]
     params["subdomain_position"] = [(14, 11)]
     params["decline"] = [(1, 1)]
-    params["precision"] = [8]
+    params["samples_per_period"] = [8]
     params["num_to_avg"] = [1]
     return params
 
@@ -144,7 +144,7 @@ def get_params(params):
     params["reference_position"].append(get_position(last_nonempty(params["reference_position"]), subdomain_size, "reference"))
     params["subdomain_position"].append(get_position(last_nonempty(params["subdomain_position"]), subdomain_size, "second"))
     params["decline"].append(get_decline(last_nonempty(params["decline"])))
-    params["precision"].append(get_precision(last_nonempty(params["precision"])))
+    params["samples_per_period"].append(get_samples_per_period(last_nonempty(params["samples_per_period"])))
     params["num_to_avg"].append(get_num_to_avg(last_nonempty(params["num_to_avg"])))
 
 
@@ -161,11 +161,11 @@ def get_correspond_to_2pi(current):
     return int(correspond_to_2pi_to_be)
 
 
-def get_precision(current):
-    precision_to_be = input(f"enter number of phase shifts. current value: {current} >> ")
-    if precision_to_be == '':
-        return precision_to_be
-    return int(precision_to_be)
+def get_samples_per_period(current):
+    samples_per_period_to_be = input(f"enter number of phase shifts. current value: {current} >> ")
+    if samples_per_period_to_be == '':
+        return samples_per_period_to_be
+    return int(samples_per_period_to_be)
 
 def get_num_to_avg(current):
     num_to_avg_to_be = input(f"enter number of frames to be averaged. current value: {current} >> ")
@@ -389,7 +389,7 @@ def images_to_video(image_list, video_name, fps, output_path="."):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("script for simulating and visualizing wavefront_correction loops")
-    parser.add_argument('-m', '--mode', choices=['i', 'v'], default='i', type=str, help="i for images, v for video output")
+    parser.add_argument('-m', '--mode', choices=['i', 'v'], default='i', type=str, help="i for images, v for video output (saved in images/explore)")
     args = parser.parse_args()
 
     explore(args)

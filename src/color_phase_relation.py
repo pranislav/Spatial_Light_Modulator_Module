@@ -95,7 +95,7 @@ if __name__ == "__main__":
     help_ref_coord = "pseudo coordinates of reference subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size"
 
     parser.add_argument('-ss', '--subdomain_size', type=int, default=64)
-    parser.add_argument('-p', '--precision', type=int, default=16, help="number of phase shifts")
+    parser.add_argument('-spp', '--samples_per_period', type=int, default=16, help="number of phase shifts")
     parser.add_argument('-a', '--angle', type=str, default="1_1", help="use form: xdecline_ydecline (angles in constants.u unit)")
     parser.add_argument('-c', '--reference_coordinates', type=str, default="8_6", help=help_ref_coord)
     parser.add_argument('-avg', '--num_to_avg', type=int, default=8, help="number of frames to average when measuring intensity")

@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
     parser.add_argument('wavefront_correction_name', type=str)
     parser.add_argument('-ss', '--subdomain_size', type=int, default=32)
-    parser.add_argument('-p', '--precision', type=int, default=8, help='"color depth" of the phase mask')
+    parser.add_argument('-spp', '--samples_per_period', type=int, default=8, help='"color depth" of the phase mask')
     parser.add_argument('-a', '--angle', type=str, default="1_1", help="use form: xdecline_ydecline (angles in constants.u unit)")
     parser.add_argument('-c', '--reference_coordinates', type=str, default="16_12", help=help_ref_coord)
     parser.add_argument('-avg', '--num_to_avg', type=int, default=1, help="number of frames to average when measuring intensity")

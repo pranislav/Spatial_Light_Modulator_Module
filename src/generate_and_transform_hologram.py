@@ -4,7 +4,6 @@ from algorithms import GS, GD
 import numpy as np
 from PIL import Image as im
 import PIL.ImageOps
-# import slm_screen as sc
 import constants as c
 import argparse
 import os
@@ -14,107 +13,6 @@ import analytical_holograms as ah
 import time
 
 
-
-# # SETTINGS
-# # name and type of image which should be projected by SLM
-# target_name = "multidecline_grating_1x1_dot" # "moving_traps/two_circulating_traps_radius1px/3" # "multidecline_user_defined_5432_dot_2x2"
-# target_type = "png"
-# #
-# path_to_incomming_intensity = "images/incomming_intensity_images/paper_shade_01_intensity_mask.png"
-# # ...
-# save_result = True
-# preview = False
-# plot_error = True
-# # other settings
-# invert = False
-# quarterize = True # original image is reduced to quarter and pasted to black image of its original size | helpful when imaging - there is no overlap between diffraction maxima of different order
-# algorithm = "GS"    # GD for gradient descent, GS for Gerchberg-Saxton
-# # stopping parameters
-# tolerance = 0.0001 # algorithm stops when error descends under tolerance
-# max_loops = 42 # algorithm performs no more than max_loops loops no matter what error it is
-# # transform parameters
-# x_decline = 0
-# y_decline = 0
-# unit = c.u # c.u for one quarter of 1st diff maximum, 1 for radians | ubiquity in filename - units not in the name
-# focal_len = False
-# # for GD:
-# learning_rate = 0.005 # how far our solution jump in direction of the gradient. Too low - slow convergence; too high - oscilations or even none reasonable improvement at all
-# mask_relevance = 100 # very helpful when target is predominantly black (multidecline dots)
-# unsettle = 0 # learning rate is (unsettle - 1) times doubled. it may improve algorithm performance, and it also may cause peaks in error evolution
-# # gif creation
-# gif_target = "" # "h" for hologram, "i" for image (result) and empty string for no gif
-# gif_skip = 2 # each gif_skip-th frame will be in gif
-
-# correspond_to2pi = 256 # color value corresponding to 2pi phase change on SLM
-
-
-
-# # loading image and creating array target
-# target_img = im.open(f"images/{target_name}.{target_type}").convert('L').resize((int(c.slm_width), int(c.slm_height)))
-# if invert:
-#     target_img = PIL.ImageOps.invert(target_img)
-# if quarterize:
-#     target_img = quarter(target_img)
-# target = np.array(target_img)
-
-
-# enhance_mask = target / 255 # normed to 1 | enhance the error to get lower on light areas
-
-# # creating gif data structure (primarily for GD arguments reducing)
-# gif = gif_struct()
-# gif.type = gif_target
-# gif.skip_frames = gif_skip
-
-# if gif_target:
-#     directory = "images" if gif_target == "i" else "holograms"
-#     gif.source_address = f"{directory}/gif_source"
-#     # making place for gif images
-#     remove_files_in_dir(gif.source_address)
-
-
-# # compouting phase distribution
-# if algorithm == "GS":
-#     source_phase_array, exp_tar_array, loops = GS(target, path_to_incomming_intensity, tolerance, max_loops, gif, plot_error, correspond_to2pi)
-
-# if algorithm == "GD":
-#     source_phase_array, exp_tar_array, loops = GD(target, path_to_incomming_intensity, learning_rate, enhance_mask,\
-#                     mask_relevance, tolerance, max_loops, unsettle, gif, plot_error, correspond_to2pi)
-
-
-# source_phase = im.fromarray(source_phase_array) # this goes into SLM
-# expected_target = im.fromarray(exp_tar_array)
-
-
-# are_transforms = x_decline or y_decline or focal_len
-# if are_transforms:
-#     hologram = transform_hologram(source_phase, (x_decline*unit, y_decline*unit), focal_len)
-#     def u_name(unit):
-#         return "u" if unit==c.u else "rad"
-#     transforms = f"x={x_decline}{u_name(unit)}_y={y_decline}{u_name(unit)}_lens={focal_len}"
-# else:
-#     hologram = sc.Screen(source_phase)
-#     transforms = ""
-
-# if algorithm == "GD":
-#     alg_params = f"_learning_rate={learning_rate}_mask_relevance={mask_relevance}_unsettle={unsettle}"
-# else:
-#     alg_params = ""
-
-# target_transforms = f"inverted={invert}_quarter={quarterize}"
-# general_params = f"loops={loops}_ct2pi={correspond_to2pi}"
-
-# if save_result:
-#     hologram_name = f"{target_name}_{target_transforms}_{transforms}_hologram_alg={algorithm}_{general_params}_{alg_params}"
-#     hologram.img.convert("L").save(f"holograms/{hologram_name}.png")
-#     expected_target.convert("L").save(f"images/{hologram_name}_exp_tar.png")
-
-# if gif_target:
-#     create_gif(gif.source_address, f"{directory}/gif_{hologram_name}.gif")
-
-# # preview of results: what goes into SLM and what it should look like
-# if preview:
-#     source_phase.show()
-#     expected_target.show()
 
 
 # TODO: make algs eat nonsqrted target image and return just hologram as im object
@@ -128,7 +26,6 @@ def main(args):
         expected_outcome.show()
     hologram = transform_hologram(hologram, args)
     save_hologram_and_gif(hologram, args)
-
 
 
 def make_hologram(args):
@@ -215,17 +112,6 @@ def quarter(image: im) -> im:
     return ground
 
 
-# def transform_hologram(hologram, angle, focal_len):
-#     x_angle, y_angle = angle
-#     hologram_screen = sc.Screen(hologram)
-#     if x_angle:
-#         hologram_screen.decline('x', x_angle)
-#     if y_angle:
-#         hologram_screen.decline('y', y_angle)
-#     if focal_len:
-#         hologram_screen.lens(focal_len)
-#     return hologram_screen
-
 def decline_hologram(hologram: np.array, angle: tuple, correspond_to2pi: int=256):
     '''declines hologram by angle, returns declined hologram
     '''
@@ -262,8 +148,8 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--invert", action="store_true", help="invert colors of the target image")
     parser.add_argument("-alg", "--algorithm", default="GS", choices=["GS", "GD"], help="algorithm to use: GS for Gerchberg-Saxton, GD for gradient descent")
     parser.add_argument("-ct2pi", "--correspond_to2pi", default=256, type=int, help="color value corresponding to 2pi phase change on SLM")
-    parser.add_argument("-tol", "--tolerance", default=0, type=float, help="error tolerance")
-    parser.add_argument("-loops", "--max_loops", default=42, type=int, help="maximum number of loops")
+    parser.add_argument("-tol", "--tolerance", default=0, type=float, help="algorithm stops when error descends under tolerance")
+    parser.add_argument("-loops", "--max_loops", default=42, type=int, help="algorithm performs no more than max_loops loops no matter what error it is")
     parser.add_argument("-lr", "--learning_rate", default=0.005, type=float, help="learning rate for GD algorithm (how far the solution jumps in direction of the gradient)")
     parser.add_argument("-mr", "--mask_relevance", default=100, type=float, help="mask relevance for GD algorithm, sets higher priority to white areas by making error on those areas mask_relevance-times higher")
     parser.add_argument("-unsettle", default=0, type=int, help="unsettle for GD algorithm; learning rate is (unsettle - 1) times doubled")
@@ -272,7 +158,7 @@ if __name__ == "__main__":
     parser.add_argument("-gif_skip", default=1, type=int, help="each gif_skip-th frame will be in gif")
     parser.add_argument("-plot_error", action="store_true", help="plot error evolution")
     parser.add_argument("-p", "--preview", action="store_true", help="show expected outcome at the end of the program run")
-    parser.add_argument("-decline", nargs=2, default=(0, 0), help="decline hologram by given angle in units of quarter of first diffraction maximum ")
+    parser.add_argument("-decline", nargs=2, default=(0, 0), help="shifts resulting image on Fourier plane by given angle in units of quarter of first diffraction maximum ")
     parser.add_argument("-lens", default=None, type=float, help="add lens to hologram with given focal length in meters")
     args = parser.parse_args()
 

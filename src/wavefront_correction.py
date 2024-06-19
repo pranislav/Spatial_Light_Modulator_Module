@@ -2,20 +2,7 @@
 aberrations caused both by the modulator and whole optical path.
 This mask should be added up with any projected hologram.
 For each optical path there should be generated its own mask.
-
-Principle:
-modulator's screen is divided into square subdomains
-for each subdomain we are searching for optimal phase offset
-optimal phase offset is found as following:
-let us have a reference subdomain which deflects light to particular angle
-for each subdomain we do following:
-the subdomain deflects light to the exact same angle as the reference one
-all the others subdomains are "off"
-the hologram on the subdomain is shifted by a constant phase several times
-the phase shift which causes best constructive interference with the reference subdomain
-is chosen and written into the phase mask
-the quality of the interference is decided by
-measuring intensity at the end of the optical path with a camera
+There is implemented Tomas Cizmar's approach here.
 '''
 
 # ! working in constants.u units
@@ -128,7 +115,7 @@ def initialize(args):
     args.window = create_tk_window()
     print("creating sample holograms...")
     args.angle = read_angle(args.angle)
-    args.phase_list = [i * 2 * np.pi / args.precision for i in range(args.precision)]
+    args.phase_list = [i * 2 * np.pi / args.samples_per_period for i in range(args.samples_per_period)]
     sample_list_2pi = make_sample_holograms_2pi(args.angle, args.phase_list)
     args.samples_list = convert_phase_holograms_to_color_holograms(sample_list_2pi, args.correspond_to2pi)
     rx, ry = read_reference_coordinates(args.reference_coordinates, get_number_of_subdomains(args.subdomain_size))
@@ -172,15 +159,13 @@ def wavefront_correction_loop(i, j, args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Script for calibrating an optical path by SLM")
-
-    help_ref_coord = "pseudo coordinates of reference subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size"
+    parser = argparse.ArgumentParser(description="This script creates phase mask which compensates aberrations in optical path and curvature of SLM itself")
 
     parser.add_argument('wavefront_correction_name', type=str)
     parser.add_argument('-ss', '--subdomain_size', type=int, default=32)
-    parser.add_argument('-p', '--precision', type=int, default=8, help='"color depth" of the phase mask')
+    parser.add_argument('-spp', '--samples_per_period', type=int, default=4, help='number of intensity measurements per one subdomain')
     parser.add_argument('-a', '--angle', type=str, default="1_1", help="use form: xdecline_ydecline (angles in constants.u unit)")
-    parser.add_argument('-c', '--reference_coordinates', type=str, default="center", help=help_ref_coord)
+    parser.add_argument('-c', '--reference_coordinates', type=str, default="center", help="subdomain-scale coordinates of reference subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size. Default parameter assigns the reference subdomain to the middle one.")
     # parser.add_argument('-avg', '--num_to_avg', type=int, default=1, help="number of frames to average when measuring intensity")
     parser.add_argument('-ct2pi', '--correspond_to2pi', type=int, default=256, help="value of pixel corresponding to 2pi phase shift")
     parser.add_argument('-skip', '--skip_subdomains_out_of_inscribed_circle', action="store_true", help="subdomains out of the inscribed circle will not be callibrated. use when the SLM is not fully illuminated and the light beam is circular.")
@@ -191,7 +176,7 @@ if __name__ == "__main__":
     parser.add_argument('-resample', type=str, choices=["bilinear", "bicubic"], default="bilinear", help="smoothing method used to upscale the unwrapped phase mask")
     parser.add_argument('-nsp', '--sqrted_number_of_source_pixels', type=int, default=1, help='number of pixel of side of square area on photo from which intensity is taken')
     parser.add_argument('-parallel', action="store_true", help="use parallelization")
-    parser.add_argument('-rd', '--remove_defocus', action="store_true", help="remove defocus from the phase mask")
+    parser.add_argument('-rd', '--remove_defocus', action="store_true", help="remove defocus compensation from the phase mask")
 
     args = parser.parse_args()
     start = time()

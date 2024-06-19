@@ -79,7 +79,7 @@ def fit_and_subtract(array, fit_func, initial_guess):
 
 
 def make_specification(args):
-    return f"{args.wavefront_correction_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_precision_{args.precision}_x{args.angle[0]}_y{args.angle[1]}_ref_{args.reference_coordinates}_intensity_coords_{args.intensity_coordinates}_source_pxs_{args.sqrted_number_of_source_pixels}"
+    return f"{args.wavefront_correction_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_samples_per_period_{args.samples_per_period}_x{args.angle[0]}_y{args.angle[1]}_ref_{args.reference_coordinates}_intensity_coords_{args.intensity_coordinates}_source_pxs_{args.sqrted_number_of_source_pixels}"
 
 
 
@@ -141,11 +141,11 @@ def trick_function(phase_intensity_list, fun):
 
 # ---------- sample holograms ----------- #
 
-def make_sample_holograms(angle, precision, ct2pi):
+def make_sample_holograms(angle, samples_per_period, ct2pi):
     sample = []
     sample.append(decline(angle, ct2pi))
-    for i in range(1, precision):
-        offset = i * ct2pi // precision
+    for i in range(1, samples_per_period):
+        offset = i * ct2pi // samples_per_period
         sample.append((sample[0] + offset) % ct2pi)
     return sample
 
