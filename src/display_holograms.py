@@ -5,6 +5,9 @@ import argparse
 import os
 import explore_wavefront_correction as e
 import constants as c
+import time
+import keyboard
+from functools import partial
 
 mask_dir = "holograms/wavefront_correction_phase_masks"
 default_hologram_dir = "holograms"
@@ -13,6 +16,7 @@ def display_holograms(args):
     window = cl.create_tk_window()
     directory = set_dir(args.directory)
     mask_arr = set_mask(args.mask_name)
+    name = None
     while True:
         command = input("do an action or type 'help' >> ")
         if command == "help":
@@ -30,19 +34,82 @@ def display_holograms(args):
         if command[0:2] == "cm":
             if len(command) == 2: 
                 mask_arr = None
-                display_with_mask(window, name, directory, mask_arr, args.correspond_to2pi)
+                if name is not None:
+                    display_with_mask(window, name, directory, mask_arr, args.correspond_to2pi)
                 continue
             maybe_mask_arr = set_mask(command[3:])
-            if maybe_mask_arr is not None: mask_arr = maybe_mask_arr
-            display_with_mask(window, name, directory, mask_arr, args.correspond_to2pi)
+            if maybe_mask_arr is not None: mask_arr = maybe_mask_arr # TODO: delete this?
+            if name is not None:
+                display_with_mask(window, name, directory, mask_arr, args.correspond_to2pi)
             continue
         if command[:2] == 'c':
             print("in mode for displaying instant wavefront_correction holograms")
             display_instant_wavefront_correction_holograms(window)
             continue
+        if command[:2] == "s ":
+            if " " not in command[2:]:
+                dir = command[2:]
+                wait = 0
+            else:
+                dir, wait = command[2:].split(" ")
+                wait = float(wait)
+            display_holograms_in_sequence(window, dir, wait, mask_arr, args.correspond_to2pi)
+            continue
         name = command
         display_with_mask(window, name, directory, mask_arr, args.correspond_to2pi)
 
+
+def display_holograms_in_sequence(window, dir, wait, mask_arr, ct2pi):
+    quit_func = False
+    key_wait = 0.3
+    micro_wait = 0.01
+    frame_micro_wait = min(micro_wait, wait)
+    i = -1
+    i_max = len(os.listdir(dir)) - 1
+    display_with_mask_partial = partial(display_with_mask, window, directory=dir, mask_arr=mask_arr, ct2pi=ct2pi)
+    while i < i_max:
+        i += 1
+        display_with_mask_partial(f"{i}.png")
+        start = time.time()
+        while True:
+            if keyboard.is_pressed("space"):
+                time.sleep(key_wait) # to avoid multiple toggles from a single key press due to key repeat
+                i, quit_func = stop_mode(display_with_mask_partial, i, i_max, key_wait, micro_wait, dir)
+                break
+            if keyboard.is_pressed("left"):
+                i = max(i - 2, 0)
+                continue
+            if keyboard.is_pressed("right"):
+                continue
+            if keyboard.is_pressed("esc"):
+                quit_func = True
+                break
+            time.sleep(frame_micro_wait)
+            if time.time() - start >= wait:
+                break
+        if quit_func:
+            break
+
+def stop_mode(display_with_mask_partial, i, i_max, key_wait, micro_wait, dir):
+    quit_func = False
+    while True:
+        if keyboard.is_pressed("space"):
+            time.sleep(key_wait)
+            break
+        if keyboard.is_pressed("left"):
+            time.sleep(key_wait)
+            i = max(i - 1, 0)
+            display_with_mask_partial(f"{i}.png")
+        if keyboard.is_pressed("right"):
+            time.sleep(key_wait)
+            i = min(i + 1, i_max)
+            display_with_mask_partial(f"{i}.png")
+        if keyboard.is_pressed("esc"):
+            quit_func = True
+            break
+        time.sleep(micro_wait)
+    return i, quit_func
+                  
 
 def display_instant_wavefront_correction_holograms(window):
     params = default_params()
@@ -105,6 +172,7 @@ def print_help():
     print("- <hologram_name> - display hologram in current directory")
     print(f"- cm <mask_name> - change mask - {mask_help}")
     print("- c - enter mode for displaying instant wavefront_correction holograms")
+    print("- s <directory> <wait_time> - display holograms in sequence from specified directory. wait_time is time between frames in seconds. if not specified, wait_time is 0. press space to pause, left and right to navigate, esc to quit")
     print("- help - display this message")
     print("- q - quit")
 
@@ -127,14 +195,14 @@ def set_dir(directory):
 
 def mask_hologram(path, mask_arr, ct2pi):
     hologram_im = im.open(path).convert("L")
-    hologram_arr = np.array(hologram_im)
+    hologram_arr = np.array(hologram_im).astype(np.int16)
     masked_hologram_arr = (hologram_arr + mask_arr) % ct2pi
     masked_hologram_im = im.fromarray(masked_hologram_arr).convert("RGB")
     return masked_hologram_im
 
 
 if __name__ == "__main__":
-    # TODO: it actually dont need parsing now
+    # TODO: it actually does not need parsing now, and add ct2pi to change while run
     parser = argparse.ArgumentParser(description="displays selected images from specified directory. Images can be masked with mask of given name")
 
     mask_help = f"leave blank or type 'none' for no mask. otherwise type name of the mask. it have to be in {mask_dir}"
