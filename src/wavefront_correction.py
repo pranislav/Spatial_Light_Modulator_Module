@@ -14,7 +14,6 @@ from pylablib.devices import uc480
 from time import time
 import fit_stuff as f
 import phase_mask_smoothing as pms
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from queue import Queue
 from threading import Thread
 
@@ -31,7 +30,6 @@ def wavefront_correction(args):
         print(f"\rcalibrating subdomain {count + 1}/{len(coordinates_list)}", end="")
         intensity_list = wavefront_correction_loop(i, j, args)
         fill_pixel_phase_masks(phase_masks, intensity_list, best_phase, i, j, args)
-        # = mean_best_phase(intensity_list, best_phase, args)
         count += 1
     produce_phase_mask(phase_masks, args)
 
@@ -139,12 +137,8 @@ def wavefront_correction_loop(i, j, args):
     while k < len(args.phase_list):
         args.hologram = add_subdomain(args.hologram, args.samples_list[k], (j_real, i_real), args.subdomain_size)
         display_image_on_external_screen(args.window, args.hologram) # displays hologram on an external dispaly (SLM)
-        # intensity = 0
-        # for _ in range(args.num_to_avg):
         frame = args.cam.snap()
         relevant_pixels = square_selection(frame, args.upper_left_corner, args.lower_right_corner)
-            # intensity = get_intensity_on_coordinates(frame, coords)
-        # intensity /= args.num_to_avg
         if relevant_pixels.max() == 255:
             print("maximal intensity was reached, adapting...")
             args.cam.set_exposure(args.cam.get_exposure() * 0.9) # 10 % decrease of exposure time
@@ -154,7 +148,6 @@ def wavefront_correction_loop(i, j, args):
         intensity_list.append(relevant_pixels)
         k += 1
     clear_subdomain(args.hologram, (i_real, j_real), args.subdomain_size)
-    # print("+", end="")
     return intensity_list
 
 
@@ -166,10 +159,8 @@ if __name__ == "__main__":
     parser.add_argument('-spp', '--samples_per_period', type=int, default=4, help='number of intensity measurements per one subdomain')
     parser.add_argument('-a', '--angle', type=str, default="1_1", help="use form: xdecline_ydecline (angles in constants.u unit)")
     parser.add_argument('-c', '--reference_coordinates', type=str, default="center", help="subdomain-scale coordinates of reference subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size. Default parameter assigns the reference subdomain to the middle one.")
-    # parser.add_argument('-avg', '--num_to_avg', type=int, default=1, help="number of frames to average when measuring intensity")
     parser.add_argument('-ct2pi', '--correspond_to2pi', type=int, default=256, help="value of pixel corresponding to 2pi phase shift")
     parser.add_argument('-skip', '--skip_subdomains_out_of_inscribed_circle', action="store_true", help="subdomains out of the inscribed circle will not be callibrated. use when the SLM is not fully illuminated and the light beam is circular.")
-    parser.add_argument('-smooth', '--smooth_phase_mask', action="store_true", help="the phase mask will be smoothed")
     parser.add_argument("-shuffle", action="store_true", help="subdomains will be calibrated in random order")
     parser.add_argument('-ic', "--intensity_coordinates", type=str, default=None, help="coordinates of the point where intensity is measured in form x_y. if not provided, the point will be found automatically.")
     parser.add_argument('-choose_phase', type=str, choices=["trick", "fit"], default="fit", help="method of finding the optimal phase shift")

@@ -15,15 +15,12 @@ from scipy.optimize import leastsq
 def produce_phase_mask_single(phase_mask, args):
     specification = "phase_mask_" + make_specification(args)
     dest_dir = "holograms/wavefront_correction_phase_masks"
-    # if args.choose_phase == "trick": phase_mask += np.pi
     big_phase_mask = expand_phase_mask((phase_mask % (2 * np.pi)) * args.correspond_to2pi / (2 * np.pi), args.subdomain_size)
     save_phase_mask(big_phase_mask, dest_dir, specification)
-    if args.smooth_phase_mask:
-        phase_mask_unwrapped = unwrap_phase(phase_mask)
-        # big_phase_mask = pms.circular_box_blur(phase_mask_unwrapped, args.subdomain_size // 2)
-        resample = im.BICUBIC if args.resample == "bicubic" else im.BILINEAR
-        big_phase_mask = im.fromarray(phase_mask_unwrapped * args.correspond_to2pi / (2 * np.pi)).resize((c.slm_width, c.slm_height), resample=resample)
-        save_phase_mask(np.array(big_phase_mask) % args.correspond_to2pi, dest_dir, "smoothed_"+specification)
+    phase_mask_unwrapped = unwrap_phase(phase_mask)
+    resample = im.BICUBIC if args.resample == "bicubic" else im.BILINEAR
+    big_phase_mask = im.fromarray(phase_mask_unwrapped * args.correspond_to2pi / (2 * np.pi)).resize((c.slm_width, c.slm_height), resample=resample)
+    save_phase_mask(np.array(big_phase_mask) % args.correspond_to2pi, dest_dir, "smoothed_"+specification)
 
 def combine_phase_masks(phase_masks):
     mean_phase_mask = np.zeros(phase_masks[0].shape)
