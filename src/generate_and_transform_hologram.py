@@ -21,7 +21,7 @@ import time
 
 
 def main(args):
-    hologram, expected_outcome = make_hologram(args)
+    hologram, expected_outcome, _ = make_hologram(args)
     if args.preview:
         expected_outcome.show()
     hologram = transform_hologram(hologram, args)
@@ -31,7 +31,6 @@ def main(args):
 def make_hologram(args):
     algorithm = GS if args.algorithm == "GS" else GD
     target = prepare_target(args.img_name, args)
-    args.path_to_incomming_intensity = "images/incomming_intensity_images/paper_shade_01_intensity_mask.png"
     add_gif_source_address(args)
     hologram, expected_outcome = algorithm(target, args)
     return hologram, expected_outcome
@@ -143,6 +142,8 @@ def remove_files_in_dir(dir: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("img_name", type=str, help="path to the target image from images directory")
+    parser.add_argument("-ii", "--incomming_intensity", type=str, default="uniform", help="path to the incomming intensity image from images directory or 'uniform' for uniform intensity")
+    # "images/incomming_intensity_images/paper_shade_01_intensity_mask.png"
     parser.add_argument("-dest_dir", "--destination_directory", type=str, default="holograms", help="directory where the hologram will be saved")
     parser.add_argument("-q", "--quarterize", action="store_true", help="original image is reduced to quarter and pasted to black image of its original size ")
     parser.add_argument("-i", "--invert", action="store_true", help="invert colors of the target image")
@@ -151,7 +152,7 @@ if __name__ == "__main__":
     parser.add_argument("-tol", "--tolerance", default=0, type=float, help="algorithm stops when error descends under tolerance")
     parser.add_argument("-loops", "--max_loops", default=42, type=int, help="algorithm performs no more than max_loops loops no matter what error it is")
     parser.add_argument("-lr", "--learning_rate", default=0.005, type=float, help="learning rate for GD algorithm (how far the solution jumps in direction of the gradient)")
-    parser.add_argument("-mr", "--mask_relevance", default=100, type=float, help="mask relevance for GD algorithm, sets higher priority to white areas by making error on those areas mask_relevance-times higher")
+    parser.add_argument("-mr", "--mask_relevance", default=1, type=float, help="mask relevance for GD algorithm, sets higher priority to white areas by making error on those areas mask_relevance-times higher")
     parser.add_argument("-unsettle", default=0, type=int, help="unsettle for GD algorithm; learning rate is (unsettle - 1) times doubled")
     parser.add_argument("-gif", action="store_true", help="create gif from hologram computing evolution")
     parser.add_argument("-gif_t", "--gif_type", choices=["h", "i"], help="type of gif: h for hologram, i for image (result)")
@@ -161,5 +162,6 @@ if __name__ == "__main__":
     parser.add_argument("-decline", nargs=2, default=(0, 0), help="shifts resulting image on Fourier plane by given angle in units of quarter of first diffraction maximum ")
     parser.add_argument("-lens", default=None, type=float, help="add lens to hologram with given focal length in meters")
     args = parser.parse_args()
+    args.print_info = True
 
     main(args)
