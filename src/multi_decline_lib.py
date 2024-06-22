@@ -6,7 +6,7 @@ import os
 
 white = 255
 
-def multi_decline_img(coordinates: list[tuple], object: function, size_x: float, size_y: float) -> im:
+def multi_decline_img(coordinates: list[tuple], object: function, size_x: float=1, size_y: float=1) -> im:
     img = im.new('L', (c.slm_width, c.slm_height))
     for point in coordinates:
         object(img, point, size_x, size_y, white)
@@ -18,12 +18,11 @@ def multi_decline_img(coordinates: list[tuple], object: function, size_x: float,
 '''creates a sequence of images of multiple moving points
 from given lists of coordinates
 and saves them into a file'''
-def create_sequence_dots(list_of_position_lists: list[list[tuple]], name: str, trap_radius: int=5):
-    name = f"{name}_radius{trap_radius}"
+def create_sequence_dots(list_of_position_lists: list[list[tuple]], name: str):
     if not os.path.exists(f"images/moving_traps/{name}"):
         os.makedirs(f"images/moving_traps/{name}")
     for i, position_list in enumerate(list_of_position_lists):
-        img = multi_decline_img(position_list, dot, trap_radius, trap_radius)
+        img = multi_decline_img(position_list, dot)
         img.save(f"images/moving_traps/{name}/{i}.png")
 
 
