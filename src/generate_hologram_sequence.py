@@ -8,7 +8,7 @@ import numpy as np
 
 
 def generate_hologram_sequence(args):
-    dest_dir_holograms = f"holograms/{args.source_dir}_holograms"
+    dest_dir_holograms = f"holograms/{args.source_dir}{args.version}_holograms"
     dest_dir_preview = f"images/moving_traps/{args.source_dir}_preview"
     for dest_dir in [dest_dir_holograms, dest_dir_preview]:
         if not os.path.exists(dest_dir):
@@ -39,6 +39,7 @@ def plot_error_evolution(err_evl_list):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="transforms sequence of images of traps into a sequence of holograms corresponding to those traps")
     parser.add_argument("source_dir", type=str, help="name of the directory with images of traps (has to be in images/moving_traps directory)")
+    parser.add_argument("-v", "--version", type=str, help="string added to the name of the directory with holograms and preview images to distinguish between different versions of the same sequence of traps")
     parser.add_argument("-ii", "--incomming_intensity", type=str, default="uniform", help="path to the incomming intensity image from images directory or 'uniform' for uniform intensity")
     # "images/incomming_intensity_images/paper_shade_01_intensity_mask.png"
     parser.add_argument("-ct2pi", "--correspond_to2pi", default=256, type=int, help="color value corresponding to 2pi phase change on SLM")
