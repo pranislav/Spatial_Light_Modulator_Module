@@ -21,7 +21,7 @@ import time
 
 
 def main(args):
-    hologram, expected_outcome, _ = make_hologram(args)
+    hologram, expected_outcome = make_hologram(args)
     if args.preview:
         expected_outcome.show()
     hologram = transform_hologram(hologram, args)
@@ -32,7 +32,7 @@ def make_hologram(args):
     algorithm = GS if args.algorithm == "GS" else GD
     target = prepare_target(args.img_name, args)
     add_gif_source_address(args)
-    hologram, expected_outcome = algorithm(target, args)
+    hologram, expected_outcome, _ = algorithm(target, args)
     return hologram, expected_outcome
 
 def transform_hologram(hologram, args):
