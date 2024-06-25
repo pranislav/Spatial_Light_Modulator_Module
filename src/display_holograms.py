@@ -24,6 +24,9 @@ def display_holograms(args):
             continue
         if command == "q":
             break
+        if command[0:5] == "ct2pi":
+            args.correspond_to2pi = int(command[5:])
+            continue
         if command[0:2] == "cd":
             if len(command) == 2:
                 directory = set_dir(default_hologram_dir)
@@ -78,9 +81,9 @@ def display_holograms_in_sequence(window, dir, wait, mask_arr, ct2pi):
                 break
             if keyboard.is_pressed("left"):
                 i = max(i - 2, 0)
-                continue
+                break
             if keyboard.is_pressed("right"):
-                continue
+                break
             if keyboard.is_pressed("esc"):
                 quit_func = True
                 break
@@ -115,7 +118,6 @@ def display_instant_wavefront_correction_holograms(window):
     params = default_params()
     while True:
         get_params(params)
-        # print(params)
         sample_hologram = cl.decline(params["decline"], params["correspond_to_2pi"])
         hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
         reference_position = e.real_subdomain_position(params["reference_position"], params["subdomain_size"])
@@ -168,6 +170,7 @@ def set_path_to_hologram(directory, name):
 
 def print_help():
     print("available commands:")
+    print("- ct2pi <value> - change value of pixel corresponding to 2pi phase shift")
     print(f"- cd <directory> - change directory, enter {directory_help}")
     print("- <hologram_name> - display hologram in current directory")
     print(f"- cm <mask_name> - change mask - {mask_help}")
@@ -203,14 +206,14 @@ def mask_hologram(path, mask_arr, ct2pi):
 
 if __name__ == "__main__":
     # TODO: it actually does not need parsing now, and add ct2pi to change while run
-    parser = argparse.ArgumentParser(description="displays selected images from specified directory. Images can be masked with mask of given name")
+    parser = argparse.ArgumentParser(description="Displays images from specified directory on external screen without window porter or taskbar. Images can be masked with mask of given name. There is also a mode for displaying instant wavefront_correction holograms and a mode for displaying holograms in sequence.")
 
-    mask_help = f"leave blank or type 'none' for no mask. otherwise type name of the mask. it have to be in {mask_dir}"
+    mask_help = f"Type name of the mask to be added to displayed images or leave blank (or type 'none') for no mask. Mask have to be in {mask_dir}."
     directory_help = "path (from project root) to directory containing images to be displayed"
 
-    parser.add_argument('-ct2pi', '--correspond_to2pi', type=int, default=256, help="value of pixel corresponding to 2pi phase shift")
-    parser.add_argument('mask_name', nargs='?', default=None, type=str, help=mask_help)
-    parser.add_argument('-d', '--directory', default=default_hologram_dir, type=str, help=directory_help)
+    parser.add_argument('-ct2pi', '--correspond_to2pi', type=int, default=256, help="value of pixel corresponding to 2pi phase shift. you can change this parameter later by typing 'ct2pi <value>' in the console.")
+    parser.add_argument('mask_name', nargs='?', default=None, type=str, help=mask_help+" you can change mask later by typing 'cm <mask_name>' in the console.")
+    parser.add_argument('-d', '--directory', default=default_hologram_dir, type=str, help=directory_help+" you can change directory later by typing 'cd <directory>' in the console.")
 
     args = parser.parse_args()
     display_holograms(args)
