@@ -1,6 +1,6 @@
 # Spatial Light Modulator Module
 
-**A module for work with spatial light modulator - SLM (especially transparent phase-only SLM which was this project developed for). Covers generating & displaying holograms, wave front correction and creating optical traps.**
+**A module for work with transparent phase-only spatial light modulator (SLM). Contains scripts for generating & displaying holograms, wave front correction and creating optical traps.**
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -8,7 +8,7 @@
     - [Wave front correction](#wave-front-correction)
     - [Hologram generating](#hologram-generating)
     - [Hologram displaying](#hologram-displaying)
-    - [Holograms concerning traps](#holograms-concerning-traps)
+    - [Holograms for optical trapping](#holograms-for-optical-trapping)
     - [SLM calibration](#slm-calibration)
 3. [Requirements](#requirements)
 4. [Installation](#installation)
@@ -22,7 +22,7 @@ This project arised beside working on my thesis entitled "Applications of Spatia
 ## Features
 
 ### Wave front correction
-The process of wave front correction (Tomas Cizmar approach) is implemented in the wavefront_correction.py. Resulting phase mask can compensate curvature of SLM and also aberrations induced by other optical components. Brief explanation of how the process works follows. For more detailed information check the [original paper](https://www.nature.com/articles/nphoton.2010.85).
+The process of wave front correction (Tomas Cizmar approach) is implemented in the *wavefront_correction.py*. Resulting phase mask can compensate curvature of SLM and also aberrations induced by other optical components. Brief explanation of how the process works follows. For more detailed information check the [original paper](https://www.nature.com/articles/nphoton.2010.85).
 
 Modulator's screen is divided into square subdomains (groups of pixels) of equal size. 
 For each subdomain we are searching for optimal phase offset.
@@ -64,7 +64,7 @@ Holograms can be generated using one of two implemented iterative algorithms or,
 - *display_holograms.py* - displays holograms on given paths without window porter or task bar on SLM. Allows displaying with mask (wich can be changed any time) and displaying of hologram sequence, which can be stopped or navigated frame-by frame. Another feature is mode for instant wave-front-correction-holograms displaying, which generates and displays holograms used in wave front correction procedure corresponding to entered parameters.
 
 
-### Holograms concerning traps
+### Holograms for optical trapping
 Scripts for work with optical traps.
 
 - *multi_decline_generate* - generates static holograms of multiple traps. There can be set shape and size of traps, which does not make sense, but results in holograms of nontrivial aesthetic value.
