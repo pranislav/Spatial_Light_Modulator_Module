@@ -17,11 +17,11 @@ import numpy as np
 def lens(focal_length, correspond_to2pi, shape):
     '''simultes lens with focal length 'focal_length' in meters
     '''
-    w, h = shape
+    h, w = shape
     hologram = np.zeros((h, w), dtype=np.uint8)
-    for i in range(w):
-        for j in range(h):
-            r = c.px_distance * np.sqrt((i - w / 2) ** 2 + (j - h / 2) ** 2)
+    for i in range(h):
+        for j in range(w):
+            r = c.px_distance * np.sqrt((i - h / 2) ** 2 + (j - w / 2) ** 2)
             phase_shift = 2 * np.pi * focal_length / c.wavelength * \
                 (1 - np.sqrt(1 + r ** 2 / focal_length ** 2))
             hologram[i, j] = (phase_shift * correspond_to2pi / (2 * np.pi)) % correspond_to2pi
