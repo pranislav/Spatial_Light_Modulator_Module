@@ -14,14 +14,11 @@ import time
 
 
 
-
-# TODO: make algs eat nonsqrted target image and return just hologram as im object
-# TODO: independent function for visualizing expected image
-# what about final loop number?
-
-
 def main(args):
-    hologram, expected_outcome = make_hologram(args)
+    if args.img_name is None:
+        hologram = np.zeros((c.slm_height, c.slm_width))
+    else:
+        hologram, expected_outcome = make_hologram(args)
     if args.preview:
         expected_outcome.show()
     hologram = transform_hologram(hologram, args)
@@ -36,7 +33,7 @@ def make_hologram(args):
     return hologram, expected_outcome
 
 def transform_hologram(hologram, args):
-    if args.decline != (0, 0):
+    if args.decline is not None:
         hologram = decline_hologram(hologram, args.decline, args.correspond_to2pi)
     if args.lens:
         hologram = add_lens(hologram, args.lens, args.correspond_to2pi)
@@ -64,7 +61,7 @@ def prepare_target(img_name, args):
     return np.array(target_img)
 
 def save_hologram_and_gif(hologram, args):
-    img_name = os.path.basename(args.img_name).split(".")[0]
+    img_name = os.path.basename(args.img_name).split(".")[0] if args.img_name else "analytical"
     dest_dir = args.destination_directory
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
@@ -87,6 +84,8 @@ def make_hologram_name(args, img_name):
     if args.invert:
         img_transforms += "_inverted"
     time_name = time.strftime("%Y-%m-%d_%H-%M-%S")
+    if args.img_name is None:
+        return f"{img_name}{transforms}"
     return f"{img_name}{img_transforms}_{args.algorithm}{alg_params}__ct2pi{args.correspond_to2pi}_loops{args.max_loops}{transforms}_{time_name}"
 
 
@@ -132,16 +131,9 @@ def create_gif(img_dir, outgif_path):
             writer.append_data(image)
 
 
-def remove_files_in_dir(dir: str):
-    '''removes all files in given directory'''
-    for file in os.listdir(dir):
-        os.remove(f"{dir}/{file}")
-
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("img_name", type=str, help="path to the target image from images directory")
+    parser.add_argument("img_name", nargs="?", default=None, type=str, help="path to the target image from images directory. Leave empty if you want to create pure decline/lens hologram")
     parser.add_argument("-ii", "--incomming_intensity", type=str, default="uniform", help="path to the incomming intensity image from images directory or 'uniform' for uniform intensity")
     # "images/incomming_intensity_images/paper_shade_01_intensity_mask.png"
     parser.add_argument("-dest_dir", "--destination_directory", type=str, default="holograms", help="directory where the hologram will be saved")
@@ -159,7 +151,7 @@ if __name__ == "__main__":
     parser.add_argument("-gif_skip", default=1, type=int, help="each gif_skip-th frame will be in gif")
     parser.add_argument("-plot_error", action="store_true", help="plot error evolution")
     parser.add_argument("-p", "--preview", action="store_true", help="show expected outcome at the end of the program run")
-    parser.add_argument("-decline", nargs=2, default=(0, 0), help="shifts resulting image on Fourier plane by given angle in units of quarter of first diffraction maximum ")
+    parser.add_argument("-decline", nargs=2, type=float, default=None, help="add hologram for decline to computed hologram. Effect: shifts resulting image on Fourier plane by given angle (in units of quarter of first diffraction maximum)")
     parser.add_argument("-lens", default=None, type=float, help="add lens to hologram with given focal length in meters")
     args = parser.parse_args()
     args.print_info = True
