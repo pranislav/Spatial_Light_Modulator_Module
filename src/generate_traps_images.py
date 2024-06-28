@@ -54,8 +54,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Create sequence of images with moving dots")
     parser.add_argument("name", type=str, help="name of the sequence")
     parser.add_argument("-p", "--parametrization", type=str, choices=["circulating_dot_quarterized", "two_circulating_dots_quarterized", "two_circulating_dots"], default="circulating_dot_quarterized", help="parametrization of the paths of the dots")
-    parser.add_argument("-r", "--rescale_parameter", type=float, default=1, help="rescales parameter (faster (> 1) or slower (< 1)) motion")
-    parser.add_argument("-n", "--number_of_frames", type=int, default=360)
+    parser.add_argument("-r", "--rescale_parameter", metavar="FLOAT", type=float, default=1, help="rescales parameter (faster (> 1) or slower (< 1)) motion")
+    parser.add_argument("-n", "--number_of_frames", metavar="INT", type=int, default=360)
     args = parser.parse_args()
 
     main(args)

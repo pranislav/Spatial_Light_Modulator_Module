@@ -40,11 +40,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="transforms sequence of images of traps into a sequence of holograms corresponding to those traps")
     parser.add_argument("source_dir", type=str, help="name of the directory with images of traps (has to be in images/moving_traps directory)")
     parser.add_argument("-v", "--version", type=str, help="string added to the name of the directory with holograms and preview images to distinguish between different versions of the same sequence of traps")
-    parser.add_argument("-ii", "--incomming_intensity", type=str, default="uniform", help="path to the incomming intensity image from images directory or 'uniform' for uniform intensity")
+    parser.add_argument("-ii", "--incomming_intensity", metavar="PATH", type=str, default="uniform", help="path to the incomming intensity image from images directory or 'uniform' for uniform intensity")
     # "images/incomming_intensity_images/paper_shade_01_intensity_mask.png"
-    parser.add_argument("-ct2pi", "--correspond_to2pi", default=256, type=int, help="color value corresponding to 2pi phase change on SLM")
-    parser.add_argument("-tol", "--tolerance", default=0, type=float, help="algorithm stops when error descends under tolerance")
-    parser.add_argument("-loops", "--max_loops", default=5, type=int, help="algorithm performs no more than max_loops loops no matter what error it is")
+    parser.add_argument("-ct2pi", "--correspond_to2pi", metavar="INT", default=256, type=int, help="color value corresponding to 2pi phase change on SLM")
+    parser.add_argument("-tol", "--tolerance", metavar="FLOAT", default=0, type=float, help="algorithm stops when error descends under tolerance")
+    parser.add_argument("-loops", "--max_loops", metavar="INT", default=5, type=int, help="algorithm performs no more than max_loops loops no matter what error it is")
     parser.add_argument("-p", "--preview", action="store_true", help="creates also directory with expected images resulting from the holograms")
     args = parser.parse_args()
     args.gif = False

@@ -211,7 +211,7 @@ if __name__ == "__main__":
     mask_help = f"Type name of the mask to be added to displayed images or leave blank (or type 'none') for no mask. Mask have to be in {mask_dir}."
     directory_help = "path (from project root) to directory containing images to be displayed"
 
-    parser.add_argument('-ct2pi', '--correspond_to2pi', type=int, default=256, help="value of pixel corresponding to 2pi phase shift. you can change this parameter later by typing 'ct2pi <value>' in the console.")
+    parser.add_argument('-ct2pi', '--correspond_to2pi', metavar="INT", type=int, default=256, help="value of pixel corresponding to 2pi phase shift. you can change this parameter later by typing 'ct2pi <value>' in the console.")
     parser.add_argument('mask_name', nargs='?', default=None, type=str, help=mask_help+" you can change mask later by typing 'cm <mask_name>' in the console.")
     parser.add_argument('-d', '--directory', default=default_hologram_dir, type=str, help=directory_help+" you can change directory later by typing 'cd <directory>' in the console.")
 

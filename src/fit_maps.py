@@ -50,11 +50,11 @@ if __name__ == "__main__":
     help_ref_coord = "pseudo coordinates of reference subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size"
 
     parser.add_argument('wavefront_correction_name', type=str)
-    parser.add_argument('-ss', '--subdomain_size', type=int, default=32)
-    parser.add_argument('-spp', '--samples_per_period', type=int, default=8, help='"color depth" of the phase mask')
-    parser.add_argument('-d', '--decline', nargs=2, type=float, default=(0.5, 0.5), help="angle to decline the light in x and y direction (in constants.u unit)")
-    parser.add_argument('-c', '--reference_coordinates', nargs=2, type=int, default=None, help="subdomain-scale coordinates of reference subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size. Default parameter assigns the reference subdomain to the middle one.")
-    parser.add_argument('-avg', '--num_to_avg', type=int, default=1, help="number of frames to average when measuring intensity")
+    parser.add_argument('-ss', '--subdomain_size', metavar="INT", type=int, default=32)
+    parser.add_argument('-spp', '--samples_per_period', metavar="INT", type=int, default=8, help='"color depth" of the phase mask')
+    parser.add_argument('-d', '--decline', metavar=("X_ANGLE", "Y_ANGLE"), nargs=2, type=float, default=(0.5, 0.5), help="angle to decline the light in x and y direction (in constants.u unit)")
+    parser.add_argument('-c', '--reference_coordinates', metavar=("X_COORD", "Y_COORD"), nargs=2, type=int, default=None, help="subdomain-scale coordinates of reference subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size. Default parameter assigns the reference subdomain to the middle one.")
+    parser.add_argument('-avg', '--num_to_avg', metavar="INT", type=int, default=1, help="number of frames to average when measuring intensity")
 
     args = parser.parse_args()
     args.dest_dir = "holograms/fit_maps"

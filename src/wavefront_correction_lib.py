@@ -361,18 +361,14 @@ def set_exposure_wrt_reference_img(cam, window, intensity_range, hologram, num_t
 #     display_image_on_external_screen(window, hologram_path)
 #     set_exposure(cam, intensity_range, num_to_avg)
 
-def get_intensity_coords(cam, window, hologram, args):
+def get_and_show_intensity_coords(cam, window, hologram, args):
     display_image_on_external_screen(window, hologram)
     img = cam.snap()
     if args.intensity_coordinates is None:
-        # get_highest_intensity_coordinates_img(cam, window, reference_hologram, args.num_to_avg) 
-        coords = mean_position_of_overflow_pixel(img)
-        print(f"intensity coordinates: {coords}")
-    else:
-        x, y = args.intensity_coordinates.split("_")
-        coords = (int(x), int(y))
-    show_coords_on_img(cam.snap(), coords)
-    return coords
+        args.intensity_coordinates = mean_position_of_overflow_pixel(img)
+        print(f"intensity coordinates: {args.intensity_coordinates}")
+    show_coords_on_img(cam.snap(), args.intensity_coordinates)
+
 
 def show_coords_on_img(array_img, coords):
     img_img = im.fromarray(array_img, "L").convert("RGB")

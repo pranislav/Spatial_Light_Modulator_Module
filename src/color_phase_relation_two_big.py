@@ -127,12 +127,12 @@ def make_hologram_set(reference, sample_list, coords, subdomain_size):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-spp", "--samples_per_period", type=int, default=32, help="number of different phase values to be tested")
-    parser.add_argument("-ss", "--subdomain_size", type=int, default=64, help="subdomain size")
-    parser.add_argument('-ct2pi', '--correspond_to2pi', type=int, default=256, help="value of pixel corresponding to 2pi phase shift")
-    parser.add_argument("-r", "--runs", type=int, default=8, help="number of runs to average the results")
+    parser.add_argument("-spp", "--samples_per_period", metavar="INT", type=int, default=32, help="number of different phase values to be tested")
+    parser.add_argument("-ss", "--subdomain_size", metavar="INT", type=int, default=64, help="subdomain size")
+    parser.add_argument('-ct2pi', '--correspond_to2pi', metavar="INT", type=int, default=256, help="value of pixel corresponding to 2pi phase shift")
+    parser.add_argument("-r", "--runs", metavar="NUMBER_OF_RUNS", type=int, default=8, help="number of runs to average the results")
     parser.add_argument("-f", "--floor", action="store_true", help="presume that minimal intensity is almost zero")
-    parser.add_argument("-w", "--wait", type=float, default=0, help="time to wait between the runs")
+    parser.add_argument("-w", "--wait", metavar="TIME_TO_WAIT", type=float, default=0, help="time to wait between the runs")
     parser.add_argument("-fix", "--fix_params", action="store_true", help="make second round of fitting with fixed parameters (determined in first round) except wavelentgh (correspond_to2pi factor)")
     args = parser.parse_args()
     main(args)

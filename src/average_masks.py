@@ -30,11 +30,11 @@ def main(args):
 if __name__ == "__main__":
     source_dir = "holograms/wavefront_correction_phase_masks"
     parser = argparse.ArgumentParser()
-    parser.add_argument("output_name", type=str)
+    parser.add_argument("output_name", type=str, help="name of the averaged mask")
     parser.add_argument("images", type=str, nargs="+", help=f"list of images to average from {source_dir}")
-    parser.add_argument("-subtract", type=str, help="image to subtract from the average")
-    parser.add_argument("-ct2pi", type=int, default=245, help="value of pixel corresponding to 2pi phase shift")
-    parser.add_argument("-s", "--smooth", action="store_true", help="resize with bilinear interpolation to the average mask")
-    parser.add_argument("-ss", "--subdomain_size", type=int, default=32, help="subdomain size used to create the phase mask")
+    parser.add_argument("-subtract", metavar="PATH_TO_IMG", type=str, help="image to subtract from the average")
+    parser.add_argument("-ct2pi", metavar="INT", type=int, default=245, help="value of pixel corresponding to 2pi phase shift")
+    parser.add_argument("-s", "--smooth", action="store_true", help="smooth the mask by resizing it to SLM size with bilinear interpolation")
+    parser.add_argument("-ss", "--subdomain_size", metavar="INT", type=int, default=32, help="subdomain size used to create the phase mask")
     args = parser.parse_args()
     main(args)
