@@ -105,7 +105,7 @@ if __name__ == "__main__":
     parser.add_argument('-avg', '--num_to_avg', metavar="INT", type=int, default=8, help="number of frames to average when measuring intensity")
     parser.add_argument('-f', '--floor', action='store_true', help="when fitting, it is supposed that minimal intensity is almost zero")
     parser.add_argument('-amp', '--fix_amplitude', action='store_true', help="makes second round of fitting with fixed amplitude (determined in previous round)")
-    parser.add_argument('-ct2pi', '--correspond_to2pi', metavar="INT", type=int, default=256, help="value of pixel corresponding to 2pi phase shift")
+    parser.add_argument('-ct2pi', '--correspond_to2pi', metavar="INT", required=True, default=256, help="value of pixel corresponding to 2pi phase shift")
     args = parser.parse_args()
 
     main(args)

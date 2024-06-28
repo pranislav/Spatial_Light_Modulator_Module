@@ -73,6 +73,6 @@ if __name__ == "__main__":
     parser.add_argument('-c', '--reference_coordinates', metavar=("X_COORD", "y_COORD"), nargs=2, type=int, default=None, help="subdomain-scale coordinates of reference subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size. Default parameter assigns the reference subdomain to the middle one.")
     parser.add_argument('-sc', '--subdomain_coordinates', metavar=("X_COORD", "y_COORD"), nargs=2, type=int, default=(0, 0), help="coordinates of second subdomain")
     parser.add_argument('-e', '--exposure', metavar="SECONDS", type=float, default=None, help="exposure time in seconds")
-    parser.add_argument('-ct2pi', '--correspond_to2pi', metavar="INT", type=int, default=256, help="value of pixel corresponding to 2pi phase shift")
+    parser.add_argument('-ct2pi', '--correspond_to2pi', metavar="INT", type=int, requird=True, help="value of pixel corresponding to 2pi phase shift")
     args = parser.parse_args()
     measure_fluctuations(args)
