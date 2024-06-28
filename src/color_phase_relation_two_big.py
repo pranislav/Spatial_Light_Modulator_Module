@@ -37,7 +37,9 @@ def main(args):
     fit_params_dict = iniciate_fit_params_dict(fit_func)
     intensity_lists = []
     time_name = time.strftime("%Y-%m-%d_%H-%M-%S")
-    file_name = "fit_params_two_big.txt"
+    if not os.path.exists("documents"):
+        os.makedirs("documents")
+    file_name = "documents/fit_params_two_big.txt"
     cp.print_info(args, file_name)
     i = 0
     while i < args.runs:

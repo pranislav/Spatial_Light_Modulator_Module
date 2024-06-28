@@ -7,11 +7,12 @@ from wavefront_correction_lib import *
 from functools import partial
 import fit_stuff as fs
 import time
+import os
 
 
 def main(args):
-    loop_args = ca.make_loop_args(args)
-    wavefront_correction_loop = partial(ca.wavefront_correction_loop, loop_args=loop_args)
+    ca.initialize(args)
+    wavefront_correction_loop = partial(ca.wavefront_correction_loop, args=args)
     fit_func = fs.positive_cos_floor() if args.floor else fs.positive_cos
     fit_params_dict = {param: [] for param in fit_func.__code__.co_varnames[1:]}
     intensity_lists = []
@@ -32,7 +33,9 @@ def main(args):
                     continue
                 fill_fit_params_dict(fit_params_dict, param_dict)
     avg_params, std = average_fit_params(fit_params_dict)
-    file_name = "fit_params.txt"
+    if not os.path.exists("documents"):
+        os.makedirs("documents")
+    file_name = "documents/fit_params.txt"
     print_info(args, file_name)
     params_printout(avg_params, std, file_name)
     if args.fix_amplitude:
