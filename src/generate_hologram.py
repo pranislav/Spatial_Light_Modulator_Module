@@ -9,7 +9,6 @@ import argparse
 import os
 import imageio
 import wavefront_correction_lib as cl
-import analytical_holograms as ah
 import time
 
 
@@ -118,7 +117,20 @@ def decline_hologram(hologram: np.array, angle: tuple, correspond_to2pi: int=256
     return declined_hologram
 
 def add_lens(hologram: np.array, focal_len: float, correspond_to2pi: int=256):
-    return (hologram + ah.lens(focal_len, correspond_to2pi, hologram.shape)) % correspond_to2pi
+    return (hologram + lens(focal_len, correspond_to2pi, hologram.shape)) % correspond_to2pi
+
+def lens(focal_length, correspond_to2pi, shape):
+    '''simulates lens with focal length 'focal_length' in meters
+    '''
+    h, w = shape
+    hologram = np.zeros((h, w), dtype=np.uint8)
+    for i in range(h):
+        for j in range(w):
+            r = c.px_distance * np.sqrt((i - h / 2) ** 2 + (j - w / 2) ** 2)
+            phase_shift = 2 * np.pi * focal_length / c.wavelength * \
+                (1 - np.sqrt(1 + r ** 2 / focal_length ** 2))
+            hologram[i, j] = (phase_shift * correspond_to2pi / (2 * np.pi)) % correspond_to2pi
+    return hologram
     
 
 def create_gif(img_dir, outgif_path):
@@ -129,6 +141,11 @@ def create_gif(img_dir, outgif_path):
         for file in os.listdir(img_dir):
             image = imageio.imread(f"{img_dir}/{file}")
             writer.append_data(image)
+
+def remove_files_in_dir(dir_name):
+    '''removes all files in a directory'''
+    for file in os.listdir(dir_name):
+        os.remove(f"{dir_name}/{file}")
 
 
 if __name__ == "__main__":
