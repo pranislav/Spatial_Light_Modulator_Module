@@ -35,6 +35,6 @@ if __name__ == "__main__":
     parser.add_argument("-subtract", metavar="PATH_TO_IMG", type=str, help="image to subtract from the average")
     parser.add_argument("-ct2pi", metavar="INT", type=int, required=True, help="value of pixel corresponding to 2pi phase shift")
     parser.add_argument("-s", "--smooth", action="store_true", help="smooth the mask by resizing it to SLM size with bilinear interpolation")
-    parser.add_argument("-ss", "--subdomain_size", metavar="INT", type=int, default=32, help="subdomain size used to create the phase mask")
+    parser.add_argument("-ss", "--subdomain_size", metavar="INT", type=int, required=True, help="subdomain size used to create the phase mask")
     args = parser.parse_args()
     main(args)
