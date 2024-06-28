@@ -22,7 +22,7 @@ from threading import Thread
 def wavefront_correction(args):
     initialize(args)
     best_phase = choose_phase(args)
-    phase_masks = [np.zeros(get_number_of_subdomains(args.subdomain_size)) for _ in range(args.sqrted_number_of_source_pixels ** 2)]
+    phase_masks = [np.zeros(args.subdomain_scale_shape) for _ in range(args.sqrted_number_of_source_pixels ** 2)]
     coordinates_list = make_coordinates_list(args)
     print("mainloop start.")
     count = 0
@@ -36,7 +36,7 @@ def wavefront_correction(args):
 def wavefront_correction_parallelized(args):
     initialize(args)
     best_phase = choose_phase(args)
-    phase_masks = [np.zeros(get_number_of_subdomains(args.subdomain_size)) for _ in range(args.sqrted_number_of_source_pixels ** 2)]
+    phase_masks = [np.zeros(args.subdomain_scale_shape) for _ in range(args.sqrted_number_of_source_pixels ** 2)]
     coordinates_list = make_coordinates_list(args)
     print("mainloop start.")
 
@@ -87,8 +87,8 @@ def return_phase(dict):
 
 
 def make_coordinates_list(args):
-    H, W = get_number_of_subdomains(args.subdomain_size)
-    j0, i0 = read_reference_coordinates(args.reference_coordinates, (H, W))
+    H, W = args.subdomain_scale_shape
+    j0, i0 = (H // 2, W // 2) if args.reference_coordinates is None else args.reference_coordinates
     if args.skip_subdomains_out_of_inscribed_circle:
         coordinates_list = [(i, j) for i in range(H) for j in range(W) if circular_hole_inclusive_condition(i, j, (H, W)) and not (i == i0 and j == j0)]
     else:
@@ -112,11 +112,12 @@ def initialize(args):
     args.cam = uc480.UC480Camera()
     args.window = create_tk_window()
     print("creating sample holograms...")
-    args.angle = read_angle(args.angle)
     args.phase_list = [i * 2 * np.pi / args.samples_per_period for i in range(args.samples_per_period)]
-    sample_list_2pi = make_sample_holograms_2pi(args.angle, args.phase_list)
+    sample_list_2pi = make_sample_holograms_2pi(args.decline, args.phase_list)
     args.samples_list = convert_phase_holograms_to_color_holograms(sample_list_2pi, args.correspond_to2pi)
-    rx, ry = read_reference_coordinates(args.reference_coordinates, get_number_of_subdomains(args.subdomain_size))
+    args.subdomain_scale_shape = get_number_of_subdomains(args.subdomain_size)
+    H, W = args.subdomain_scale_shape
+    rx, ry = (H // 2, W // 2) if args.reference_coordinates is None else args.reference_coordinates
     args.real_reference_coordinates = (rx * args.subdomain_size, ry * args.subdomain_size)
     black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
     reference_hologram = add_subdomain(black_hologram, args.samples_list[0], args.real_reference_coordinates, args.subdomain_size)
@@ -157,8 +158,8 @@ if __name__ == "__main__":
     parser.add_argument('wavefront_correction_name', type=str)
     parser.add_argument('-ss', '--subdomain_size', type=int, default=32)
     parser.add_argument('-spp', '--samples_per_period', type=int, default=4, help='number of intensity measurements per one subdomain')
-    parser.add_argument('-a', '--angle', type=str, default="1_1", help="use form: xdecline_ydecline (angles in constants.u unit)")
-    parser.add_argument('-c', '--reference_coordinates', type=str, default="center", help="subdomain-scale coordinates of reference subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size. Default parameter assigns the reference subdomain to the middle one.")
+    parser.add_argument('-d', '--decline', nargs=2, type=float, default=(1, 1), help="angle to decline the light in x and y direction (in constants.u unit)")
+    parser.add_argument('-c', '--reference_coordinates', nargs=2, type=int, default=None, help="subdomain-scale coordinates of reference subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size. Default parameter assigns the reference subdomain to the middle one.")
     parser.add_argument('-ct2pi', '--correspond_to2pi', type=int, default=256, help="value of pixel corresponding to 2pi phase shift")
     parser.add_argument('-skip', '--skip_subdomains_out_of_inscribed_circle', action="store_true", help="subdomains out of the inscribed circle will not be callibrated. use when the SLM is not fully illuminated and the light beam is circular.")
     parser.add_argument("-shuffle", action="store_true", help="subdomains will be calibrated in random order")
@@ -170,6 +171,7 @@ if __name__ == "__main__":
     parser.add_argument('-rd', '--remove_defocus', action="store_true", help="remove defocus compensation from the phase mask")
 
     args = parser.parse_args()
+    args.dest_dir = "holograms/wavefront_correction_phase_masks"
     start = time()
     if args.parallel:
         wavefront_correction_parallelized(args)

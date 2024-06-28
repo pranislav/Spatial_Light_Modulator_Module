@@ -6,9 +6,10 @@ from time import time
 
 
 def fit_maps(args):
-    loop_args = make_loop_args(args) # & set exposure
+    args.sqrted_number_of_source_pixels = 1 # TODO: make use of this parameter - average the maps, the results will be better
+    initialize(args)
     H, W = get_number_of_subdomains(args.subdomain_size)
-    j0, i0 = read_reference_coordinates(args.reference_coordinates)
+    j0, i0 = (H // 2, W // 2) if args.reference_coordinates is None else args.reference_coordinates
     fit_func = f.positive_cos
     param_maps = initiate_param_maps((H, W), fit_func)
     start_loops = time()
@@ -19,21 +20,19 @@ def fit_maps(args):
         for j in range(W):
             if i == i0 and j == j0:
                 continue
-            intensity_list = wavefront_correction_loop(i, j, loop_args)
+            intensity_list = wavefront_correction_loop(i, j, args)
             param_dict = f.fit_intensity_general(intensity_list, fit_func)
             fill_maps(param_maps, param_dict, (i, j))
-    create_param_maps(param_maps, args.subdomain_size)
+    create_param_maps(param_maps, args)
 
 
-def fill_maps(param_maps, param_dict, coord): # if error, check if coord is in the right order
+def fill_maps(param_maps, param_dict, coord):
     for key in param_dict.keys():
         param_maps[key][coord] = param_dict[key]
 
-def create_param_maps(param_maps, subdomain_size):
-    dest_dir = "holograms/fit_maps"
+def create_param_maps(param_maps, args):
     for key in param_maps.keys():
-        specification = key + "_" + make_specification(args)
-        create_phase_mask(param_maps[key], subdomain_size, specification, dest_dir)
+        produce_phase_mask_single(param_maps[key], key, args)
 
 
 def initiate_param_maps(shape, fit_func):
@@ -53,11 +52,12 @@ if __name__ == "__main__":
     parser.add_argument('wavefront_correction_name', type=str)
     parser.add_argument('-ss', '--subdomain_size', type=int, default=32)
     parser.add_argument('-spp', '--samples_per_period', type=int, default=8, help='"color depth" of the phase mask')
-    parser.add_argument('-a', '--angle', type=str, default="1_1", help="use form: xdecline_ydecline (angles in constants.u unit)")
-    parser.add_argument('-c', '--reference_coordinates', type=str, default="16_12", help=help_ref_coord)
+    parser.add_argument('-d', '--decline', nargs=2, type=float, default=(0.5, 0.5), help="angle to decline the light in x and y direction (in constants.u unit)")
+    parser.add_argument('-c', '--reference_coordinates', nargs=2, type=int, default=None, help="subdomain-scale coordinates of reference subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size. Default parameter assigns the reference subdomain to the middle one.")
     parser.add_argument('-avg', '--num_to_avg', type=int, default=1, help="number of frames to average when measuring intensity")
 
     args = parser.parse_args()
+    args.dest_dir = "holograms/fit_maps"
     start = time()
     fit_maps(args)
     print("execution_time: ", round((time() - start) / 60, 1),  " min")

@@ -49,30 +49,30 @@ def plot_and_save(intensity_evolution, expo):
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
     plt.savefig(f"{dest_dir}/fluctuations_{time_name}.png")
-    # plt.show()
 
 
 def create_wavefront_correction_hologram(args):
     black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width), dtype=np.uint8))
-    angle = tuple(map(int, args.angle.split("_")))
-    sample = cl.decline(angle, 256)
-    reference_coordinates = read_adn_expand_coords(args.reference_coordinates, args.subdomain_size)
-    subdomain_coordinates = read_adn_expand_coords(args.subdomain_coordinates, args.subdomain_size)
+    sample = cl.decline(args.decline, args.correspond_to2pi)
+    reference_coordinates = read_and_expand_coords(args.reference_coordinates, args.subdomain_size)
+    subdomain_coordinates = read_and_expand_coords(args.subdomain_coordinates, args.subdomain_size)
     reference_subdomain = cl.add_subdomain(black_hologram, sample, reference_coordinates, args.subdomain_size)
     second_subdomain = cl.add_subdomain(reference_subdomain, sample, subdomain_coordinates, args.subdomain_size)
     return second_subdomain
 
-def read_adn_expand_coords(coords, subdomain_size):
-    x, y = coords.split("_")
+def read_and_expand_coords(coords, subdomain_size):
+    H, W = cl.get_number_of_subdomains(subdomain_size)
+    x, y = (H // 2, W // 2) if coords is None else coords
     return int(x) * subdomain_size, int(y) * subdomain_size
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Script for measuring impact of fluctuations of the light on the wavefront_correction procedure")
     parser.add_argument('-t', '--time', type=int, default=5, help="time of the measurement in seconds")
     parser.add_argument('-ss', '--subdomain_size', type=int, default=32)
-    parser.add_argument('-a', '--angle', type=str, default="1_1", help="use form: xdecline_ydecline (angles in constants.u unit)")
-    parser.add_argument('-c', '--reference_coordinates', type=str, default="16_12", help="pseudo coordinates of reference subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size")
-    parser.add_argument('-sc', '--subdomain_coordinates', type=str, default="16_13", help="pseudo coordinates of second subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size")
+    parser.add_argument('-d', '--decline', nargs=2, type=float, default=(0.5, 0.5), help="angle to decline the light in x and y direction (in constants.u unit)")
+    parser.add_argument('-c', '--reference_coordinates', nargs=2, type=int, default=None, help="subdomain-scale coordinates of reference subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size. Default parameter assigns the reference subdomain to the middle one.")
+    parser.add_argument('-sc', '--subdomain_coordinates', nargs=2, type=int, default=(0, 0), help="coordinates of second subdomain")
     parser.add_argument('-e', '--exposure', type=float, default=None, help="exposure time in seconds")
+    parser.add_argument('-ct2pi', '--correspond_to2pi', type=int, default=256, help="value of pixel corresponding to 2pi phase shift")
     args = parser.parse_args()
     measure_fluctuations(args)

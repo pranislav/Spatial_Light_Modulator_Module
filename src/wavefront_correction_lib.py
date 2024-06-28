@@ -12,15 +12,14 @@ from skimage.restoration import unwrap_phase
 from scipy.optimize import leastsq
 
 
-def produce_phase_mask_single(phase_mask, args):
-    specification = "phase_mask_" + make_specification(args)
-    dest_dir = "holograms/wavefront_correction_phase_masks"
+def produce_phase_mask_single(phase_mask, type, args):
+    specification = type + "_" + make_specification(args)
     big_phase_mask = expand_phase_mask((phase_mask % (2 * np.pi)) * args.correspond_to2pi / (2 * np.pi), args.subdomain_size)
-    save_phase_mask(big_phase_mask, dest_dir, specification)
+    save_phase_mask(big_phase_mask, args.dest_dir, specification)
     phase_mask_unwrapped = unwrap_phase(phase_mask)
     resample = im.BICUBIC if args.resample == "bicubic" else im.BILINEAR
     big_phase_mask = im.fromarray(phase_mask_unwrapped * args.correspond_to2pi / (2 * np.pi)).resize((c.slm_width, c.slm_height), resample=resample)
-    save_phase_mask(np.array(big_phase_mask) % args.correspond_to2pi, dest_dir, "smoothed_"+specification)
+    save_phase_mask(np.array(big_phase_mask) % args.correspond_to2pi, args.dest_dir, "smoothed_"+specification)
 
 def combine_phase_masks(phase_masks):
     mean_phase_mask = np.zeros(phase_masks[0].shape)
@@ -35,7 +34,7 @@ def produce_phase_mask(phase_masks, args):
     mean_phase_mask = combine_phase_masks(phase_masks)
     if args.remove_defocus:
         mean_phase_mask = fit_and_subtract(mean_phase_mask, quadratic_func, [0, 0])
-    produce_phase_mask_single(mean_phase_mask, args)
+    produce_phase_mask_single(mean_phase_mask, "phase_mask", args)
 
 def linear_func(params, x, y):
     a, b, c = params
@@ -76,7 +75,7 @@ def fit_and_subtract(array, fit_func, initial_guess):
 
 
 def make_specification(args):
-    return f"{args.wavefront_correction_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_samples_per_period_{args.samples_per_period}_x{args.angle[0]}_y{args.angle[1]}_ref_{args.reference_coordinates}_intensity_coords_{args.intensity_coordinates}_source_pxs_{args.sqrted_number_of_source_pixels}"
+    return f"{args.wavefront_correction_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_samples_per_period_{args.samples_per_period}_x{args.decline[0]}_y{args.decline[1]}_ref_{args.reference_coordinates}_intensity_coords_{args.intensity_coordinates}_source_pxs_{args.sqrted_number_of_source_pixels}"
 
 
 
@@ -208,19 +207,6 @@ def extract_reference_coordinates(reference_hologram_coordinates_ratio, subdomai
     y_coord = subdomain_size * (int(y_numerator) * H // int(y_denominator))
     x_coord = subdomain_size * (int(x_numerator) * W // int(x_denominator))
     return (y_coord, x_coord)
-
-def read_reference_coordinates(reference_coordinates_str, shape):
-    if reference_coordinates_str == "center":
-        H, W = shape
-        return W // 2, H // 2
-    return read_coordinates(reference_coordinates_str)
-
-def read_coordinates(coordinates_str):
-    x, y = coordinates_str.split('_')
-    return int(x), int(y)
-
-def read_angle(angle_str):
-    return tuple(map(float, angle_str.split("_")))
 
 
 def get_number_of_subdomains(subdomain_size):

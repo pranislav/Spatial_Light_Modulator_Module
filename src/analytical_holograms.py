@@ -28,15 +28,14 @@ def lens(focal_length, correspond_to2pi, shape):
     return hologram
 
 def create_decline_hologram(args):
-    angle = cl.read_angle(args.angle)
-    hologram = cl.decline(angle, args.correspond_to2pi)
-    im.fromarray(hologram).convert("L").save(f"{args.directory}/decline_{args.angle}_ct2pi_{args.correspond_to2pi}.png")
+    hologram = cl.decline(args.decline, args.correspond_to2pi)
+    im.fromarray(hologram).convert("L").save(f"{args.directory}/decline_{args.decline[0]}_{args.decline[1]}_ct2pi_{args.correspond_to2pi}.png")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-ct2pi", "--correspond_to2pi", default=256, type=int, help="color value corresponding to 2pi phase change on SLM")
-    parser.add_argument("-d", "--directory", default="holograms/analytical", type=str, help="directory to save the hologram")
-    parser.add_argument("-a", "--angle", default="1_1", type=str, help="angle of the decline. use form: xdecline_ydecline (angles in constants.u unit)")
+    parser.add_argument("-dir", "--directory", default="holograms/analytical", type=str, help="directory to save the hologram")
+    parser.add_argument("-d", "--decline", nargs=2, default=(0.5, 0.5), type=float, help="angle to decline the light in x and y direction (in constants.u unit)")
     args = parser.parse_args()
     create_decline_hologram(args)
