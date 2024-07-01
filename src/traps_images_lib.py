@@ -6,14 +6,12 @@ import os
 
 white = 255
 
-def multi_decline_img(coordinates: list[tuple], object: function, size_x: float=1, size_y: float=1) -> im:
+def make_traps_image(coordinates: list[tuple], object: function, size_x: float=1, size_y: float=1) -> im:
     img = im.new('L', (c.slm_width, c.slm_height))
     for point in coordinates:
         object(img, point, size_x, size_y, white)
     return img
 
-
-# trap_radius = 10
 
 '''creates a sequence of images of multiple moving points
 from given lists of coordinates
@@ -22,7 +20,7 @@ def create_sequence_dots(list_of_position_lists: list[list[tuple]], name: str):
     if not os.path.exists(f"images/moving_traps/{name}"):
         os.makedirs(f"images/moving_traps/{name}")
     for i, position_list in enumerate(list_of_position_lists):
-        img = multi_decline_img(position_list, dot)
+        img = make_traps_image(position_list, dot)
         img.save(f"images/moving_traps/{name}/{i}.png")
 
 
@@ -51,17 +49,6 @@ def user_defined(x, y):
 
 # objects --------------------------------------------
 
-# outdated, not compatible; use more general function 'ellipse'
-def circle(target_img: im, coor: tuple[int], radius: float, color: int) -> None:
-    x_coor, y_coor = coor
-    w, h = target_img.size
-    for i in range(w):
-        for j in range(h):
-            if (i - x_coor)**2 + (j - y_coor)**2 < radius**2:
-                target_img.putpixel((i, j), color)
-    return target_img
-
-
 def ellipse_arr(target_img: im, coor: tuple[int], x_d: float, y_d: float, color: int) -> None:
     x_coor, y_coor = coor
     w, h = target_img.size
@@ -81,28 +68,12 @@ def ellipse(target_img: im, coor: tuple[int], x_d: float, y_d: float, color: int
                 target_img.putpixel((i, j), color)
     return target_img
 
-def dot(target_img: im, coor: tuple[int], ___, __, color: int) -> None:
-    # target_arr = np.array(target_img)
-    # target_arr[0,0] = 100
-    # print(target_arr)
-    # return im.fromarray(target_arr)
-    x_coor = round(coor[0])
-    y_coor = round(coor[1])
+def dot(target_img: im, coords: tuple[int], ___, __, color: int) -> None:
+    x_coor = round(coords[0])
+    y_coor = round(coords[1])
     target_img.putpixel((x_coor, y_coor), color)
     return target_img
 
-
-# outdated, not compatible; use more general function 'rectangle'
-def square(target_img: im, coor: tuple[int], side: float, color: int):
-    x_coor, y_coor = coor
-    w, h = target_img.size
-    for i in range(w):
-        for j in range(h):
-            x_cond = (x_coor - side // 2) < i <= (x_coor + side // 2)
-            y_cond = (y_coor - side // 2) < j <= (y_coor + side // 2)
-            if x_cond and y_cond:
-                target_img.putpixel((i, j), color)
-    return target_img
 
 def rectangle(target_img: im, coor: tuple[int], side_x: float, side_y: float, color: int):
     x_coor, y_coor = coor
