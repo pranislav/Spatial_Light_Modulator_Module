@@ -37,7 +37,7 @@ def GS(demanded_output, args) -> np.array:
         if args.print_info: print(f"\rloop {i}/{args.max_loops}", end='')
     if args.print_info:
         print()
-        printout(error, i, error_evolution, "asdf", args.plot_error)
+        printout(error, i, error_evolution, args.plot_error)
     phase_for_slm = (np.angle(A) + np.pi) * args.correspond_to2pi / (2*np.pi) # converts phase to color value, input for SLM
     return phase_for_slm, expected_outcome, error_evolution
 
@@ -85,7 +85,7 @@ def GD(demanded_output: np.array, args) -> Tuple[np.array, np.array, int]:
         if args.print_info: print(f"\rloop {i}/{args.max_loops}", end='')
     if args.print_info:
         print()
-        printout(error, i, error_evolution, f"learning_rate: {args.learning_rate}", args.plot_error)
+        printout(error, i, error_evolution, args.plot_error)
     phase_for_slm = complex_to_real_phase(input, args.correspond_to2pi)
     exp_tar_for_slm = output
     return phase_for_slm, exp_tar_for_slm, error_evolution
@@ -95,12 +95,13 @@ def error_f(actual, correct, norm):
     return np.sum((actual - correct)**2) / norm
 
 
-def printout(error, loop_num, error_evol, label, plot_error):
+def printout(error, loop_num, error_evol, plot_error):
     print(f"error: {error}")
     print(f"number of loops: {loop_num}")
     if plot_error:
-        plt.plot(error_evol, label=label)
-        plt.legend()
+        plt.plot(error_evol)
+        plt.xlabel("loop number")
+        plt.ylabel("error")
         plt.show()
 
 

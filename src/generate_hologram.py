@@ -74,7 +74,7 @@ def make_hologram_name(args, img_name):
     alg_params = ""
     transforms = ""
     img_transforms = ""
-    if args.lens or args.decline != (0, 0):
+    if args.lens or args.decline:
         transforms += f"_decline_x{args.decline[0]}_y{args.decline[1]}_lens_{args.lens}"
     if args.algorithm == "GD":
         alg_params += f"_lr{args.learning_rate}_mr{args.mask_relevance}_unsettle{args.unsettle}"
