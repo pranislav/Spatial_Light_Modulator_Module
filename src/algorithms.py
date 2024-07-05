@@ -62,7 +62,7 @@ def GD(demanded_output: np.array, args) -> Tuple[np.array, np.array, int]:
     input = initial_input
     error = args.tolerance + 1
     i = 0
-    mask = 1 + args.mask_relevance * demanded_output/255
+    mask = 1 + args.white_attention * demanded_output/255
     if args.print_info: print("computing hologram")
     while error > args.tolerance and i < args.max_loops:
         med_output = fft2(input/abs(input) * incomming_amplitude)

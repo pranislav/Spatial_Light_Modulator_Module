@@ -52,11 +52,12 @@ This is the phase offset which is recorded on the phase mask.
 ### Hologram generating
 Holograms can be generated using one of two implemented iterative algorithms or, in special cases, can be computed analytically. These cases include declining and focusing of incident light. The iterative algorithms which are able to produce general hologram are Gerchberg-Saxton algorithm (GS) and an algorithm using gradient descent (GD). The latter one was inspierd by neural networks and developed by my humble person (not claiming i was the first one). 
 
-- *generate_and_transform_hologram.py* - as an input it takes an image that should be result of hologram displaying. Produces phase-only hologram. The image should appear in the Fourier plane. The program can be used for generating decline/lens hologram if the input image is not provided and values of `-decline` or `-lens` are set. The input image will be resized to match the dimensions of the SLM; when actually displaying, only square-like pictures will preserve their proportions. Explanation of arguments which might be confusing: `-q`, `--quarterize` - the original image is reduced to quarter and pasted to black image of its original size before generating hologram to make sure there will be no overlaps between various aliases of displayed image. `-gif` - an option to create a gif capturing evolution of the hologram (`--gif_type h`) or expected image (`-gif_type i`). It was useful rather for developing to see inside the process, but it still can be useful for setting optimal parameters intuitively. Besides, when generating holograms for non-dimensionless traps (bigger than one pixel), the result is also quite interesting, i recommend to try value of -unsettle argument more than one.
+- *generate_hologram.py* - as an input it takes an image that should be result of hologram displaying. Produces phase-only hologram. The image should appear in the Fourier plane. The program can be used for generating decline/lens hologram if the input image is not provided and values of `-decline` or `-lens` are set. The input image will be resized to match the dimensions of the SLM; when actually displaying, only square-like pictures will preserve their proportions. Explanation of arguments which might be confusing: `-q`, `--quarterize` - the original image is reduced to quarter and pasted to black image of its original size before generating hologram to make sure there will be no overlaps between various aliases of displayed image. `-gif` - an option to create a gif capturing evolution of the hologram (`--gif_type h`) or expected image (`-gif_type i`). It was useful rather for developing to see inside the process, but it still can be useful for setting optimal parameters intuitively. Besides, when generating holograms for non-dimensionless traps (bigger than one pixel), the result is also quite interesting, i recommend to try value of -unsettle argument more than one.
 
-- *analytical_holograms.py* - generates holograms for declining and focusing
+<!-- - *analytical_holograms.py* - generates holograms for declining and focusing -->
+<!-- TODO: napisat, ze analytical hols vie spravit v generate -->
 
-- *fit_incomming_intensity.py* - takes as an input a photo of laser intensity profile at the plane where the holograms are displayed, makes a gaussian fit of the intensity and returns picture of the gaussian function with fitted parameters. It works as the intensity photo smoothing (naturally just for gaussian intensity profiles). This picture can be than provided to an generating algorithm through *generate_and_transform_holograms.py* as `--incomming_intensity` argument. (Default value of this argument results in uniform intensity, which should be sufficient approximation.)
+<!-- - *fit_incomming_intensity.py* - takes as an input a photo of laser intensity profile at the plane where the holograms are displayed, makes a gaussian fit of the intensity and returns picture of the gaussian function with fitted parameters. It works as the intensity photo smoothing (naturally just for gaussian intensity profiles). This picture can be than provided to an generating algorithm through *generate_and_transform_holograms.py* as `--incomming_intensity` argument. (Default value of this argument results in uniform intensity, which should be sufficient approximation.) -->
 
 
 ### Hologram displaying
@@ -67,7 +68,7 @@ Holograms can be generated using one of two implemented iterative algorithms or,
 ### Holograms for optical trapping
 Scripts for work with optical traps.
 
-- *multi_decline_generate.py* - generates an image of multiple traps. The image can be used as input for hologram generating. Shape and size of the traps can be specified, but for practical use stay at one-pixel traps. Bigger traps results in holograms of nontrivial aesthetic value though.
+<!-- - *multi_decline_generate.py* - generates an image of multiple traps. The image can be used as input for hologram generating. Shape and size of the traps can be specified, but for practical use stay at one-pixel traps. Bigger traps results in holograms of nontrivial aesthetic value though. -->
 
 - *generate_traps_images.py* - generates series of images with traps from given parametrization of their movement. This serves as an input for *generate_hologram_sequence* which creates holograms corresponding to the traps images.
 
@@ -80,6 +81,7 @@ To set the correct phase shift on given pixel of SLM, you need to know the relat
 - *color_phase_relation.py* - script for measuring relation between color of pixel on hologram and corresponding real phase shift on SLM. Linear relation is presumed, so the outcome is *correspond_to_2pi* constant. It is based on wavefront correction procedure with fitting all parameters (period is not fixed as it is measured).
 
 - *color_phase_relation_two_big.py* - same purpose and process as in *color_phase_relation* except just two big subdomains are used and the process is repeated many times. Big subdomains are used for better interference pattern.
+<!-- TODO: na velkosti nezide, ta sa da nastavit aj v tom druhom. Spomenut, ze sa da druhy krat fitovat s fixnutymi parametrami -->
 
 
 ## Requirements

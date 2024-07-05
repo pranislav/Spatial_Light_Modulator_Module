@@ -77,7 +77,7 @@ def make_hologram_name(args, img_name):
     if args.lens or args.decline:
         transforms += f"_decline_x{args.decline[0]}_y{args.decline[1]}_lens_{args.lens}"
     if args.algorithm == "GD":
-        alg_params += f"_lr{args.learning_rate}_mr{args.mask_relevance}_unsettle{args.unsettle}"
+        alg_params += f"_lr{args.learning_rate}_mr{args.white_attention}_unsettle{args.unsettle}"
     if args.quarterize:
         img_transforms += "_quarter"
     if args.invert:
@@ -162,7 +162,7 @@ if __name__ == "__main__":
     parser.add_argument("-tol", "--tolerance", default=0, metavar='FLOAT', type=float, help="algorithm stops when error descends under tolerance")
     parser.add_argument("-loops", "--max_loops", default=42, metavar='INTEGER', type=int, help="algorithm performs no more than max_loops loops no matter what error it is")
     parser.add_argument("-lr", "--learning_rate", default=0.005, type=float, help="learning rate for GD algorithm (how far the solution jumps in direction of the gradient)")
-    parser.add_argument("-mr", "--mask_relevance", metavar='FLOAT', default=1, type=float, help="mask relevance for GD algorithm, sets higher priority to white areas by making error on those areas mask_relevance-times higher")
+    parser.add_argument("-wa", "--white_attention", metavar='FLOAT', default=1, type=float, help="attention to white places for GD algorithm, sets higher priority to white areas by making error on those areas white_attention-times higher")
     parser.add_argument("-unsettle", default=0, metavar='INTEGER', type=int, help="unsettle for GD algorithm; learning rate is (unsettle - 1) times doubled")
     parser.add_argument("-gif", action="store_true", help="create gif from hologram computing evolution")
     parser.add_argument("-gif_t", "--gif_type", choices=["h", "i"], help="type of gif: h for hologram, i for image (result)")
