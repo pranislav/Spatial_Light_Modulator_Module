@@ -19,7 +19,7 @@ def main(args):
     else:
         hologram, expected_outcome = make_hologram(args)
     if args.preview:
-        expected_outcome.show()
+        im.fromarray(expected_outcome).show()
     hologram = transform_hologram(hologram, args)
     save_hologram_and_gif(hologram, args)
 
@@ -153,6 +153,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("img_name", nargs="?", default=None, type=str, help="path to the target image from images directory. Leave empty if you want to create pure decline/lens hologram")
     parser.add_argument("-ii", "--incomming_intensity", type=str, default="uniform", help="path to the incomming intensity image from images directory or 'uniform' for uniform intensity")
+    parser.add_argument("-ig", "--initial_guess", type=str, default="random", choices=["random", "fourier"], help="initial guess for the GD algorithm: random or phase from the Fourier transform of the target image")
     # "images/incomming_intensity_images/paper_shade_01_intensity_mask.png"
     parser.add_argument("-dest_dir", "--destination_directory", type=str, default="holograms", help="directory where the hologram will be saved")
     parser.add_argument("-q", "--quarterize", action="store_true", help="original image is reduced to quarter and pasted to black image of its original size ")
@@ -160,10 +161,10 @@ if __name__ == "__main__":
     parser.add_argument("-alg", "--algorithm", default="GS", choices=["GS", "GD"], help="algorithm to use: GS for Gerchberg-Saxton, GD for gradient descent")
     parser.add_argument("-ct2pi", "--correspond_to2pi", required=True, metavar='INTEGER', type=int, help="color value corresponding to 2pi phase change on SLM")
     parser.add_argument("-tol", "--tolerance", default=0, metavar='FLOAT', type=float, help="algorithm stops when error descends under tolerance")
-    parser.add_argument("-loops", "--max_loops", default=42, metavar='INTEGER', type=int, help="algorithm performs no more than max_loops loops no matter what error it is")
+    parser.add_argument("-l", "--max_loops", default=42, metavar='INTEGER', type=int, help="algorithm performs no more than max_loops loops no matter what error it is")
     parser.add_argument("-lr", "--learning_rate", default=0.005, type=float, help="learning rate for GD algorithm (how far the solution jumps in direction of the gradient)")
     parser.add_argument("-wa", "--white_attention", metavar='FLOAT', default=1, type=float, help="attention to white places for GD algorithm, sets higher priority to white areas by making error on those areas white_attention-times higher")
-    parser.add_argument("-unsettle", default=0, metavar='INTEGER', type=int, help="unsettle for GD algorithm; learning rate is (unsettle - 1) times doubled")
+    parser.add_argument("-u", "--unsettle", default=0, metavar='INTEGER', type=int, help="unsettle for GD algorithm; learning rate is unsettle times doubled")
     parser.add_argument("-gif", action="store_true", help="create gif from hologram computing evolution")
     parser.add_argument("-gif_t", "--gif_type", choices=["h", "i"], help="type of gif: h for hologram, i for image (result)")
     parser.add_argument("-gif_skip", default=1, type=int, metavar='INTEGER', help="each gif_skip-th frame will be in gif")

@@ -7,7 +7,7 @@ from typing import Tuple
 from cmath import phase
 
 
-def GS(demanded_output, args) -> np.array:
+def GS(demanded_output, args):
     '''classical Gerchberg-Saxton algorithm
     produces input for SLM for creating 'demanded_output' image
     '''
@@ -34,7 +34,8 @@ def GS(demanded_output, args) -> np.array:
         if args.gif and i % args.gif_skip == 0:
             add_gif_image(args, expected_outcome, A, i)
         i += 1
-        if args.print_info: print(f"\rloop {i}/{args.max_loops}", end='')
+        print(f"\rloop {i}/{args.max_loops}", end='')
+    print()
     if args.print_info:
         print()
         printout(error, i, error_evolution, args.plot_error)
@@ -50,16 +51,15 @@ def add_gif_image(args, expected_outcome, A, i):
     img.convert("L").save(f"{args.gif_source_address}/{i // args.gif_skip}.png")
 
 
-def GD(demanded_output: np.array, args) -> Tuple[np.array, np.array, int]:
+def GD(demanded_output: np.array, args):
     
     incomming_intensity = np.ones(demanded_output.shape) if args.incomming_intensity == "uniform" else  np.array(im.open(args.incomming_intensity))
     incomming_amplitude = np.sqrt(incomming_intensity)
     w, l = demanded_output.shape
     space_norm = w * l
-    initial_input = generate_initial_input(l, w)
     error_evolution = []
     norm = np.amax(demanded_output)
-    input = initial_input
+    input = make_initial_guess(args.initial_guess, incomming_amplitude, demanded_output, demanded_output.shape)
     error = args.tolerance + 1
     i = 0
     mask = 1 + args.white_attention * demanded_output/255
@@ -80,9 +80,10 @@ def GD(demanded_output: np.array, args) -> Tuple[np.array, np.array, int]:
                 img = im.fromarray(output)
             img.convert("L").save(f"{args.gif_source_address}/{i // args.gif_skip}.png")
         i += 1
-        if args.unsettle and i % int(args.max_loops / args.unsettle) == 0:
-            learning_rate *= 2
-        if args.print_info: print(f"\rloop {i}/{args.max_loops}", end='')
+        if args.unsettle and i % int(round(args.max_loops / (args.unsettle + 1))) == 0:
+            args.learning_rate *= 2
+        print(f"\rloop {i}/{args.max_loops}", end='')
+    print()
     if args.print_info:
         print()
         printout(error, i, error_evolution, args.plot_error)
@@ -90,6 +91,15 @@ def GD(demanded_output: np.array, args) -> Tuple[np.array, np.array, int]:
     exp_tar_for_slm = output
     return phase_for_slm, exp_tar_for_slm, error_evolution
 
+
+def make_initial_guess(initial_guess_type, incomming_amplitude, demanded_output, shape):
+    l, w = shape
+    if initial_guess_type == "random":
+        generate_initial_input(l, w) 
+    elif initial_guess_type == "fourier":
+        incomming_amplitude * np.exp(1j * np.angle(ifft2(np.sqrt(demanded_output))))
+    else:
+        raise ValueError("unknown type of initial guess")
 
 def error_f(actual, correct, norm):
     return np.sum((actual - correct)**2) / norm
