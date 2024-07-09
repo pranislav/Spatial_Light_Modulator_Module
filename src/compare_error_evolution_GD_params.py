@@ -11,16 +11,19 @@ def compare_error_evolution(args):
     if not os.path.exists(args.dest_dir):
         os.makedirs(args.dest_dir)
     name_of_vary = choose_name_of_vary(args)
+    plt.figure(figsize=(10, 5))
     for value in args.values:
         set_argument(args, value)
         _, _, error_evolution = GD(target, args)
         plt.plot(error_evolution, label=f"{name_of_vary}: {value}")
+    plt.ylim(bottom=0)
     plt.xlabel("iteration")
-    # plt.xticks(range(int(len(error_evolution)) + 1))
     plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.ylabel("error")
     plt.legend()
     save_plot(args)
+    if args.show:
+        plt.show()
 
 def set_argument(args, value):
     if args.vary == 'wa':
@@ -29,8 +32,10 @@ def set_argument(args, value):
         args.learning_rate = value
     elif args.vary == 'u':
         args.unsettle = value
-    elif args.vary == 'ii':
-        args.initial_input = value
+    elif args.vary == 'ig':
+        args.initial_guess = value
+    elif args.vary == 'rs':
+        args.random_seed = value
         
 
 def choose_name_of_vary(args):
@@ -40,8 +45,10 @@ def choose_name_of_vary(args):
         return "learning_rate"
     elif args.vary == 'u':
         return "unsettle"
-    elif args.vary == 'ii':
-        return "initial_input"
+    elif args.vary == 'ig':
+        return "initial_guess"
+    elif args.vary == 'rs':
+        return "random_seed"
     else:
         return "unknown"
 
@@ -60,7 +67,7 @@ def create_name(args):
         name += "_quarterized"
     if args.invert:
         name += "_inverted"
-    specification = f"learning_rate{args.learning_rate}_attention_{args.white_attention}_unsettle_{args.unsettle}_loops_{args.max_loops}"
+    specification = f"learning_rate{args.learning_rate}_attention_{args.white_attention}_unsettle_{args.unsettle}_initial_guess_{args.initial_guess}_loops_{args.max_loops}"
     return name, specification
 
 
@@ -87,13 +94,15 @@ if __name__ == "__main__":
     parser.add_argument('-q', '--quarterize', action='store_true', help='quarterize')
     parser.add_argument('-u', '--unsettle', type=int, default=0, help='unsettle')
     parser.add_argument('-lr', '--learning_rate', default=0.005, type=float, help='learning rates')
-    parser.add_argument('-ig', '--initial_guess', default="random", choices=["random", "fourier"], help='initial input')
-    parser.add_argument('-v', '--vary', choices=['wa', 'lr', 'u', 'ig'], help='vary white attention, learning rate, unsettle or initial guess')
-    parser.add_argument('values', nargs='+', type=float, help='values to vary')
+    parser.add_argument('-ig', '--initial_guess', default="random", choices=["random", "fourier", "unnormed", "zeros", "ones", "old"], help='initial input')
+    parser.add_argument('-rs', '--random_seed', type=int, default=42, help='random seed')
+    parser.add_argument('-v', '--vary', choices=['wa', 'lr', 'u', 'ig', 'n', 'rs'], help='vary white attention, learning rate, unsettle, initial guess or random seed')
+    parser.add_argument('values', nargs='*', type=float, help='values to vary')
+    parser.add_argument('-s', '--show', action='store_true', help='show the plot')
     args = parser.parse_args()
-    args.dest_dir = "compare_error_evolution_GD_params"
-    if args.vary == 'ii':
-        args.values = ["random", "ifft2"]
+    args.dest_dir = "images/compare_error_evolution_GD_params"
+    if args.vary == 'ig':
+        args.values = ["random", "fourier", "unnormed", "zeros", "ones", "old"]
 
     compare_error_evolution(args)
     

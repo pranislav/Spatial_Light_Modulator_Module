@@ -12,18 +12,25 @@ def compare_error_evolution_algorithms(args):
         os.makedirs(args.dest_dir)
     print("GD")
     _, _, error_evolution = GD(target, args)
+    plt.figure(figsize=(10, 5))
     plt.plot(error_evolution, label=f"GD")
     print("GS")
     _, _, error_evolution = GS(target, args)
     plt.plot(error_evolution, label=f"GS")
+    plt.ylim(bottom=0)
     plt.xlabel("iteration")
     plt.ylabel("error")
     plt.legend()
     save_plot(args)
+    if args.show:
+        plt.show()
 
 def save_plot(args):
     name, specification = compare.create_name(args)
-    plt.savefig(f"{args.dest_dir}/{name}_{specification}.png")
+    name_to_be = f"{args.dest_dir}/{name}_{specification}"
+    while os.path.exists(name_to_be + ".png"):
+        name_to_be += "I"
+    plt.savefig(f"{name_to_be}.png")
 
 
 
@@ -37,7 +44,9 @@ if __name__ == "__main__":
     parser.add_argument('-u', '--unsettle', type=int, default=0, help='unsettle')
     parser.add_argument('-lr', '--learning_rate', type=float, default=0.005, help='learning rate')
     parser.add_argument('-ig', '--initial_guess', type=str, choices={"random", "fourier"}, default="random", help='initial guess')
+    parser.add_argument('-rs', '--random_seed', type=int, default=42, help='random seed')
+    parser.add_argument('-show', action='store_true', help='show plot')
     args = parser.parse_args()
-    args.dest_dir = "compare_error_evolution_algorithms"
+    args.dest_dir = "images/compare_error_evolution_algorithms"
 
     compare_error_evolution_algorithms(args)
