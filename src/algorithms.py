@@ -100,6 +100,12 @@ def make_initial_guess(initial_guess_type, incomming_amplitude, demanded_output,
         return np.array([[np.exp(1j * 2 * np.pi * random.random()) for _ in range(w)] for _ in range(h)]) 
     if initial_guess_type == "old":
         return np.array([[(np.sqrt(random.random()) + 1j*np.sqrt(random.random())) for _ in range(w)] for _ in range(h)])
+    if initial_guess_type == "unnormed":
+        return (np.array([[random.random() + 1j*random.random() for _ in range(w)] for _ in range(h)]) - 0.5) * 2
+    if initial_guess_type == "zeros":
+        return np.array([[np.exp(1j * 2 * np.pi * random.random()) / 100 for _ in range(w)] for _ in range(h)]) 
+    if initial_guess_type == "ones":
+        return np.ones(demanded_output.shape) + 1j * np.zeros(demanded_output.shape)
     elif initial_guess_type == "fourier":
         return incomming_amplitude * np.exp(1j * np.angle(ifft2(np.sqrt(demanded_output))))
     else:
