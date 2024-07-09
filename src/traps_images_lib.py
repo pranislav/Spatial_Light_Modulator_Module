@@ -85,3 +85,6 @@ def rectangle(target_img: im, coor: tuple[int], side_x: float, side_y: float, co
             if x_cond and y_cond:
                 target_img.putpixel((i, j), color)
     return target_img
+
+def random_coordinates_list(num: int) -> list[tuple]:
+    return [(np.random.randint(0, c.slm_width), np.random.randint(0, c.slm_height)) for _ in range(num)]
