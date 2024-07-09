@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.fft import fft2, ifft2, fftshift, ifftshift
 import matplotlib.pyplot as plt
-from random import random
+import random
 import PIL.Image as im
 from typing import Tuple
 from cmath import phase
@@ -21,7 +21,7 @@ def GS(demanded_output, args):
     error = args.tolerance + 1
     error_evolution = []
     i = 0
-    A = ifft2(demanded_output_amplitude)
+    A = ifft2(ifftshift(demanded_output_amplitude))
     while error > args.tolerance and i < args.max_loops:
         B = incomming_amplitude * np.exp(1j * np.angle(A))
         C = fftshift(fft2(B))
@@ -59,7 +59,7 @@ def GD(demanded_output: np.array, args):
     space_norm = w * l
     error_evolution = []
     norm = np.amax(demanded_output)
-    input = make_initial_guess(args.initial_guess, incomming_amplitude, demanded_output, demanded_output.shape)
+    input = make_initial_guess(args.initial_guess, incomming_amplitude, demanded_output, args.random_seed)
     error = args.tolerance + 1
     i = 0
     mask = 1 + args.white_attention * demanded_output/255
@@ -68,6 +68,7 @@ def GD(demanded_output: np.array, args):
         med_output = fft2(input/abs(input) * incomming_amplitude)
         output_unnormed = abs(med_output) **2
         output = output_unnormed * norm / np.amax(output_unnormed) # toto prip. zapocitat do grad. zostupu
+        # im.fromarray(output).show()
         dEdF = ifft2(mask * med_output * (output - demanded_output)) * incomming_amplitude
         dEdX = np.array(list(map(dEdX_complex, dEdF, input)))
         input -= args.learning_rate * dEdX
@@ -92,12 +93,15 @@ def GD(demanded_output: np.array, args):
     return phase_for_slm, exp_tar_for_slm, error_evolution
 
 
-def make_initial_guess(initial_guess_type, incomming_amplitude, demanded_output, shape):
-    l, w = shape
+def make_initial_guess(initial_guess_type, incomming_amplitude, demanded_output, seed):
+    h, w = demanded_output.shape
+    random.seed(seed)
     if initial_guess_type == "random":
-        generate_initial_input(l, w) 
+        return np.array([[np.exp(1j * 2 * np.pi * random.random()) for _ in range(w)] for _ in range(h)]) 
+    if initial_guess_type == "old":
+        return np.array([[(np.sqrt(random.random()) + 1j*np.sqrt(random.random())) for _ in range(w)] for _ in range(h)])
     elif initial_guess_type == "fourier":
-        incomming_amplitude * np.exp(1j * np.angle(ifft2(np.sqrt(demanded_output))))
+        return incomming_amplitude * np.exp(1j * np.angle(ifft2(np.sqrt(demanded_output))))
     else:
         raise ValueError("unknown type of initial guess")
 
@@ -114,10 +118,6 @@ def printout(error, loop_num, error_evol, plot_error):
         plt.ylabel("error")
         plt.show()
 
-
-def generate_initial_input(w, h):
-    random_matrix = [[(np.sqrt(random()) + 1j*np.sqrt(random())) for _ in range(w)] for _ in range(h)]
-    return np.array(random_matrix)
 
 def complex_to_real_phase(complex_phase, correspond_to2pi=256):
     return (np.angle(complex_phase) + np.pi) / (2*np.pi) * correspond_to2pi
