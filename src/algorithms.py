@@ -21,12 +21,12 @@ def GS(demanded_output, args):
     error = args.tolerance + 1
     error_evolution = []
     i = 0
-    A = ifft2(ifftshift(demanded_output_amplitude))
+    A = ifft2(demanded_output_amplitude) # A = ifft2(ifftshift(demanded_output_amplitude))
     while error > args.tolerance and i < args.max_loops:
         B = incomming_amplitude * np.exp(1j * np.angle(A))
-        C = fftshift(fft2(B))
+        C = fft2(B) # C = fftshift(fft2(B))
         D = np.abs(demanded_output_amplitude) * np.exp(1j * np.angle(C))
-        A = (ifft2(ifftshift(D)))
+        A = ifft2(D) # A = ifft2(ifftshift(D))
         expected_outcome = np.abs(C)**2
         expected_outcome *= norm / expected_outcome.max()
         error = error_f(expected_outcome, demanded_output, space_norm)
