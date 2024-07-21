@@ -46,7 +46,7 @@ def save_image_with_colorbar(img_array, original_image_path, palette):
     cax = divider.append_axes("right", size="5%", pad=0.1)
     # cbar = fig.colorbar(im, cax=cax)
     cbar = fig.colorbar(im, cax=cax, ticks=[0, np.pi/2, np.pi, 3*np.pi/2, 2*np.pi])
-    cbar.set_label('Fázový posun')
+    cbar.set_label('Fázový posun [rad]')
     cbar.ax.set_yticklabels(['0', r'$\pi/2$', r'$\pi$', r'$3\pi/2$', r'$2\pi$'])
 
     plt.savefig(output_path, bbox_inches='tight', dpi=600)  # Save the plot with tight bounding box

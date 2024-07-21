@@ -175,6 +175,7 @@ if __name__ == "__main__":
     parser.add_argument("-decline", nargs=2, type=float, metavar=('X_ANGLE', 'Y_ANGLE'), default=None, help="add hologram for decline to computed hologram. Effect: shifts resulting image on Fourier plane by given angle (in units of quarter of first diffraction maximum)")
     parser.add_argument("-lens", default=None, type=float, metavar='FOCAL_LENGTH', help="add lens to hologram with given focal length in meters")
     args = parser.parse_args()
+    args.random_seed = 42
     args.print_info = True
 
     main(args)

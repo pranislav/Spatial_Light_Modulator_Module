@@ -75,7 +75,7 @@ def fit_and_subtract(array, fit_func, initial_guess):
 
 
 def make_specification(args):
-    return f"{args.wavefront_correction_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_samples_per_period_{args.samples_per_period}_x{args.decline[0]}_y{args.decline[1]}_ref_{args.reference_coordinates}_intensity_coords_{args.intensity_coordinates}_source_pxs_{args.sqrted_number_of_source_pixels}"
+    return f"{args.wavefront_correction_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_samples_per_period_{args.samples_per_period}_x{args.decline[0]}_y{args.decline[1]}_ref_{args.reference_coordinates}_intensity_coords_{args.intensity_coordinates[0]}_{args.intensity_coordinates[1]}_source_pxs_{args.sqrted_number_of_source_pixels}"
 
 
 
