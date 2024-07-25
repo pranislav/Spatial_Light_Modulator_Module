@@ -10,6 +10,7 @@ from skimage.restoration import unwrap_phase
 from scipy.optimize import leastsq
 import numpy.ma as ma
 from scipy.ndimage import zoom
+from skimage.restoration.inpaint import inpaint_biharmonic
 
 
 
@@ -23,9 +24,11 @@ def produce_phase_mask_single(phase_mask, args):
     big_phase_mask = expand_phase_mask((array_to_save % (2 * np.pi)) * args.correspond_to2pi / (2 * np.pi), args.subdomain_size)
     save_phase_mask(big_phase_mask, args.dest_dir, specification)
     big_phase_mask = resize_2d_array(phase_mask, (c.slm_height, c.slm_width))
+    big_phase_mask_mod = big_phase_mask % (2 * np.pi)
+    mask_to_save = inpaint_biharmonic(big_phase_mask_mod, np.isnan(big_phase_mask)) if args.skip_subdomains_out_of_inscribed_circle else big_phase_mask_mod
     name = "smoothed_" + specification
-    np.save(f"{args.dest_dir}/{name}.npy", big_phase_mask)
-    save_phase_mask((big_phase_mask % (2 * np.pi)) * args.correspond_to2pi / (2 * np.pi), args.dest_dir, name)
+    np.save(f"{args.dest_dir}/{name}.npy", mask_to_save)
+    save_phase_mask(mask_to_save * args.correspond_to2pi / (2 * np.pi), args.dest_dir, name)
 
 
 def combine_phase_masks(phase_masks):
@@ -45,6 +48,7 @@ def produce_phase_mask(phase_masks, args):
         mean_phase_mask = fit_and_subtract_masked(mean_phase_mask, quadratic_func, [0, 0])
     produce_phase_mask_single(mean_phase_mask, args)
 
+
 def resize_2d_array(array, new_shape):
     """
     Resize a 2D array using bilinear interpolation.
@@ -60,7 +64,7 @@ def resize_2d_array(array, new_shape):
         array = array.filled(fill_value=np.nan)
     zoom_factors = [n / o for n, o in zip(new_shape, array.shape)]
     resized_array = zoom(array, zoom_factors, order=1)
-    return np.nan_to_num(resized_array, nan=0)
+    return resized_array
 
 
 def linear_func(params, x, y):
@@ -322,9 +326,7 @@ def expand_phase_mask(phase_mask, subdomain_size):
     return big_phase_mask
 
 
-def save_phase_mask(phase_mask, dest_dir, name):
-    if ma.is_masked(phase_mask):
-        phase_mask = np.ma.filled(phase_mask, fill_value=0)               
+def save_phase_mask(phase_mask, dest_dir, name):               
     if not os.path.exists(dest_dir): os.makedirs(dest_dir)
     phase_mask_img = im.fromarray(phase_mask)
     phase_mask_img.convert('L').save(f"{dest_dir}/{name}.png")
