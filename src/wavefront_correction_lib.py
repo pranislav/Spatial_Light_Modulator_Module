@@ -15,30 +15,35 @@ from scipy.ndimage import zoom
 
 def produce_phase_mask_single(phase_mask, args):
     specification = make_specification_phase_mask(args)
-    np.save(f"{args.dest_dir}/{specification}.npy", phase_mask)
-    # big_phase_mask = expand_phase_mask((phase_mask % (2 * np.pi)) * args.correspond_to2pi / (2 * np.pi), args.subdomain_size)
-    # save_phase_mask(big_phase_mask, args.dest_dir, specification)
+    if ma.is_masked(phase_mask):
+        array_to_save = ma.filled(phase_mask, fill_value=0)
+    else:
+        array_to_save = phase_mask
+    np.save(f"{args.dest_dir}/{specification}.npy", array_to_save)
+    big_phase_mask = expand_phase_mask((array_to_save % (2 * np.pi)) * args.correspond_to2pi / (2 * np.pi), args.subdomain_size)
+    save_phase_mask(big_phase_mask, args.dest_dir, specification)
     big_phase_mask = resize_2d_array(phase_mask, (c.slm_height, c.slm_width))
     name = "smoothed_" + specification
     np.save(f"{args.dest_dir}/{name}.npy", big_phase_mask)
-    save_phase_mask(big_phase_mask * args.correspond_to_2pi % (2 * np.pi), args.dest_dir, name)
+    save_phase_mask((big_phase_mask % (2 * np.pi)) * args.correspond_to2pi / (2 * np.pi), args.dest_dir, name)
 
 
 def combine_phase_masks(phase_masks):
     mean_phase_mask = np.zeros(phase_masks[0].shape)
+    if ma.is_masked(phase_masks[0]):
+        mean_phase_mask = ma.array(mean_phase_mask, mask=phase_masks[0].mask)
     for phase_mask in phase_masks:
         phase_mask = unwrap_phase(phase_mask - np.pi)
         phase_mask = fit_and_subtract_masked(phase_mask, linear_func, [0, 0, 0])
         mean_phase_mask += phase_mask
     mean_phase_mask /= len(phase_masks)
-    # print(f"mean_phase_mask is {"" if ma.is_masked(mean_phase_mask) else "not"} masked")
     return mean_phase_mask
 
 def produce_phase_mask(phase_masks, args):
     mean_phase_mask = combine_phase_masks(phase_masks)
     if args.remove_defocus:
         mean_phase_mask = fit_and_subtract_masked(mean_phase_mask, quadratic_func, [0, 0])
-    produce_phase_mask_single(mean_phase_mask, "phase_mask", args)
+    produce_phase_mask_single(mean_phase_mask, args)
 
 def resize_2d_array(array, new_shape):
     """
@@ -56,6 +61,7 @@ def resize_2d_array(array, new_shape):
     zoom_factors = [n / o for n, o in zip(new_shape, array.shape)]
     resized_array = zoom(array, zoom_factors, order=1)
     return np.nan_to_num(resized_array, nan=0)
+
 
 def linear_func(params, x, y):
     a, b, c = params
@@ -257,18 +263,19 @@ def get_number_of_subdomains(subdomain_size):
 # --------- a little image processing --------- # - for integral metrics (which probably does not work at all)
 
 def detect_bright_area(picture: np.array):
-    coord = mean_position_of_white_pixel(picture)
+    coord = weighted_mean_position_of_grey_pixel(picture)
     length = deviation_of_bright_pixels(picture, coord)
     return (coord, length)
 
-def mean_position_of_white_pixel(picture):
+def weighted_mean_position_of_grey_pixel(picture, treshold=200):
     h, w = picture.shape
     sum = np.array([0, 0])
-    norm = 0
+    norm = 0.0
     for y in range(h):
         for x in range(w):
-            sum += np.array([y, x]) * picture[y, x]
-            norm += picture[y, x]
+            if picture[y, x] > treshold:
+                sum += np.array([y, x]) * picture[y, x]
+                norm += picture[y, x]
     a, b = sum / norm
     return (int(round(a)), int(round(b)))
 
@@ -303,6 +310,8 @@ def expand_phase_mask(phase_mask, subdomain_size):
     and returns a phase mask where one pixel represents a pixel in SLM
     '''
     h, w = phase_mask.shape
+    if ma.is_masked(phase_mask):
+        phase_mask = ma.filled(phase_mask, fill_value=0)
     ss = subdomain_size
     big_phase_mask = np.zeros((h * ss, w * ss))
     for i in range(h):

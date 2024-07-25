@@ -74,7 +74,7 @@ def wavefront_correction_parallelized(args):
 
 def make_circular_mask(shape):
     condition = circular_hole_inclusive_condition
-    return np.array([[condition(i, j, shape) for j in range(shape[1])] for i in range(shape[0])])
+    return np.array([[(0 if condition(i, j, shape) else 1) for j in range(shape[1])] for i in range(shape[0])])
 
 
 def choose_phase(args):
@@ -164,14 +164,14 @@ if __name__ == "__main__":
     parser.add_argument('wavefront_correction_name', type=str)
     parser.add_argument('-ss', '--subdomain_size', metavar="INT", type=int, default=32, help='size of subdomain side in pixels')
     parser.add_argument('-spp', '--samples_per_period', metavar="INT", type=int, default=4, help='number of intensity measurements per one subdomain')
-    parser.add_argument('-d', '--decline', metavar=("X_ANGLE", "Y_ANGLE"), nargs=2, type=float, default=(1, 1), help="angle to decline the light in x and y direction (in constants.u unit)")
+    parser.add_argument('-d', '--decline', metavar=("X_ANGLE", "Y_ANGLE"), nargs=2, type=float, default=(0.5, 0.5), help="angle to decline the light in x and y direction (in constants.u unit)")
     parser.add_argument('-c', '--reference_coordinates', metavar=("X_COORD", "Y_COORD"), nargs=2, type=int, default=None, help="subdomain-scale coordinates of reference subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size. Default parameter assigns the reference subdomain to the middle one.")
     parser.add_argument('-ct2pi', '--correspond_to2pi', metavar="INT", type=int, required=True, help="value of pixel corresponding to 2pi phase shift")
     parser.add_argument('-skip', '--skip_subdomains_out_of_inscribed_circle', action="store_true", help="subdomains out of the inscribed circle will not be callibrated. use when the SLM is not fully illuminated and the light beam is circular.")
     parser.add_argument("-shuffle", action="store_true", help="subdomains will be calibrated in random order")
     parser.add_argument('-ic', "--intensity_coordinates", metavar=("X_COORD", "Y_COORD"), nargs=2, type=int, default=None, help="coordinates of the point where intensity is measured in form x_y. if not provided, the point will be found automatically.")
-    parser.add_argument('-choose_phase', type=str, choices=["trick", "fit"], default="fit", help="method of finding the optimal phase shift")
-    parser.add_argument('-resample', type=str, choices=["bilinear", "bicubic"], default="bilinear", help="smoothing method used to upscale the unwrapped phase mask")
+    parser.add_argument('-cp', '--choose_phase', type=str, choices=["trick", "fit"], default="trick", help="method of finding the optimal phase shift")
+    # parser.add_argument('-resample', type=str, choices=["bilinear", "bicubic"], default="bilinear", help="smoothing method used to upscale the unwrapped phase mask")
     parser.add_argument('-nsp', '--sqrted_number_of_source_pixels', type=int, default=1, help='number of pixel of side of square area on photo from which intensity is taken')
     parser.add_argument('-parallel', action="store_true", help="use parallelization")
     parser.add_argument('-rd', '--remove_defocus', action="store_true", help="remove defocus compensation from the phase mask")
