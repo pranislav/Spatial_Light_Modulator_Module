@@ -32,7 +32,7 @@ def fill_maps(param_maps, param_dict, coord):
 
 def create_param_maps(param_maps, args):
     for key in param_maps.keys():
-        produce_phase_mask_single(param_maps[key], key, args)
+        produce_map(param_maps[key], key, args)
 
 
 def initiate_param_maps(shape, fit_func):
@@ -42,7 +42,13 @@ def initiate_param_maps(shape, fit_func):
         param_maps[key] = np.zeros((H, W))
     return param_maps
 
+def produce_map(map, type, args):
+    specification = type + "_" + make_specification_map(args)
+    big_map = expand_phase_mask(map * args.correspond_to2pi, args.subdomain_size)
+    save_phase_mask(big_map, args.dest_dir, specification)
 
+def make_specification_map(args):
+    return f"ss{args.subdomain_size}_spp{args.samples_per_period}_d{args.decline[0]}_{args.decline[1]}_r{args.reference_coordinates[0]}_{args.reference_coordinates[1]}"
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Script for calibrating an optical path by SLM")

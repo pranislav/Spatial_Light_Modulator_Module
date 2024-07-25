@@ -4,37 +4,58 @@ from PIL import Image as im, ImageTk
 from screeninfo import get_monitors
 import numpy as np
 import os
-import sys
 import explore_wavefront_correction as e
-import phase_mask_smoothing as pms
 import time
 from skimage.restoration import unwrap_phase
 from scipy.optimize import leastsq
+import numpy.ma as ma
+from scipy.ndimage import zoom
 
 
-def produce_phase_mask_single(phase_mask, type, args):
-    specification = type + "_" + make_specification(args)
-    big_phase_mask = expand_phase_mask((phase_mask % (2 * np.pi)) * args.correspond_to2pi / (2 * np.pi), args.subdomain_size)
-    save_phase_mask(big_phase_mask, args.dest_dir, specification)
-    phase_mask_unwrapped = unwrap_phase(phase_mask)
-    resample = im.BICUBIC if args.resample == "bicubic" else im.BILINEAR
-    big_phase_mask = im.fromarray(phase_mask_unwrapped * args.correspond_to2pi / (2 * np.pi)).resize((c.slm_width, c.slm_height), resample=resample)
-    save_phase_mask(np.array(big_phase_mask) % args.correspond_to2pi, args.dest_dir, "smoothed_"+specification)
+
+def produce_phase_mask_single(phase_mask, args):
+    specification = make_specification_phase_mask(args)
+    np.save(f"{args.dest_dir}/{specification}.npy", phase_mask)
+    # big_phase_mask = expand_phase_mask((phase_mask % (2 * np.pi)) * args.correspond_to2pi / (2 * np.pi), args.subdomain_size)
+    # save_phase_mask(big_phase_mask, args.dest_dir, specification)
+    big_phase_mask = resize_2d_array(phase_mask, (c.slm_height, c.slm_width))
+    name = "smoothed_" + specification
+    np.save(f"{args.dest_dir}/{name}.npy", big_phase_mask)
+    save_phase_mask(big_phase_mask * args.correspond_to_2pi % (2 * np.pi), args.dest_dir, name)
+
 
 def combine_phase_masks(phase_masks):
     mean_phase_mask = np.zeros(phase_masks[0].shape)
     for phase_mask in phase_masks:
         phase_mask = unwrap_phase(phase_mask - np.pi)
-        phase_mask = fit_and_subtract(phase_mask, linear_func, [0, 0, 0])
+        phase_mask = fit_and_subtract_masked(phase_mask, linear_func, [0, 0, 0])
         mean_phase_mask += phase_mask
     mean_phase_mask /= len(phase_masks)
+    # print(f"mean_phase_mask is {"" if ma.is_masked(mean_phase_mask) else "not"} masked")
     return mean_phase_mask
 
 def produce_phase_mask(phase_masks, args):
     mean_phase_mask = combine_phase_masks(phase_masks)
     if args.remove_defocus:
-        mean_phase_mask = fit_and_subtract(mean_phase_mask, quadratic_func, [0, 0])
+        mean_phase_mask = fit_and_subtract_masked(mean_phase_mask, quadratic_func, [0, 0])
     produce_phase_mask_single(mean_phase_mask, "phase_mask", args)
+
+def resize_2d_array(array, new_shape):
+    """
+    Resize a 2D array using bilinear interpolation.
+
+    Parameters:
+    - array (numpy.ndarray): The 2D input array to resize.
+    - new_shape (tuple): The desired shape for the resized array.
+
+    Returns:
+    - numpy.ndarray: The resized 2D array.
+    """
+    if ma.is_masked(array):
+        array = array.filled(fill_value=np.nan)
+    zoom_factors = [n / o for n, o in zip(new_shape, array.shape)]
+    resized_array = zoom(array, zoom_factors, order=1)
+    return np.nan_to_num(resized_array, nan=0)
 
 def linear_func(params, x, y):
     a, b, c = params
@@ -45,7 +66,15 @@ def  quadratic_func(params, x, y):
     return a * (x **2 + y ** 2) + b
 
 
-def fit_and_subtract(array, fit_func, initial_guess):
+
+def fit_and_subtract_masked(array, fit_func, initial_guess):
+    # Determine if the array is masked
+    is_masked = ma.is_masked(array)
+    
+    # If not masked, convert to masked array with no mask
+    if not is_masked:
+        array = ma.array(array, mask=np.zeros_like(array, dtype=bool))
+    
     # Get the shape of the array
     ny, nx = array.shape
     
@@ -57,12 +86,18 @@ def fit_and_subtract(array, fit_func, initial_guess):
     y_flat = y.flatten()
     array_flat = array.flatten()
     
+    # Get the mask and apply it to the flattened arrays
+    mask_flat = array.mask.flatten()
+    x_flat_masked = x_flat[~mask_flat]
+    y_flat_masked = y_flat[~mask_flat]
+    array_flat_masked = array_flat[~mask_flat]
+    
     # Define the error function
     def error_func(params, x, y, z):
         return z - fit_func(params, x, y)
     
     # Perform the least squares fitting
-    params, _ = leastsq(error_func, initial_guess, args=(x_flat, y_flat, array_flat))
+    params, _ = leastsq(error_func, initial_guess, args=(x_flat_masked, y_flat_masked, array_flat_masked))
     
     # Compute the fitted values
     fitted_values = fit_func(params, x, y)
@@ -70,12 +105,15 @@ def fit_and_subtract(array, fit_func, initial_guess):
     # Subtract the fitted values from the original array
     result_array = array - fitted_values
     
+    # Return a masked array with the original mask
+    result_array = ma.array(result_array, mask=array.mask)
+    
     return result_array
 
 
 
-def make_specification(args):
-    return f"{args.wavefront_correction_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_samples_per_period_{args.samples_per_period}_x{args.decline[0]}_y{args.decline[1]}_ref_{args.reference_coordinates}_intensity_coords_{args.intensity_coordinates[0]}_{args.intensity_coordinates[1]}_source_pxs_{args.sqrted_number_of_source_pixels}"
+def make_specification_phase_mask(args):
+    return f"phase_mask_{args.wavefront_correction_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_samples_per_period_{args.samples_per_period}_x{args.decline[0]}_y{args.decline[1]}_ref_{args.reference_coordinates}_intensity_coords_{args.intensity_coordinates[0]}_{args.intensity_coordinates[1]}_source_pxs_{args.sqrted_number_of_source_pixels}"
 
 
 
@@ -275,7 +313,9 @@ def expand_phase_mask(phase_mask, subdomain_size):
     return big_phase_mask
 
 
-def save_phase_mask(phase_mask, dest_dir, name):                
+def save_phase_mask(phase_mask, dest_dir, name):
+    if ma.is_masked(phase_mask):
+        phase_mask = np.ma.filled(phase_mask, fill_value=0)               
     if not os.path.exists(dest_dir): os.makedirs(dest_dir)
     phase_mask_img = im.fromarray(phase_mask)
     phase_mask_img.convert('L').save(f"{dest_dir}/{name}.png")

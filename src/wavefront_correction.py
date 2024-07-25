@@ -13,7 +13,6 @@ import argparse
 from pylablib.devices import uc480
 from time import time
 import fit_stuff as f
-import phase_mask_smoothing as pms
 from queue import Queue
 from threading import Thread
 
@@ -23,6 +22,8 @@ def wavefront_correction(args):
     initialize(args)
     best_phase = choose_phase(args)
     phase_masks = [np.zeros(args.subdomain_scale_shape) for _ in range(args.sqrted_number_of_source_pixels ** 2)]
+    if args.skip_subdomains_out_of_inscribed_circle:
+        phase_masks = [ma.masked_array(phase_mask, mask=make_circular_mask(args.subdomain_scale_shape)) for phase_mask in phase_masks]
     coordinates_list = make_coordinates_list(args)
     print("mainloop start.")
     count = 0
@@ -69,6 +70,11 @@ def wavefront_correction_parallelized(args):
     fill_thread.join()
     
     produce_phase_mask(phase_masks, args)
+
+
+def make_circular_mask(shape):
+    condition = circular_hole_inclusive_condition
+    return np.array([[condition(i, j, shape) for j in range(shape[1])] for i in range(shape[0])])
 
 
 def choose_phase(args):

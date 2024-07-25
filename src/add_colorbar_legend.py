@@ -11,7 +11,7 @@ def parse_arguments():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Apply a colormap to a grayscale image.")
     parser.add_argument("image_path", type=str, help="Path to the grayscale image.")
-    parser.add_argument("-p", "--palette", type=str, default='grey', help="Color palette to apply to the image.")
+    parser.add_argument("-p", "--palette", type=str, default='greyscale', help="Color palette to apply ('greyscale' or 'hue'). Optional, default is 'greyscale'.")
     parser.add_argument("ct2pi", type=float, help="Value in the image that should correspond to 2*pi in phase mapping.")
     return parser.parse_args()
 
