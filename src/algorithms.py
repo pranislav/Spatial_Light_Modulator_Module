@@ -34,13 +34,13 @@ def GS(demanded_output, args):
         if args.gif and i % args.gif_skip == 0:
             add_gif_image(args, expected_outcome, A, i)
         i += 1
-        print(f"\rloop {i}/{args.max_loops}", end='')
-    print()
+        if args.print_progress: print(f"\rloop {i}/{args.max_loops}", end='')
+    if args.print_progress: print()
     if args.print_info:
         print()
         printout(error, i, error_evolution, args.plot_error)
-    phase_for_slm = (np.angle(A) + np.pi) * args.correspond_to2pi / (2*np.pi) # converts phase to color value, input for SLM
-    return phase_for_slm, expected_outcome, error_evolution
+    # phase_for_slm = (np.angle(A) + np.pi) * args.correspond_to2pi / (2*np.pi)
+    return np.angle(A), expected_outcome, error_evolution
 
 
 def add_gif_image(args, expected_outcome, A, i):
@@ -88,9 +88,9 @@ def GD(demanded_output: np.array, args):
     if args.print_info:
         print()
         printout(error, i, error_evolution, args.plot_error)
-    phase_for_slm = complex_to_real_phase(input, args.correspond_to2pi)
+    # phase_for_slm = complex_to_real_phase(input, args.correspond_to2pi)
     exp_tar_for_slm = output
-    return phase_for_slm, exp_tar_for_slm, error_evolution
+    return np.angle(input), exp_tar_for_slm, error_evolution
 
 
 def make_initial_guess(initial_guess_type, incomming_amplitude, demanded_output, seed):
