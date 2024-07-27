@@ -25,14 +25,20 @@ def main(args):
     black_image = np.zeros((c.slm_height, c.slm_width), dtype=np.uint8)
     print("Creating holograms")
     holograms_number = (c.slm_height // 2) * (c.slm_width // 2)
+    n = 0
     for i in range(c.slm_height // 2):
         os.makedirs(args.save_address + f"/{i}", exist_ok=True)
         for j in range(c.slm_width // 2):
-            print(f"\r{i * c.slm_width // 2 + j + 1}/{holograms_number}", end='')
+            n += 1
+            name = args.save_address + f"/{i}/{j}.npy"
+            if os.path.exists(name):
+                continue
+            print(f"\r{n}/{holograms_number}", end='')
             black_image[i, j] = 255
             hologram, _, _ = alg.GS(black_image, GS_args)
             black_image[i, j] = 0
-            np.save(args.save_address + f"/{i}/{j}.npy", hologram)
+            np.save(name, hologram)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

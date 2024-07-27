@@ -1,15 +1,10 @@
 import argparse
 from PIL import Image as im
 import numpy as np
-import matplotlib.pyplot as plt
 
 def show_hologram(args):
     hologram = np.load(args.hologram)
-    plt.plot(hologram[0])
-    plt.show()
     hologram_int = (hologram % (2 * np.pi) * args.correspond_to2pi / (2 * np.pi)).astype(np.uint8)
-    plt.plot(hologram_int[0])
-    plt.show()
     hologram_img = im.fromarray(hologram_int)
     hologram_img.show()
 
