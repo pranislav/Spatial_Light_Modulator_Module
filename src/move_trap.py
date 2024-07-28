@@ -13,18 +13,14 @@ def main(args):
     black_image = np.zeros((c.slm_height, c.slm_width), dtype=np.uint8)
     height_border = c.slm_height // 2
     width_border = c.slm_width // 2
-    coords = [height_border // 2, width_border // 2]
+    coords = [0, 0]
     flags = {"mask": True, "quit": False}
-    if args.mirror:
-        read_keyboard_input = read_keyboard_input_mirror
-    else:
-        read_keyboard_input = read_keyboard_input_normal
     while True:
         black_image[coords[0]][coords[1]] = 255
         hologram = np.angle(ifft2(black_image)) #np.load(f"{args.holograms_dir}/{coords[0]}/{coords[1]}.npy") #cl.decline_2pi(coords)
         black_image[coords[0]][coords[1]] = 0
         display_hologram(window, hologram, mask, flags["mask"], args.correspond_to2pi)
-        read_keyboard_input(coords, flags, args.big_step, height_border, width_border)
+        read_keyboard_input(coords, flags, args.big_step, height_border, width_border, args.mirror)
         if flags["quit"]:
             break
 
@@ -37,32 +33,26 @@ def display_hologram(window, hologram, mask, mask_flag, ct2pi):
     cl.display_image_on_external_screen(window, hologram_img)
 
 
-def read_keyboard_input_mirror(coords, mask_flag, big_step, height_border, width_border):
+def read_keyboard_input(coords, mask_flag, big_step, height_border, width_border, mirror):
     while True:
         if keyboard.is_pressed("shift"):
-            if keyboard.is_pressed("left"):
-                coords[1] = (coords[1] + big_step) % width_border
-                return
-            if keyboard.is_pressed("right"):
-                coords[1] = (coords[1] - big_step) % width_border
-                return
-            if keyboard.is_pressed("down"):
-                coords[0] = (coords[0] - big_step) % height_border
-                return
-            if keyboard.is_pressed("up"):
-                coords[0] = (coords[0] + big_step) % height_border
-                return
+            step = big_step
+        else:
+            step = 1
+        if mirror:
+            step = - step
+        
         if keyboard.is_pressed("left"):
-            coords[1] = (coords[1] + 1) % width_border
+            coords[1] = (coords[1] - step) % width_border
             return
         if keyboard.is_pressed("right"):
-            coords[1] = (coords[1] - 1) % width_border
+            coords[1] = (coords[1] + step) % width_border
             return
         if keyboard.is_pressed("down"):
-            coords[0] = (coords[0] - 1) % height_border
+            coords[0] = (coords[0] + step) % height_border
             return
         if keyboard.is_pressed("up"):
-            coords[0] = (coords[0] + 1) % height_border
+            coords[0] = (coords[0] - step) % height_border
             return
         if keyboard.is_pressed("m"):
             mask_flag["mask"] = not mask_flag["mask"]
@@ -72,40 +62,6 @@ def read_keyboard_input_mirror(coords, mask_flag, big_step, height_border, width
             return
         time.sleep(0.1)
 
-def read_keyboard_input_normal(coords, mask_flag, big_step, height_border, width_border):
-    while True:
-        if keyboard.is_pressed("shift"):
-            if keyboard.is_pressed("left"):
-                coords[1] = (coords[1] - big_step) % width_border
-                return
-            if keyboard.is_pressed("right"):
-                coords[1] = (coords[1] + big_step) % width_border
-                return
-            if keyboard.is_pressed("down"):
-                coords[0] = (coords[0] + big_step) % height_border
-                return
-            if keyboard.is_pressed("up"):
-                coords[0] = (coords[0] - big_step) % height_border
-                return
-        if keyboard.is_pressed("left"):
-            coords[1] = (coords[1] - 1) % width_border
-            return
-        if keyboard.is_pressed("right"):
-            coords[1] = (coords[1] + 1) % width_border
-            return
-        if keyboard.is_pressed("down"):
-            coords[0] = (coords[0] + 1) % height_border
-            return
-        if keyboard.is_pressed("up"):
-            coords[0] = (coords[0] - 1) % height_border
-            return
-        if keyboard.is_pressed("m"):
-            mask_flag["mask"] = not mask_flag["mask"]
-            return
-        if keyboard.is_pressed("esc"):
-            mask_flag["quit"] = True
-            return
-        time.sleep(0.1)
 
 
 
@@ -114,7 +70,7 @@ if __name__ == "__main__":
     parser.add_argument("mask_name", help="name of the mask file")
     parser.add_argument("-ct2pi", "--correspond_to2pi", type=int, required=True, help="value of pixel corresponding to 2pi phase shift")
     parser.add_argument("-bs", "--big_step", type=int, default=20, help="big step size")
-    parser.add_argument("-m", "--mirror", action="store_true", help="mirror left-right and up-down")
+    parser.add_argument("-m", "--mirror", action="store_true", help="mirrors left-right and up-down")
     args = parser.parse_args()
 
     # holograms_dir = "holograms/single_trap_grid_holograms"
