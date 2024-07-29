@@ -31,13 +31,16 @@ def main(args):
                 break
             time.sleep(0.05)
         prev_split_val = flags["split"]
-        process_key(coords, flags, args.big_step, height_border, width_border, args.mirror)
+        process_key(coords, flags, args, height_border, width_border)
         if flags["quit"]:
             break
         hologram = update_hologram(black_image, coords, flags["which"])
         holograms[flags["which"]] = hologram
         if prev_split_val != flags["split"]:
             holograms[(flags["which"] + 1) % 2] = hologram
+        if not prev_split_val and not flags["split"]:
+            if flags["which"] != i % 2:
+                i += 1
 
 
 def update_hologram(black_image, coords, which):
@@ -49,10 +52,11 @@ def update_hologram(black_image, coords, which):
 
 def wait_for_key(flags):
     while not (flags["is_pressed"] or flags["key_change"]):
-        return
-    time.sleep(0.1)
+        time.sleep(0.1)
+    return
+    
 
-def process_key(coords, flags, big_step, height_border, width_border, mirror):
+def process_key(coords, flags, args, height_border, width_border):
     if not (flags["key_change"] or flags["is_pressed"]):
         return
     flags["key_change"] = False
@@ -68,10 +72,10 @@ def process_key(coords, flags, big_step, height_border, width_border, mirror):
         return
 
     if flags["shift"]:
-        step = big_step
+        step = args.big_step
     else:
         step = 1
-    if mirror:
+    if args.mirror:
         step = - step
     
     if flags["last_key"] == "left":
@@ -90,6 +94,9 @@ def process_key(coords, flags, big_step, height_border, width_border, mirror):
         flags["mask"] = not flags["mask"]
         return
 
+    # if flags["last_key"] == "c":
+    #     time.sleep(0.1)
+    #     args.correspond_to2pi = int(input("Enter new value of pixel corresponding to 2pi phase shift: "))
     if flags["last_key"] == "esc":
         flags["quit"] = True
         return
