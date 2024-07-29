@@ -30,16 +30,20 @@ def main(args):
             if flags["is_pressed"] or flags["key_change"]:
                 break
             time.sleep(0.05)
-        change_coords(coords, flags, args.big_step, height_border, width_border, args.mirror)
+        prev_split_val = flags["split"]
+        process_key(coords, flags, args.big_step, height_border, width_border, args.mirror)
         if flags["quit"]:
             break
-        holograms[flags["which"]] = update_hologram(black_image, coords, i)
+        hologram = update_hologram(black_image, coords, flags["which"])
+        holograms[flags["which"]] = hologram
+        if prev_split_val != flags["split"]:
+            holograms[(flags["which"] + 1) % 2] = hologram
 
 
-def update_hologram(black_image, coords, i):
-    black_image[coords[i%2][0]][coords[i%2][1]] = 255
+def update_hologram(black_image, coords, which):
+    black_image[coords[which][0]][coords[which][1]] = 255
     hologram = np.angle(ifft2(black_image))
-    black_image[coords[i%2][0]][coords[i%2][1]] = 0
+    black_image[coords[which][0]][coords[which][1]] = 0
     return hologram
 
 
@@ -48,10 +52,20 @@ def wait_for_key(flags):
         return
     time.sleep(0.1)
 
-def change_coords(coords, flags, big_step, height_border, width_border, mirror):
-    if not flags["key_change"] or not flags["is_pressed"]:
+def process_key(coords, flags, big_step, height_border, width_border, mirror):
+    if not (flags["key_change"] or flags["is_pressed"]):
         return
     flags["key_change"] = False
+
+    if flags["split"] and flags["last_key"] == "ctrl":
+        time.sleep(0.1)
+        flags["which"] = (flags["which"] + 1) % 2
+        return
+    if flags["last_key"] == "s":
+        time.sleep(0.1)
+        flags["split"] = not flags["split"]
+        if flags["split"]: coords[(flags["which"] + 1) % 2] = coords[flags["which"]].copy()
+        return
 
     if flags["shift"]:
         step = big_step
@@ -75,16 +89,7 @@ def change_coords(coords, flags, big_step, height_border, width_border, mirror):
     if flags["last_key"] == "m":
         flags["mask"] = not flags["mask"]
         return
-    if flags["last_key"] == "ctrl":
-        time.sleep(0.1)
-        flags["which"] = (flags["which"] + 1) % 2
-        return
-    if flags["last_key"] == "s":
-        time.sleep(0.1)
-        flags["split"] = not flags["split"]
-        if flags["split"]:
-            coords[(flags["which"] + 1) % 2] = coords[flags["which"]].copy()
-        return
+
     if flags["last_key"] == "esc":
         flags["quit"] = True
         return
