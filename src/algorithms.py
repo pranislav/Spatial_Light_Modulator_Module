@@ -34,8 +34,8 @@ def GS(demanded_output, args):
         if args.gif and i % args.gif_skip == 0:
             add_gif_image(args, expected_outcome, A, i)
         i += 1
-        if args.print_progress: print(f"\rloop {i}/{args.max_loops}", end='')
-    if args.print_progress: print()
+        print(f"\rloop {i}/{args.max_loops}", end='')
+    print()
     if args.print_info:
         print()
         printout(error, i, error_evolution, args.plot_error)

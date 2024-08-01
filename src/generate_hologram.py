@@ -24,6 +24,31 @@ def main(args):
     save_hologram_and_gif(hologram, args)
 
 
+def pad_to_square(img):
+    '''Pads the image with black pixels to make it square
+    '''
+
+    # Get current dimensions
+    width, height = img.size
+
+    if width == height:
+        return img
+    
+    # Determine the size of the new square image
+    new_size = max(width, height)
+    
+    # Create a new black image with square dimensions in 'L' mode
+    new_img = im.new('L', (new_size, new_size), 0)
+    
+    # Calculate position to paste the original image
+    paste_x = (new_size - width) // 2
+    paste_y = (new_size - height) // 2
+    
+    # Paste the original grayscale image onto the new black image
+    new_img.paste(img, (paste_x, paste_y))
+    
+    return new_img
+
 def make_hologram(args):
     algorithm = GS if args.algorithm == "GS" else GD
     target = prepare_target(args.img_name, args)
@@ -52,11 +77,13 @@ def add_gif_source_address(args):
         
 
 def prepare_target(img_name, args):
-    target_img = im.open(f"images/{img_name}").convert('L').resize((int(c.slm_width), int(c.slm_height)))
+    target_img = im.open(f"images/{img_name}").convert('L')
     if args.invert:
         target_img = PIL.ImageOps.invert(target_img)
+    target_img = pad_to_square(target_img)
     if args.quarterize:
         target_img = quarter(target_img)
+    target_img.resize((int(c.slm_width), int(c.slm_height)))
     return np.array(target_img)
 
 def save_hologram_and_gif(hologram, args):
