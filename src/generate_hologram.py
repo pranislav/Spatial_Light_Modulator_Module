@@ -83,8 +83,8 @@ def prepare_target(img_name, args):
     target_img = pad_to_square(target_img)
     if args.quarterize:
         target_img = quarter(target_img)
-    target_img.resize((int(c.slm_width), int(c.slm_height)))
-    return np.array(target_img)
+    resized = target_img.resize((int(c.slm_width), int(c.slm_height)))
+    return np.array(resized)
 
 def save_hologram_and_gif(hologram, args):
     img_name = os.path.basename(args.img_name).split(".")[0] if args.img_name else "analytical"
