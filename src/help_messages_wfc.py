@@ -1,7 +1,7 @@
 
 samples_per_period = "number of intensity measurements per one subdomain"
 subdomain_size = "size of subdomain side in pixels"
-decline = "angle to decline the light in x and y direction (in constants.u unit)"
+deflect = "angle to deflect the light in x and y direction (in constants.u unit)"
 ct2pi = "value of pixel corresponding to 2pi phase shift"
 reference_subdomain_coordinates = "subdomain-scale coordinates of the reference subdomain. \
     Default parameter assigns the reference subdomain to the middle one."

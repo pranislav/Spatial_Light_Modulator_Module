@@ -75,7 +75,7 @@ def fill_unnecessary_args(args):
     args.gif = False
     args.gif_type = None
     args.gif_dir = None
-    args.decline = None
+    args.deflect = None
     args.lens = None
     args.correspond_to2pi = 256
     args.incomming_intensity = "uniform"

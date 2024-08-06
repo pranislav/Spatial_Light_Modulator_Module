@@ -118,13 +118,13 @@ def display_instant_wavefront_correction_holograms(window):
     params = default_params()
     while True:
         get_params(params)
-        sample_hologram = cl.decline(params["decline"], params["correspond_to_2pi"])
+        sample_hologram = cl.deflect(params["deflect"], params["correspond_to_2pi"])
         hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
         reference_position = e.real_subdomain_position(params["reference_position"], params["subdomain_size"])
         subdomain_position = e.real_subdomain_position(params["subdomain_position"], params["subdomain_size"])
         hologram = cl.add_subdomain(hologram, sample_hologram, reference_position, params["subdomain_size"])
         if params["phase_shift"] != 0:
-            sample_hologram = cl.decline(params["decline"], params["correspond_to_2pi"]) + params["phase_shift"]
+            sample_hologram = cl.deflect(params["deflect"], params["correspond_to_2pi"]) + params["phase_shift"]
         hologram = cl.add_subdomain(hologram, sample_hologram, subdomain_position, params["subdomain_size"])
         cl.display_image_on_external_screen(window, hologram)
         command = input("press enter to continue, type 'q' to quit this mode >> ")
@@ -140,7 +140,7 @@ def default_params():
     params["reference_position"] = (15, 11)
     params["subdomain_position"] = (14, 11)
     params["phase_shift"] = 0
-    params["decline"] = (1, 1)
+    params["deflect"] = (1, 1)
     return params
 
 def get_params(params):

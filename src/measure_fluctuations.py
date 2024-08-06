@@ -54,7 +54,7 @@ def plot_and_save(intensity_evolution, expo):
 
 def create_wavefront_correction_hologram(args):
     black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width), dtype=np.uint8))
-    sample = cl.decline(args.decline, args.correspond_to2pi)
+    sample = cl.deflect(args.deflect, args.correspond_to2pi)
     reference_coordinates = read_and_expand_coords(args.reference_coordinates, args.subdomain_size)
     subdomain_coordinates = read_and_expand_coords(args.subdomain_coordinates, args.subdomain_size)
     reference_subdomain = cl.add_subdomain(black_hologram, sample, reference_coordinates, args.subdomain_size)
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Script for measuring impact of fluctuations of the light on the wavefront_correction procedure")
     parser.add_argument('-t', '--time', metavar="SECONDS", type=int, default=5, help="time of the measurement in seconds")
     parser.add_argument('-ss', '--subdomain_size', metavar="INT", type=int, default=32, help=help_messages_wfc.subdomain_size)
-    parser.add_argument('-d', '--decline', metavar=("X_ANGLE", "Y_ANGLE"), nargs=2, type=float, default=(0.5, 0.5), help=help_messages_wfc.decline)
+    parser.add_argument('-d', '--deflect', metavar=("X_ANGLE", "Y_ANGLE"), nargs=2, type=float, default=(0.5, 0.5), help=help_messages_wfc.deflect)
     parser.add_argument('-c', '--reference_coordinates', metavar=("X_COORD", "y_COORD"), nargs=2, type=int, default=None, help=help_messages_wfc.reference_subdomain_coordinates)
     parser.add_argument('-sc', '--subdomain_coordinates', metavar=("X_COORD", "y_COORD"), nargs=2, type=int, default=(0, 0), help="subdomain-scale coordinates of second subdomain")
     parser.add_argument('-e', '--exposure', metavar="SECONDS", type=float, default=None, help="exposure time in seconds")

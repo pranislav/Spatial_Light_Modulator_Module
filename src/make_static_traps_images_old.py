@@ -14,11 +14,11 @@ spacing_param_b = 2 # num of objects on y axis for grating or y coordinate for 1
 ud = coord_generator == md.user_defined
 spacing_params = f"{spacing_param_a}x{spacing_param_b}"
 if object == md.dot:
-    name = f"multidecline_{coord_generator.__name__}_{spacing_params}_{object.__name__}"
+    name = f"multideflect_{coord_generator.__name__}_{spacing_params}_{object.__name__}"
 elif object == md.user_defined:
-    name = f"multidecline_{coord_generator.__name__}_note_{object.__name__}_{obj_size_x}x{obj_size_y}"
+    name = f"multideflect_{coord_generator.__name__}_note_{object.__name__}_{obj_size_x}x{obj_size_y}"
 else:
-    name = f"multidecline_{coord_generator.__name__}_{spacing_params}_{object.__name__}_{obj_size_x}x{obj_size_y}"
+    name = f"multideflect_{coord_generator.__name__}_{spacing_params}_{object.__name__}_{obj_size_x}x{obj_size_y}"
 
 if ud:
     coordinates = [(w//6, h//4), (2*w//6, h//4)] 

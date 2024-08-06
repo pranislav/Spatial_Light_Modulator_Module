@@ -57,8 +57,8 @@ def make_hologram(args):
     return hologram, expected_outcome
 
 def transform_hologram(hologram, args):
-    if args.decline is not None:
-        hologram = decline_hologram(hologram, args.decline, args.correspond_to2pi)
+    if args.deflect is not None:
+        hologram = deflect_hologram(hologram, args.deflect, args.correspond_to2pi)
     if args.lens:
         hologram = add_lens(hologram, args.lens, args.correspond_to2pi)
     return hologram
@@ -101,8 +101,8 @@ def make_hologram_name(args, img_name):
     alg_params = ""
     transforms = ""
     img_transforms = ""
-    if args.decline:
-        transforms += f"_decline_x{args.decline[0]}_y{args.decline[1]}"
+    if args.deflect:
+        transforms += f"_deflect_x{args.deflect[0]}_y{args.deflect[1]}"
     if args.lens:
         transforms += f"_lens{args.lens}"
     if args.algorithm == "GD":
@@ -138,12 +138,12 @@ def quarter(image: im) -> im:
     return ground
 
 
-def decline_hologram(hologram: np.array, angle: tuple, correspond_to2pi: int=256):
-    '''declines hologram by angle, returns declined hologram
+def deflect_hologram(hologram: np.array, angle: tuple, correspond_to2pi: int=256):
+    '''deflects hologram by angle, returns deflectd hologram
     '''
-    decline = cl.decline(angle, correspond_to2pi)
-    declined_hologram = (hologram + decline) % correspond_to2pi
-    return declined_hologram
+    deflect = cl.deflect(angle, correspond_to2pi)
+    deflectd_hologram = (hologram + deflect) % correspond_to2pi
+    return deflectd_hologram
 
 def add_lens(hologram: np.array, focal_len: float, correspond_to2pi: int=256):
     return (hologram + lens(focal_len, correspond_to2pi, hologram.shape)) % correspond_to2pi
@@ -180,7 +180,7 @@ def remove_files_in_dir(dir_name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("img_name", nargs="?", default=None, type=str, help="path to the target image from images directory. Leave empty if you want to create pure decline/lens hologram")
+    parser.add_argument("img_name", nargs="?", default=None, type=str, help="path to the target image from images directory. Leave empty if you want to create pure deflect/lens hologram")
     parser.add_argument("-ii", "--incomming_intensity", type=str, default="uniform", help="path to the incomming intensity image from images directory or 'uniform' for uniform intensity")
     parser.add_argument("-ig", "--initial_guess", type=str, default="random", choices=["random", "fourier"], help="initial guess for the GD algorithm: random or phase from the Fourier transform of the target image")
     # "images/incomming_intensity_images/paper_shade_01_intensity_mask.png"
@@ -199,7 +199,7 @@ if __name__ == "__main__":
     parser.add_argument("-gif_skip", default=1, type=int, metavar='INTEGER', help="each gif_skip-th frame will be in gif")
     parser.add_argument("-plot_error", action="store_true", help="plot error evolution")
     parser.add_argument("-p", "--preview", action="store_true", help="show expected outcome at the end of the program run")
-    parser.add_argument("-decline", nargs=2, type=float, metavar=('X_ANGLE', 'Y_ANGLE'), default=None, help="add hologram for decline to computed hologram. Effect: shifts resulting image on Fourier plane by given angle (in units of quarter of first diffraction maximum)")
+    parser.add_argument("-deflect", nargs=2, type=float, metavar=('X_ANGLE', 'Y_ANGLE'), default=None, help="add hologram for deflect to computed hologram. Effect: shifts resulting image on Fourier plane by given angle (in units of quarter of first diffraction maximum)")
     parser.add_argument("-lens", default=None, type=float, metavar='FOCAL_LENGTH', help="add lens to hologram with given focal length in meters")
     args = parser.parse_args()
     args.random_seed = 42

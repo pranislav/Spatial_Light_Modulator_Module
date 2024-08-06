@@ -120,7 +120,7 @@ def initialize(args):
     args.window = create_tk_window()
     print("creating sample holograms...")
     args.phase_list = [i * 2 * np.pi / args.samples_per_period for i in range(args.samples_per_period)]
-    sample_list_2pi = make_sample_holograms_2pi(args.decline, args.phase_list)
+    sample_list_2pi = make_sample_holograms_2pi(args.deflect, args.phase_list)
     args.samples_list = convert_phase_holograms_to_color_holograms(sample_list_2pi, args.correspond_to2pi)
     args.subdomain_scale_shape = get_number_of_subdomains(args.subdomain_size)
     H, W = args.subdomain_scale_shape
@@ -165,7 +165,7 @@ if __name__ == "__main__":
     parser.add_argument('wavefront_correction_name', type=str)
     parser.add_argument('-ss', '--subdomain_size', metavar="INT", type=int, default=32, help=help_messages_wfc.subdomain_size)
     parser.add_argument('-spp', '--samples_per_period', metavar="INT", type=int, default=4, help=help_messages_wfc.samples_per_period)
-    parser.add_argument('-d', '--decline', metavar=("X_ANGLE", "Y_ANGLE"), nargs=2, type=float, default=(0.5, 0.5), help=help_messages_wfc.decline)
+    parser.add_argument('-d', '--deflect', metavar=("X_ANGLE", "Y_ANGLE"), nargs=2, type=float, default=(0.5, 0.5), help=help_messages_wfc.deflect)
     parser.add_argument('-c', '--reference_coordinates', metavar=("X_COORD", "Y_COORD"), nargs=2, type=int, default=None, help=help_messages_wfc.reference_subdomain_coordinates)
     parser.add_argument('-ct2pi', '--correspond_to2pi', metavar="INT", type=int, required=True, help=help_messages_wfc.ct2pi)
     parser.add_argument('-skip', '--skip_subdomains_out_of_inscribed_circle', action="store_true", help=help_messages_wfc.skip_subdomains_out_of_inscribed_circle)

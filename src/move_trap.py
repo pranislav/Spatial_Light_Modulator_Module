@@ -18,7 +18,7 @@ def main(args):
     flags = {"mask": True, "quit": False}
     while True:
         black_image[coords[0]][coords[1]] = 255
-        hologram = np.angle(ifft2(black_image)) #np.load(f"{args.holograms_dir}/{coords[0]}/{coords[1]}.npy") #cl.decline_2pi(coords)
+        hologram = np.angle(ifft2(black_image)) #np.load(f"{args.holograms_dir}/{coords[0]}/{coords[1]}.npy") #cl.deflect_2pi(coords)
         black_image[coords[0]][coords[1]] = 0
         display_hologram(window, hologram, mask, flags["mask"], args.correspond_to2pi)
         read_keyboard_input(coords, flags, args.big_step, height_border, width_border, args.mirror)

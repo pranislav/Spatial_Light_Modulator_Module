@@ -49,7 +49,7 @@ def produce_map(map, type, args):
     save_phase_mask(big_map, args.dest_dir, specification)
 
 def make_specification_map(args):
-    return f"ss{args.subdomain_size}_spp{args.samples_per_period}_d{args.decline[0]}_{args.decline[1]}_r{args.reference_coordinates[0]}_{args.reference_coordinates[1]}"
+    return f"ss{args.subdomain_size}_spp{args.samples_per_period}_d{args.deflect[0]}_{args.deflect[1]}_r{args.reference_coordinates[0]}_{args.reference_coordinates[1]}"
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Script for calibrating an optical path by SLM")
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     parser.add_argument('wavefront_correction_name', type=str)
     parser.add_argument('-ss', '--subdomain_size', metavar="INT", type=int, default=32, help=help_messages_wfc.subdomain_size)
     parser.add_argument('-spp', '--samples_per_period', metavar="INT", type=int, default=8, help=help_messages_wfc.samples_per_period)
-    parser.add_argument('-d', '--decline', metavar=("X_ANGLE", "Y_ANGLE"), nargs=2, type=float, default=(0.5, 0.5), help=help_messages_wfc.decline)
+    parser.add_argument('-d', '--deflect', metavar=("X_ANGLE", "Y_ANGLE"), nargs=2, type=float, default=(0.5, 0.5), help=help_messages_wfc.deflect)
     parser.add_argument('-c', '--reference_coordinates', metavar=("X_COORD", "Y_COORD"), nargs=2, type=int, default=None, help=help_messages_wfc.reference_subdomain_coordinates)
     parser.add_argument('-avg', '--num_to_avg', metavar="INT", type=int, default=1, help="number of frames to average when measuring intensity")
 

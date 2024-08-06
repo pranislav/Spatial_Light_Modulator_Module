@@ -123,7 +123,7 @@ def fit_and_subtract_masked(array, fit_func, initial_guess):
 
 
 def make_specification_phase_mask(args):
-    return f"phase_mask_{args.wavefront_correction_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_samples_per_period_{args.samples_per_period}_x{args.decline[0]}_y{args.decline[1]}_ref_{args.reference_coordinates}_intensity_coords_{args.intensity_coordinates[0]}_{args.intensity_coordinates[1]}_source_pxs_{args.sqrted_number_of_source_pixels}"
+    return f"phase_mask_{args.wavefront_correction_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_samples_per_period_{args.samples_per_period}_x{args.deflect[0]}_y{args.deflect[1]}_ref_{args.reference_coordinates}_intensity_coords_{args.intensity_coordinates[0]}_{args.intensity_coordinates[1]}_source_pxs_{args.sqrted_number_of_source_pixels}"
 
 
 
@@ -187,13 +187,13 @@ def trick_function(phase_intensity_list, fun):
 
 def make_sample_holograms(angle, samples_per_period, ct2pi):
     sample = []
-    sample.append(decline(angle, ct2pi))
+    sample.append(deflect(angle, ct2pi))
     for i in range(1, samples_per_period):
         offset = i * ct2pi // samples_per_period
         sample.append((sample[0] + offset) % ct2pi)
     return sample
 
-def decline(angle, ct2pi):
+def deflect(angle, ct2pi):
     x_angle, y_angle = angle
     hologram = np.zeros((c.slm_height, c.slm_width))
     const = ct2pi * c.px_distance / c.wavelength
@@ -206,12 +206,12 @@ def decline(angle, ct2pi):
 
 def make_sample_holograms_2pi(angle, phase_list):
     sample = []
-    sample.append(decline_2pi(angle))
+    sample.append(deflect_2pi(angle))
     for phase in phase_list:
         sample.append((sample[0] + phase) % (2 * np.pi))
     return sample
 
-def decline_2pi(angle):
+def deflect_2pi(angle):
     x_angle, y_angle = angle
     hologram = np.zeros((c.slm_height, c.slm_width))
     const = 2 * np.pi * c.px_distance / c.wavelength

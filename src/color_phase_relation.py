@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
     parser.add_argument('-ss', '--subdomain_size', metavar="INT", type=int, default=64, help=help_messages_wfc.subdomain_size)
     parser.add_argument('-spp', '--samples_per_period', metavar="INT", type=int, default=16, help=help_messages_wfc.samples_per_period)
-    parser.add_argument('-d', '--decline', metavar=("X_ANGLE", "Y_ANGLE"), nargs=2, type=float, default=(0.5, 0.5), help=help_messages_wfc.decline)
+    parser.add_argument('-d', '--deflect', metavar=("X_ANGLE", "Y_ANGLE"), nargs=2, type=float, default=(0.5, 0.5), help=help_messages_wfc.deflect)
     parser.add_argument('-c', '--reference_coordinates', metavar=("X_COORD", "Y_COORD"), nargs=2, type=int, default=None, help=help_messages_wfc.reference_subdomain_coordinates)
     parser.add_argument('-avg', '--num_to_avg', metavar="INT", type=int, default=8, help="number of frames to average when measuring intensity")
     parser.add_argument('-f', '--floor', action='store_true', help="when fitting, it is supposed that minimal intensity is almost zero")

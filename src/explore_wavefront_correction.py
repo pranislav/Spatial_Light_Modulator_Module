@@ -12,7 +12,7 @@ parameters to be changed:
 - subdomain size
 - position of subdomain
 - position of reference subdomain
-- declining angle
+- deflecting angle
 - nuber of phase shifts
 - number of frames to average to supress the fluctuation
 '''
@@ -46,8 +46,8 @@ def explore(args):
     if not os.path.exists(video_dir): os.makedirs(video_dir)
     while True:
         black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
-        if params["decline"][-1] or params["samples_per_period"][-1] or params["correspond_to_2pi"][-1]:
-            angle = last_nonempty(params["decline"])
+        if params["deflect"][-1] or params["samples_per_period"][-1] or params["correspond_to_2pi"][-1]:
+            angle = last_nonempty(params["deflect"])
             samples_per_period = last_nonempty(params["samples_per_period"])
             correspond_to_2pi = last_nonempty(params["correspond_to_2pi"])
             sample_list = cl.make_sample_holograms(angle, samples_per_period, correspond_to_2pi)
@@ -56,9 +56,9 @@ def explore(args):
             reference_position = real_subdomain_position(last_nonempty(params["reference_position"]), subdomain_size)
         reference_hologram = cl.add_subdomain(black_hologram, sample_list[0], reference_position, subdomain_size)
         num_to_avg = last_nonempty(params["num_to_avg"])
-        if params["decline"][-1] or params["subdomain_size"][-1]:
+        if params["deflect"][-1] or params["subdomain_size"][-1]:
             cl.set_exposure_wrt_reference_img(cam, window, (256 / 4 - 20, 256 / 4), reference_hologram, num_to_avg)
-        if params["decline"][-1] or params["subdomain_size"][-1] or params["correspond_to_2pi"][-1]:
+        if params["deflect"][-1] or params["subdomain_size"][-1] or params["correspond_to_2pi"][-1]:
             intensity_coord = cl.get_highest_intensity_coordinates_img(cam, window, reference_hologram, num_to_avg)
         hologram = reference_hologram
         subdomain_position = real_subdomain_position(last_nonempty(params["subdomain_position"]), subdomain_size)
@@ -130,7 +130,7 @@ def default_params():
     params["subdomain_size"] = [32]
     params["reference_position"] = [(15, 11)]
     params["subdomain_position"] = [(14, 11)]
-    params["decline"] = [(1, 1)]
+    params["deflect"] = [(1, 1)]
     params["samples_per_period"] = [8]
     params["num_to_avg"] = [1]
     return params
@@ -143,7 +143,7 @@ def get_params(params):
     subdomain_size = last_nonempty(params["subdomain_size"])
     params["reference_position"].append(get_position(last_nonempty(params["reference_position"]), subdomain_size, "reference"))
     params["subdomain_position"].append(get_position(last_nonempty(params["subdomain_position"]), subdomain_size, "second"))
-    params["decline"].append(get_decline(last_nonempty(params["decline"])))
+    params["deflect"].append(get_deflect(last_nonempty(params["deflect"])))
     params["samples_per_period"].append(get_samples_per_period(last_nonempty(params["samples_per_period"])))
     params["num_to_avg"].append(get_num_to_avg(last_nonempty(params["num_to_avg"])))
 
@@ -174,17 +174,17 @@ def get_num_to_avg(current):
     return int(num_to_avg_to_be)
 
 
-def get_decline(current):
+def get_deflect(current):
     while True:
-        decline_to_be = input(f"enter decline angle as a tuple in units of quarter of first diffraction maximum. current value: {current} >> ")
-        if decline_to_be == '':
-            return decline_to_be
-        decline_to_be = eval(decline_to_be)
-        x_angle, y_angle = decline_to_be
+        deflect_to_be = input(f"enter deflect angle as a tuple in units of quarter of first diffraction maximum. current value: {current} >> ")
+        if deflect_to_be == '':
+            return deflect_to_be
+        deflect_to_be = eval(deflect_to_be)
+        x_angle, y_angle = deflect_to_be
         if x_angle > 4 or y_angle > 4:
             print("neither of angles should exceed 4")
             continue
-        return decline_to_be
+        return deflect_to_be
         
 
 def get_position(current, subdomain_size, which):
