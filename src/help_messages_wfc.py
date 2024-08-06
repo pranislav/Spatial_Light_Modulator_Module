@@ -13,4 +13,4 @@ intensity_coordinates = "coordinates of the point where the intensity is measure
 choose_phase = "method of finding the optimal phase shift"
 sqrted_number_of_source_pixels = "length (in pixels) of side of a square area \
     on photo from which the intensity is taken"
-remove_defocus = "remove defocus compensation from the phase mask"
+remove_defocus_compensation = "remove defocus compensation from the phase mask"

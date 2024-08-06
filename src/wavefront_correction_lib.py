@@ -44,7 +44,7 @@ def combine_phase_masks(phase_masks):
 
 def produce_phase_mask(phase_masks, args):
     mean_phase_mask = combine_phase_masks(phase_masks)
-    if args.remove_defocus:
+    if args.remove_defocus_compensation:
         mean_phase_mask = fit_and_subtract_masked(mean_phase_mask, quadratic_func, [0, 0])
     produce_phase_mask_single(mean_phase_mask, args)
 

@@ -175,7 +175,7 @@ if __name__ == "__main__":
     # parser.add_argument('-resample', type=str, choices=["bilinear", "bicubic"], default="bilinear", help="smoothing method used to upscale the unwrapped phase mask")
     parser.add_argument('-nsp', '--sqrted_number_of_source_pixels', type=int, default=1, help=help_messages_wfc.sqrted_number_of_source_pixels)
     parser.add_argument('-parallel', action="store_true", help="use parallelization")
-    parser.add_argument('-rd', '--remove_defocus', action="store_true", help=help_messages_wfc.remove_defocus)
+    parser.add_argument('-rd', '--remove_defocus_compensation', action="store_true", help=help_messages_wfc.remove_defocus_compensation)
 
     args = parser.parse_args()
     args.dest_dir = "holograms/wavefront_correction_phase_masks"
