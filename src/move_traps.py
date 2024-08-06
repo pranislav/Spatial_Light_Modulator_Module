@@ -7,6 +7,7 @@ import wavefront_correction_lib as cl
 import PIL.Image as im
 from scipy.fft import ifft2
 import threading
+import help_messages_wfc
 
 def main(args):
     window = cl.create_tk_window()
@@ -129,7 +130,7 @@ def display_hologram(window, hologram, mask, mask_flag, ct2pi):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("mask_name", help="name of the mask file")
-    parser.add_argument("-ct2pi", "--correspond_to2pi", type=int, required=True, help="value of pixel corresponding to 2pi phase shift")
+    parser.add_argument("-ct2pi", "--correspond_to2pi", type=int, required=True, help=help_messages_wfc.ct2pi)
     parser.add_argument("-bs", "--big_step", type=int, default=20, help="big step size")
     parser.add_argument("-m", "--mirror", action="store_true", help="mirrors left-right and up-down")
     args = parser.parse_args()

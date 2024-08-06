@@ -19,6 +19,7 @@ import time
 import os
 from copy import deepcopy
 from matplotlib import pyplot as plt
+import help_messages_wfc
 
 
 
@@ -127,9 +128,9 @@ def make_hologram_set(reference, sample_list, coords, subdomain_size):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-spp", "--samples_per_period", metavar="INT", type=int, default=32, help="number of different phase values to be tested")
-    parser.add_argument("-ss", "--subdomain_size", metavar="INT", type=int, default=64, help="subdomain size")
-    parser.add_argument('-ct2pi', '--correspond_to2pi', metavar="INT", type=int, required=True, help="value of pixel corresponding to 2pi phase shift")
+    parser.add_argument("-spp", "--samples_per_period", metavar="INT", type=int, default=32, help=help_messages_wfc.samples_per_period)
+    parser.add_argument("-ss", "--subdomain_size", metavar="INT", type=int, default=64, help=help_messages_wfc.subdomain_size)
+    parser.add_argument('-ct2pi', '--correspond_to2pi', metavar="INT", type=int, required=True, help=help_messages_wfc.ct2pi)
     parser.add_argument("-r", "--runs", metavar="NUMBER_OF_RUNS", type=int, default=8, help="number of runs to average the results")
     parser.add_argument("-f", "--floor", action="store_true", help="presume that minimal intensity is almost zero")
     parser.add_argument("-w", "--wait", metavar="TIME_TO_WAIT", type=float, default=0, help="time to wait between the runs")
