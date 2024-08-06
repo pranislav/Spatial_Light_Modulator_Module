@@ -95,7 +95,7 @@ def return_phase(dict):
 
 def make_coordinates_list(args):
     H, W = args.subdomain_scale_shape
-    j0, i0 = (H // 2, W // 2) if args.reference_coordinates is None else args.reference_coordinates
+    j0, i0 = (H // 2, W // 2) if args.reference_subdomain_coordinates is None else args.reference_subdomain_coordinates
     if args.skip_subdomains_out_of_inscribed_circle:
         coordinates_list = [(i, j) for i in range(H) for j in range(W) if circular_hole_inclusive_condition(i, j, (H, W)) and not (i == i0 and j == j0)]
     else:
@@ -124,10 +124,10 @@ def initialize(args):
     args.samples_list = convert_phase_holograms_to_color_holograms(sample_list_2pi, args.correspond_to2pi)
     args.subdomain_scale_shape = get_number_of_subdomains(args.subdomain_size)
     H, W = args.subdomain_scale_shape
-    rx, ry = (H // 2, W // 2) if args.reference_coordinates is None else args.reference_coordinates
-    args.real_reference_coordinates = (rx * args.subdomain_size, ry * args.subdomain_size)
+    rx, ry = (H // 2, W // 2) if args.reference_subdomain_coordinates is None else args.reference_subdomain_coordinates
+    args.real_reference_subdomain_coordinates = (rx * args.subdomain_size, ry * args.subdomain_size)
     black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
-    reference_hologram = add_subdomain(black_hologram, args.samples_list[0], args.real_reference_coordinates, args.subdomain_size)
+    reference_hologram = add_subdomain(black_hologram, args.samples_list[0], args.real_reference_subdomain_coordinates, args.subdomain_size)
     print("adjusting exposure time...")
     set_exposure_wrt_reference_img(args.cam, args.window, (256 / 4 - 20, 256 / 4), reference_hologram) # in fully-constructive interference the value of amplitude could be twice as high, therefore intensity four times as high 
     get_and_show_intensity_coords(args.cam, args.window, im.fromarray(args.samples_list[0]), args)
@@ -166,7 +166,7 @@ if __name__ == "__main__":
     parser.add_argument('-ss', '--subdomain_size', metavar="INT", type=int, default=32, help=help_messages_wfc.subdomain_size)
     parser.add_argument('-spp', '--samples_per_period', metavar="INT", type=int, default=4, help=help_messages_wfc.samples_per_period)
     parser.add_argument('-d', '--deflect', metavar=("X_ANGLE", "Y_ANGLE"), nargs=2, type=float, default=(0.5, 0.5), help=help_messages_wfc.deflect)
-    parser.add_argument('-c', '--reference_coordinates', metavar=("X_COORD", "Y_COORD"), nargs=2, type=int, default=None, help=help_messages_wfc.reference_subdomain_coordinates)
+    parser.add_argument('-c', '--reference_subdomain_coordinates', metavar=("X_COORD", "Y_COORD"), nargs=2, type=int, default=None, help=help_messages_wfc.reference_subdomain_coordinates)
     parser.add_argument('-ct2pi', '--correspond_to2pi', metavar="INT", type=int, required=True, help=help_messages_wfc.ct2pi)
     parser.add_argument('-skip', '--skip_subdomains_out_of_inscribed_circle', action="store_true", help=help_messages_wfc.skip_subdomains_out_of_inscribed_circle)
     parser.add_argument("-shuffle", action="store_true", help=help_messages_wfc.shuffle)

@@ -123,7 +123,7 @@ def fit_and_subtract_masked(array, fit_func, initial_guess):
 
 
 def make_specification_phase_mask(args):
-    return f"phase_mask_{args.wavefront_correction_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_samples_per_period_{args.samples_per_period}_x{args.deflect[0]}_y{args.deflect[1]}_ref_{args.reference_coordinates}_intensity_coords_{args.intensity_coordinates[0]}_{args.intensity_coordinates[1]}_source_pxs_{args.sqrted_number_of_source_pixels}"
+    return f"phase_mask_{args.wavefront_correction_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_samples_per_period_{args.samples_per_period}_x{args.deflect[0]}_y{args.deflect[1]}_ref_{args.reference_subdomain_coordinates}_intensity_coords_{args.intensity_coordinates[0]}_{args.intensity_coordinates[1]}_source_pxs_{args.sqrted_number_of_source_pixels}"
 
 
 
@@ -249,7 +249,7 @@ def clear_subdomain(hologram: im, coordinates, subdomain_size):
 
 # ---------- new getters ----------- #
 
-def extract_reference_coordinates(reference_hologram_coordinates_ratio, subdomain_size, subdomains_number):
+def extract_reference_subdomain_coordinates(reference_hologram_coordinates_ratio, subdomain_size, subdomains_number):
     y_numerator, y_denominator, x_numerator, x_denominator = reference_hologram_coordinates_ratio.split("_")
     H, W = subdomains_number
     y_coord = subdomain_size * (int(y_numerator) * H // int(y_denominator))

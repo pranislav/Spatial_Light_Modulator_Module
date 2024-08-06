@@ -19,7 +19,7 @@ def main(args):
     fit_params_dict = {param: [] for param in fit_func.__code__.co_varnames[1:]}
     intensity_lists = []
     H, W = get_number_of_subdomains(args.subdomain_size)
-    j0, i0 = (H // 2, W // 2) if args.reference_coordinates is None else args.reference_coordinates
+    j0, i0 = (H // 2, W // 2) if args.reference_subdomain_coordinates is None else args.reference_subdomain_coordinates
     do_loop = partial(circle, (H, W), H // 4)
     for i in range(H):
         print(f"{i + 1}/{H}")
@@ -102,7 +102,7 @@ if __name__ == "__main__":
     parser.add_argument('-ss', '--subdomain_size', metavar="INT", type=int, default=64, help=help_messages_wfc.subdomain_size)
     parser.add_argument('-spp', '--samples_per_period', metavar="INT", type=int, default=16, help=help_messages_wfc.samples_per_period)
     parser.add_argument('-d', '--deflect', metavar=("X_ANGLE", "Y_ANGLE"), nargs=2, type=float, default=(0.5, 0.5), help=help_messages_wfc.deflect)
-    parser.add_argument('-c', '--reference_coordinates', metavar=("X_COORD", "Y_COORD"), nargs=2, type=int, default=None, help=help_messages_wfc.reference_subdomain_coordinates)
+    parser.add_argument('-c', '--reference_subdomain_coordinates', metavar=("X_COORD", "Y_COORD"), nargs=2, type=int, default=None, help=help_messages_wfc.reference_subdomain_coordinates)
     parser.add_argument('-avg', '--num_to_avg', metavar="INT", type=int, default=8, help="number of frames to average when measuring intensity")
     parser.add_argument('-f', '--floor', action='store_true', help="when fitting, it is supposed that minimal intensity is almost zero")
     parser.add_argument('-amp', '--fix_amplitude', action='store_true', help="makes second round of fitting with fixed amplitude (determined in previous round)")
