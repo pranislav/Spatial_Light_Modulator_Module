@@ -34,6 +34,7 @@ import os
 from copy import deepcopy
 import time
 import fit_stuff as f
+import wavefront_correction_lib as wfc
 
 
 def explore(args):
@@ -362,10 +363,12 @@ def make_imgs_for_video(seed, frame_img_list, video_frame_info):
 
 
 def make_name(params):
-    name = f""
+    name = ""
     for key in params.keys():
         name += f"{key}={last_nonempty(params[key])}_"
-    return name + time.strftime("%Y-%m-%d_%H-%M-%S")
+    name = name[:-1]
+    return name
+
 
 
 def images_to_video(image_list, video_name, fps, output_path="."):
@@ -374,7 +377,8 @@ def images_to_video(image_list, video_name, fps, output_path="."):
 
     # Define the codec and create VideoWriter object
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # You can use other codecs too, like 'XVID'
-    video = cv2.VideoWriter(f"{output_path}/{video_name}.mp4", fourcc, fps, (width, height))
+    path = f"{output_path}/{video_name}.mp4"
+    video = cv2.VideoWriter(wfc.originalize_name(path), fourcc, fps, (width, height))
 
     for img in image_list:
         # Convert PIL Image to numpy array

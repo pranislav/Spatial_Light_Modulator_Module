@@ -49,7 +49,7 @@ def produce_map(map, type, args):
     save_phase_mask(big_map, args.dest_dir, specification)
 
 def make_specification_map(args):
-    return f"ss{args.subdomain_size}_spp{args.samples_per_period}_d{args.deflect[0]}_{args.deflect[1]}_r{args.reference_subdomain_coordinates[0]}_{args.reference_subdomain_coordinates[1]}"
+    return f"ss{args.subdomain_size}_spp{args.samples_per_period}_defl_{args.deflect[0]}_{args.deflect[1]}_ref{args.reference_subdomain_coordinates[0]}_{args.reference_subdomain_coordinates[1]}"
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Script for calibrating an optical path by SLM")
@@ -65,6 +65,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     args.dest_dir = "holograms/fit_maps"
+    if not os.path.exists(args.dest_dir):
+        os.makedirs(args.dest_dir)
     start = time()
     fit_maps(args)
     print("execution_time: ", round((time() - start) / 60, 1),  " min")

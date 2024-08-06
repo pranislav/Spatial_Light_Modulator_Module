@@ -11,6 +11,7 @@ import imageio
 import wavefront_correction_lib as cl
 import time
 import help_messages_wfc
+import wavefront_correction_lib as wfc
 
 
 def main(args):
@@ -92,9 +93,11 @@ def save_hologram_and_gif(hologram, args):
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
     hologram_name = make_hologram_name(args, img_name)
-    im.fromarray(hologram).convert("L").save(f"{dest_dir}/{hologram_name}.png")
+    hologram_name_img = wfc.originalize_name(f"{dest_dir}/{hologram_name}.png")
+    im.fromarray(hologram).convert("L").save(hologram_name_img)
     if args.gif:
-        create_gif(f"{args.gif_dir}/gif_source", f"{args.gif_dir}/{hologram_name}.gif")
+        hologram_name_gif = wfc.originalize_name(f"{args.gif_dir}/{hologram_name}.gif")
+        create_gif(f"{args.gif_dir}/gif_source", hologram_name_gif)
 
 
 def make_hologram_name(args, img_name):
@@ -203,6 +206,7 @@ if __name__ == "__main__":
     parser.add_argument("-lens", default=None, type=float, metavar='FOCAL_LENGTH', help="add lens to hologram with given focal length in meters")
     args = parser.parse_args()
     args.random_seed = 42
-    args.print_info = True
+    if not os.path.exists(args.destination_directory):
+        os.makedirs(args.destination_directory)
 
     main(args)

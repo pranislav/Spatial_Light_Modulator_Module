@@ -4,15 +4,16 @@ from PIL import Image
 import argparse
 import os
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import help_messages_wfc
 
 
 
 def parse_arguments():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(description="Apply a colormap to a grayscale image.")
+    parser = argparse.ArgumentParser(description="Add a colormap to a grayscale image. Optionally, convert the image to rainbow colors.")
     parser.add_argument("image_path", type=str, help="Path to the grayscale image.")
     parser.add_argument("-p", "--palette", type=str, default='greyscale', help="Color palette to apply ('greyscale' or 'hue'). Optional, default is 'greyscale'.")
-    parser.add_argument("ct2pi", type=float, help="Value in the image that should correspond to 2*pi in phase mapping.")
+    parser.add_argument("-ct2pi", type=float, required=True, help=help_messages_wfc.ct2pi)
     return parser.parse_args()
 
 def read_image(image_path):
@@ -26,7 +27,7 @@ def convert_to_phase(image_array, ct2pi):
 
 
 def save_image_with_colorbar(img_array, original_image_path, palette):
-    """Save the colored image with a colorbar to a file."""
+    """Save the colored image with a colorbar to the directory of its origin."""
     base, ext = os.path.splitext(original_image_path)
     output_path = f"{base}_{palette}_colorbar{ext}"
     

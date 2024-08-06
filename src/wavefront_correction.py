@@ -16,6 +16,7 @@ import fit_stuff as f
 from queue import Queue
 from threading import Thread
 import help_messages_wfc
+import os
 
 
 
@@ -179,6 +180,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     args.dest_dir = "holograms/wavefront_correction_phase_masks"
+    if not os.path.exists(args.dest_dir):
+        os.makedirs(args.dest_dir)
     start = time()
     if args.parallel:
         wavefront_correction_parallelized(args)

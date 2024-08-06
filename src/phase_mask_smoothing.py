@@ -8,6 +8,7 @@ import time
 import copy
 import cv2
 import wavefront_correction_lib as cl
+import help_messages_wfc
 
 
 def main(args):
@@ -125,7 +126,7 @@ if __name__ == "__main__":
     source_dir = "holograms/wavefront_correction_phase_masks/"
     parser = argparse.ArgumentParser()
     parser.add_argument("phase_mask_name", type=str, help=f'name of a phase mask in directory {source_dir}')
-    parser.add_argument("-ct2pi", "--correspond_to_2pi", metavar="INT", type=int, required=True, help="value of pixel corresponding to 2pi phase shift")
+    parser.add_argument("-ct2pi", "--correspond_to_2pi", metavar="INT", type=int, required=True, help=help_messages_wfc.ct2pi)
     parser.add_argument("-ss", "--subdomain_size", metavar="INT", type=int, required=True, help="subdomain size used to create the phase mask")
     parser.add_argument("-resample", type=str, choices=["bilinear", "bicubic"], default="bilinear", help="smoothing method used to upscale the unwrapped phase mask")
     args = parser.parse_args()

@@ -1,5 +1,6 @@
 
-samples_per_period = "number of intensity measurements per one subdomain"
+samples_per_period = "number of intensity measurements per one subdomain \
+    and also number of subdomain hologram phase shifts"
 subdomain_size = "size of subdomain side in pixels"
 deflect = "angle to deflect the light in x and y direction (in constants.u unit)"
 ct2pi = "value of pixel corresponding to 2pi phase shift"

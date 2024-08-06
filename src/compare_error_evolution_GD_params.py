@@ -4,6 +4,7 @@ import argparse
 import matplotlib.pyplot as plt
 import os
 from matplotlib.ticker import MaxNLocator
+import wavefront_correction_lib as wfc
 
 def compare_error_evolution(args):
     target = gh.prepare_target(args.img_name, args)
@@ -53,22 +54,20 @@ def choose_name_of_vary(args):
         return "unknown"
 
 def save_plot(args):
-    name, specification = create_name(args)
+    img_name, specification = create_name(args)
     values = "_".join(map(str, args.values))
-    name_to_be = f"{args.dest_dir}/{name}_varying_{choose_name_of_vary(args)}_values_{values}_{specification}"
-    while os.path.exists(name_to_be + ".png"):
-        name_to_be += "I"
-    plt.savefig(name_to_be + ".png")
+    name_to_be = f"{args.dest_dir}/{img_name}_varying_{choose_name_of_vary(args)}_values_{values}_{specification}.png"
+    plt.savefig(wfc.originalize_name(name_to_be), bbox_inches='tight')
 
 
 def create_name(args):
-    name = args.img_name.split("/")[-1].split(".")[0]
+    img_name = args.img_name.split("/")[-1].split(".")[0]
     if args.quarterize:
-        name += "_quarterized"
+        img_name += "_quarterized"
     if args.invert:
-        name += "_inverted"
-    specification = f"learning_rate{args.learning_rate}_attention_{args.white_attention}_unsettle_{args.unsettle}_initial_guess_{args.initial_guess}_loops_{args.max_loops}"
-    return name, specification
+        img_name += "_inverted"
+    specification = f"lr{args.learning_rate}_wa_{args.white_attention}_unstl_{args.unsettle}_ig_{args.initial_guess}_l_{args.max_loops}"
+    return img_name, specification
 
 
 def fill_unnecessary_args(args):

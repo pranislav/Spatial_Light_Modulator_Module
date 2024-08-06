@@ -5,6 +5,7 @@ import wavefront_correction_lib as wcl
 import phase_mask_smoothing as pms
 import constants as c
 import help_messages_wfc
+import os
 
 
 def main(args):
@@ -13,7 +14,8 @@ def main(args):
     unwrapped_mask = pms.unwrap_phase_picture(phase_mask, args.correspond_to2pi)
     corrected_mask = wcl.fit_and_subtract(unwrapped_mask, wcl.quadratic_func, [0, 0])
     upscaled_mask = im.fromarray(corrected_mask % args.correspond_to2pi).resize((c.slm_width, c.slm_height), resample=im.BILINEAR)
-    upscaled_mask.convert("L").save(f"{args.source_dir}/{args.phase_mask_name[:-4]}_removed_defocus.png")
+    base, ext = os.path.splitext(args.phase_mask_name)
+    upscaled_mask.convert("L").save(f"{args.source_dir}/{base}_removed_defocus{ext}")
 
 
 if __name__ == "__main__":

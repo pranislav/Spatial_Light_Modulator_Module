@@ -20,7 +20,8 @@ def produce_phase_mask_single(phase_mask, args):
         array_to_save = ma.filled(phase_mask, fill_value=0)
     else:
         array_to_save = phase_mask
-    np.save(f"{args.dest_dir}/{specification}.npy", array_to_save)
+    save_path = originalize_name(f"{args.dest_dir}/{specification}.npy")
+    np.save(save_path, array_to_save)
     big_phase_mask = expand_phase_mask((array_to_save % (2 * np.pi)) * args.correspond_to2pi / (2 * np.pi), args.subdomain_size)
     save_phase_mask(big_phase_mask, args.dest_dir, specification)
     big_phase_mask = resize_2d_array(phase_mask, (c.slm_height, c.slm_width))
@@ -121,9 +122,20 @@ def fit_and_subtract_masked(array, fit_func, initial_guess):
     return result_array
 
 
+def originalize_name(name):
+    if not os.path.exists(name):
+        return name
+    base, ext = os.path.splitext(name)
+    i = 1
+    while True:
+        new_name = f"{base}_{i}{ext}"
+        if not os.path.exists(new_name):
+            return new_name
+        i += 1
+
 
 def make_specification_phase_mask(args):
-    return f"phase_mask_{args.wavefront_correction_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_samples_per_period_{args.samples_per_period}_x{args.deflect[0]}_y{args.deflect[1]}_ref_{args.reference_subdomain_coordinates}_intensity_coords_{args.intensity_coordinates[0]}_{args.intensity_coordinates[1]}_source_pxs_{args.sqrted_number_of_source_pixels}"
+    return f"phase_mask_{args.wavefront_correction_name}_ss{args.subdomain_size}_ct2pi_{args.correspond_to2pi}_spp_{args.samples_per_period}_defl_{args.deflect[0]}_{args.deflect[1]}_ref_{args.reference_subdomain_coordinates}_ic_{args.intensity_coordinates[0]}_{args.intensity_coordinates[1]}_nsp_{args.sqrted_number_of_source_pixels}"
 
 
 
@@ -329,7 +341,8 @@ def expand_phase_mask(phase_mask, subdomain_size):
 def save_phase_mask(phase_mask, dest_dir, name):               
     if not os.path.exists(dest_dir): os.makedirs(dest_dir)
     phase_mask_img = im.fromarray(phase_mask)
-    phase_mask_img.convert('L').save(f"{dest_dir}/{name}.png")
+    original_name = originalize_name(f"{dest_dir}/{name}.png")
+    phase_mask_img.convert('L').save(original_name)
 
 
 def mask_hologram(path_to_hologram, path_to_mask):

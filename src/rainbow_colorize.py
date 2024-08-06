@@ -2,6 +2,7 @@ import argparse
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
+import os
 
 def grayscale_to_rainbow(image_path):
     # Load the grayscale image
@@ -25,8 +26,9 @@ def grayscale_to_rainbow(image_path):
     # Convert the numpy array back to an image
     colorized_image = Image.fromarray(colorized_array)
 
-    # Save the colorized image with "_hue" appended to the original file name
-    new_image_path = f"{image_path.rsplit('.', 1)[0]}_hue.{image_path.rsplit('.', 1)[1]}"
+    # Save the colorized image with "_rainbow" appended to the original file name
+    base, ext = os.path.splitext(image_path)
+    new_image_path = f"{base}_rainbow{ext}"
     colorized_image.save(new_image_path)
 
     print(f"Saved rainbow-colorized image as: {new_image_path}")
