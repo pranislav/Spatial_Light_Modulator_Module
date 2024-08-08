@@ -1,4 +1,4 @@
-from traps_images_lib import create_sequence_dots
+from traps_images import create_sequence_dots
 import argparse
 import numpy as np
 import constants as c

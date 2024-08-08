@@ -1,4 +1,4 @@
-import wavefront_correction_lib as wcl
+import wavefront_correction as wcl
 import numpy as np
 import argparse
 

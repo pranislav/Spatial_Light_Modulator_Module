@@ -4,7 +4,7 @@ import argparse
 import matplotlib.pyplot as plt
 import os
 import compare_error_evolution_GD_params as compare
-import wavefront_correction_lib as wcl
+import wavefront_correction as wfc
 
 def compare_error_evolution_algorithms(args):
     target = gh.prepare_target(args.img_name, args)
@@ -29,7 +29,7 @@ def compare_error_evolution_algorithms(args):
 def save_plot(args):
     img_name, specification = compare.create_name(args)
     name = f"{args.dest_dir}/{img_name}_{specification}.png"
-    plt.savefig(wcl.originalize_name(name), bbox_inches='tight')
+    plt.savefig(wfc.originalize_name(name), bbox_inches='tight')
 
 
 

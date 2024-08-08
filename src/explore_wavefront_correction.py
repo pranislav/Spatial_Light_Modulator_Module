@@ -20,7 +20,6 @@ parameters to be changed:
 # TODO: subdomain_position degeneration (real & input one)
 
 import constants as c
-import wavefront_correction_lib as cl
 import display_holograms as dh
 import numpy as np
 from PIL import Image as im
@@ -34,13 +33,13 @@ import os
 from copy import deepcopy
 import time
 import fit_stuff as f
-import wavefront_correction_lib as wfc
+import wavefront_correction as wfc
 
 
 def explore(args):
     params = default_params()
     # sample_list = make_sample_holograms(sample_list, params)
-    window = cl.create_tk_window()
+    window = wfc.create_tk_window()
     cam = uc480.UC480Camera()
     internal_screen_resolution = get_internal_screen_resolution()
     video_dir = "images/explore"
@@ -51,16 +50,16 @@ def explore(args):
             angle = last_nonempty(params["deflect"])
             samples_per_period = last_nonempty(params["samples_per_period"])
             correspond_to_2pi = last_nonempty(params["correspond_to_2pi"])
-            sample_list = cl.make_sample_holograms(angle, samples_per_period, correspond_to_2pi)
+            sample_list = wfc.make_sample_holograms(angle, samples_per_period, correspond_to_2pi)
         if params["subdomain_size"][-1] or params["reference_position"][-1]:
             subdomain_size = last_nonempty(params["subdomain_size"])
             reference_position = real_subdomain_position(last_nonempty(params["reference_position"]), subdomain_size)
-        reference_hologram = cl.add_subdomain(black_hologram, sample_list[0], reference_position, subdomain_size)
+        reference_hologram = wfc.add_subdomain(black_hologram, sample_list[0], reference_position, subdomain_size)
         num_to_avg = last_nonempty(params["num_to_avg"])
         if params["deflect"][-1] or params["subdomain_size"][-1]:
-            cl.set_exposure_wrt_reference_img(cam, window, (256 / 4 - 20, 256 / 4), reference_hologram, num_to_avg)
+            wfc.set_exposure_wrt_reference_img(cam, window, (256 / 4 - 20, 256 / 4), reference_hologram, num_to_avg)
         if params["deflect"][-1] or params["subdomain_size"][-1] or params["correspond_to_2pi"][-1]:
-            intensity_coord = cl.get_highest_intensity_coordinates_img(cam, window, reference_hologram, num_to_avg)
+            intensity_coord = wfc.get_highest_intensity_coordinates_img(cam, window, reference_hologram, num_to_avg)
         hologram = reference_hologram
         subdomain_position = real_subdomain_position(last_nonempty(params["subdomain_position"]), subdomain_size)
         frames, intensity_data = wavefront_correction_loop_explore(window, cam, hologram, sample_list, subdomain_position, subdomain_size, samples_per_period, intensity_coord, num_to_avg)
@@ -85,13 +84,13 @@ def wavefront_correction_loop_explore(window, cam, hologram, sample, subdomain_p
     images_list = []
     k = 0
     while k < samples_per_period:
-        hologram = cl.add_subdomain(hologram, sample[k], subdomain_position, subdomain_size)
-        cl.display_image_on_external_screen(window, hologram)
+        hologram = wfc.add_subdomain(hologram, sample[k], subdomain_position, subdomain_size)
+        wfc.display_image_on_external_screen(window, hologram)
         # time.sleep(0.1)
         intensity = 0
         for _ in range(num_to_avg):
             frame = cam.snap()
-            intensity += cl.get_intensity_on_coordinates(frame, coordinates)
+            intensity += wfc.get_intensity_on_coordinates(frame, coordinates)
         images_list.append(frame)
         intensity /= num_to_avg
         if intensity == 255:

@@ -3,13 +3,13 @@ import keyboard
 import numpy as np
 import constants as c
 import time
-import wavefront_correction_lib as cl
+import wavefront_correction as wfc
 import PIL.Image as im
 from scipy.fft import ifft2
 import help_messages_wfc
 
 def main(args):
-    window = cl.create_tk_window()
+    window = wfc.create_tk_window()
     mask = np.load(f"holograms/wavefront_correction_phase_masks/{args.mask_name}")
     black_image = np.zeros((c.slm_height, c.slm_width), dtype=np.uint8)
     height_border = c.slm_height // 2
@@ -18,7 +18,7 @@ def main(args):
     flags = {"mask": True, "quit": False}
     while True:
         black_image[coords[0]][coords[1]] = 255
-        hologram = np.angle(ifft2(black_image)) #np.load(f"{args.holograms_dir}/{coords[0]}/{coords[1]}.npy") #cl.deflect_2pi(coords)
+        hologram = np.angle(ifft2(black_image)) #np.load(f"{args.holograms_dir}/{coords[0]}/{coords[1]}.npy") #wfc.deflect_2pi(coords)
         black_image[coords[0]][coords[1]] = 0
         display_hologram(window, hologram, mask, flags["mask"], args.correspond_to2pi)
         read_keyboard_input(coords, flags, args.big_step, height_border, width_border, args.mirror)
@@ -31,7 +31,7 @@ def display_hologram(window, hologram, mask, mask_flag, ct2pi):
         hologram = hologram + mask
     hologram_int = (hologram % (2 * np.pi) * ct2pi / (2 * np.pi)).astype(np.uint8)
     hologram_img = im.fromarray(hologram_int)
-    cl.display_image_on_external_screen(window, hologram_img)
+    wfc.display_image_on_external_screen(window, hologram_img)
 
 
 def read_keyboard_input(coords, mask_flag, big_step, height_border, width_border, mirror):

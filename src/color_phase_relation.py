@@ -2,23 +2,23 @@
 a value of a pixel in a hologram and real phase shift that SLM applies on the pixel'''
 
 import argparse
-import wavefront_correction as ca
-from wavefront_correction_lib import *
+import wavefront_correction as wfc
 from functools import partial
 import fit_stuff as fs
 import time
 import os
 import help_messages_wfc
+import numpy as np
 
 
 def main(args):
     args.sqrted_number_of_source_pixels = 1
-    ca.initialize(args)
-    wavefront_correction_loop = partial(ca.wavefront_correction_loop, args=args)
+    wfc.initialize(args)
+    wavefront_correction_loop = partial(wfc.wavefront_correction_loop, args=args)
     fit_func = fs.positive_cos_floor() if args.floor else fs.positive_cos
     fit_params_dict = {param: [] for param in fit_func.__code__.co_varnames[1:]}
     intensity_lists = []
-    H, W = get_number_of_subdomains(args.subdomain_size)
+    H, W = wfc.get_number_of_subdomains(args.subdomain_size)
     j0, i0 = (H // 2, W // 2) if args.reference_subdomain_coordinates is None else args.reference_subdomain_coordinates
     do_loop = partial(circle, (H, W), H // 4)
     for i in range(H):

@@ -4,7 +4,7 @@ import argparse
 import matplotlib.pyplot as plt
 import os
 from matplotlib.ticker import MaxNLocator
-import wavefront_correction_lib as wfc
+import wavefront_correction as wfc
 
 def compare_error_evolution(args):
     target = gh.prepare_target(args.img_name, args)

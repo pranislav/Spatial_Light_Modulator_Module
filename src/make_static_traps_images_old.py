@@ -1,6 +1,6 @@
 #TODO: redo this
 
-import traps_images_lib as md
+import traps_images as md
 from constants import slm_height as h, slm_width as w
 
 object = md.dot

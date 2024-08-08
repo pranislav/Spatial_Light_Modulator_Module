@@ -6,7 +6,7 @@ subdomains are significantly big'''
 
 
 import explore_wavefront_correction as e
-import wavefront_correction_lib as cl
+import wavefront_correction as wfc
 import color_phase_relation as cp
 import constants as c
 import numpy as np
@@ -26,15 +26,15 @@ import help_messages_wfc
 def main(args):
     fit_func = f.positive_cos_floor() if args.floor else f.positive_cos
     cam = uc480.UC480Camera()
-    window = cl.create_tk_window()
+    window = wfc.create_tk_window()
     # subdomain_size = int(np.sqrt(1 / 5) * c.slm_height)
-    sample_list = cl.make_sample_holograms((1, 1), args.samples_per_period, args.correspond_to2pi)
+    sample_list = wfc.make_sample_holograms((1, 1), args.samples_per_period, args.correspond_to2pi)
     upper_left_corner = np.array((c.slm_width // 2 - args.subdomain_size, (c.slm_height - args.subdomain_size) // 2))
     black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
-    reference = cl.add_subdomain(black_hologram, sample_list[0], upper_left_corner, args.subdomain_size)
+    reference = wfc.add_subdomain(black_hologram, sample_list[0], upper_left_corner, args.subdomain_size)
     hologram_set = make_hologram_set(reference, sample_list, upper_left_corner + (args.subdomain_size, 0), args.subdomain_size)
-    cl.set_exposure_wrt_reference_img(cam, window, (210, 230), hologram_set[0], 8)
-    intensity_coords = cl.get_highest_intensity_coordinates_img(cam, window, hologram_set[0], 8)
+    wfc.set_exposure_wrt_reference_img(cam, window, (210, 230), hologram_set[0], 8)
+    intensity_coords = wfc.get_highest_intensity_coordinates_img(cam, window, hologram_set[0], 8)
     fit_params_dict = iniciate_fit_params_dict(fit_func)
     intensity_lists = []
     time_name = time.strftime("%Y-%m-%d_%H-%M-%S")
@@ -104,9 +104,9 @@ def two_big_loop(samples_per_period, cam, window, hologram_set, intensity_coords
     intensity_list = [[], []]
     k = 0
     while k < samples_per_period:
-        cl.display_image_on_external_screen(window, hologram_set[k])
+        wfc.display_image_on_external_screen(window, hologram_set[k])
         frame = cam.snap()
-        intensity = cl.get_intensity_on_coordinates(frame, intensity_coords)
+        intensity = wfc.get_intensity_on_coordinates(frame, intensity_coords)
         if intensity == 255:
             print("maximal intensity was reached, starting over.")
             cam.set_exposure(cam.get_exposure() * 0.9) # 10 % decrease of exposure time
@@ -122,7 +122,7 @@ def two_big_loop(samples_per_period, cam, window, hologram_set, intensity_coords
 def make_hologram_set(reference, sample_list, coords, subdomain_size):
     hologram_set = []
     for sample in sample_list:
-        hologram_set.append(cl.add_subdomain(deepcopy(reference), sample, coords, subdomain_size))
+        hologram_set.append(wfc.add_subdomain(deepcopy(reference), sample, coords, subdomain_size))
     return hologram_set
 
 

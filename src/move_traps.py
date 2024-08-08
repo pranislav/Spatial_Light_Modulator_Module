@@ -3,14 +3,14 @@ import keyboard
 import numpy as np
 import constants as c
 import time
-import wavefront_correction_lib as cl
+import wavefront_correction as wfc
 import PIL.Image as im
 from scipy.fft import ifft2
 import threading
 import help_messages_wfc
 
 def main(args):
-    window = cl.create_tk_window()
+    window = wfc.create_tk_window()
     mask = np.load(f"holograms/wavefront_correction_phase_masks/{args.mask_name}")
     black_image = np.zeros((c.slm_height, c.slm_width), dtype=np.uint8)
     height_border = c.slm_height // 2
@@ -123,7 +123,7 @@ def display_hologram(window, hologram, mask, mask_flag, ct2pi):
         hologram = hologram + mask
     hologram_int = (hologram % (2 * np.pi) * ct2pi / (2 * np.pi)).astype(np.uint8)
     hologram_img = im.fromarray(hologram_int)
-    cl.display_image_on_external_screen(window, hologram_img)
+    wfc.display_image_on_external_screen(window, hologram_img)
 
 
 

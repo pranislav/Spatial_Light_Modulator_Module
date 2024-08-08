@@ -1,4 +1,4 @@
-import wavefront_correction_lib as cl
+import wavefront_correction as wfc
 from PIL import Image as im
 import numpy as np
 import argparse
@@ -14,7 +14,7 @@ mask_dir = "holograms/wavefront_correction_phase_masks"
 default_hologram_dir = "holograms"
 
 def display_holograms(args):
-    window = cl.create_tk_window()
+    window = wfc.create_tk_window()
     directory = set_dir(args.directory)
     mask_arr = set_mask(args.mask_name)
     name = None
@@ -119,16 +119,16 @@ def display_instant_wavefront_correction_holograms(window):
     params = default_params()
     while True:
         get_params(params)
-        sample_hologram_2pi = cl.deflect_2pi(params["deflect"], params["correspond_to_2pi"])
-        sample_hologram = cl.convert_2pi_hologram_to_int_hologram(sample_hologram_2pi, params["correspond_to_2pi"])
+        sample_hologram_2pi = wfc.deflect_2pi(params["deflect"], params["correspond_to_2pi"])
+        sample_hologram = wfc.convert_2pi_hologram_to_int_hologram(sample_hologram_2pi, params["correspond_to_2pi"])
         hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
         reference_position = e.real_subdomain_position(params["reference_position"], params["subdomain_size"])
         subdomain_position = e.real_subdomain_position(params["subdomain_position"], params["subdomain_size"])
-        hologram = cl.add_subdomain(hologram, sample_hologram, reference_position, params["subdomain_size"])
+        hologram = wfc.add_subdomain(hologram, sample_hologram, reference_position, params["subdomain_size"])
         if params["phase_shift"] != 0:
-            sample_hologram = cl.deflect(params["deflect"], params["correspond_to_2pi"]) + params["phase_shift"]
-        hologram = cl.add_subdomain(hologram, sample_hologram, subdomain_position, params["subdomain_size"])
-        cl.display_image_on_external_screen(window, hologram)
+            sample_hologram = wfc.deflect(params["deflect"], params["correspond_to_2pi"]) + params["phase_shift"]
+        hologram = wfc.add_subdomain(hologram, sample_hologram, subdomain_position, params["subdomain_size"])
+        wfc.display_image_on_external_screen(window, hologram)
         command = input("press enter to continue, type 'q' to quit this mode >> ")
         if command == 'q':
             print("leaving mode for displaying instant wavefront_correction holograms")
@@ -159,9 +159,9 @@ def display_with_mask(window, name, directory, mask_arr, ct2pi):
     if path is None:
         return 
     if mask_arr is not None:
-        cl.display_image_on_external_screen(window, mask_hologram(path, mask_arr, ct2pi))
+        wfc.display_image_on_external_screen(window, mask_hologram(path, mask_arr, ct2pi))
     else:
-        cl.display_image_on_external_screen(window, path)
+        wfc.display_image_on_external_screen(window, path)
 
 
 def set_path_to_hologram(directory, name):

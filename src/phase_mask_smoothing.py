@@ -7,7 +7,7 @@ import constants as c
 import time
 import copy
 import cv2
-import wavefront_correction_lib as cl
+import wavefront_correction as wfc
 import help_messages_wfc
 
 
@@ -26,7 +26,7 @@ def main_blur(args):
     phase_mask = read_phase_mask(args.phase_mask_name, args.source_dir)
     small_phase_mask = shrink_phase_mask(phase_mask, args.subdomain_size)
     unwrapped_mask = unwrap_phase_picture(small_phase_mask, args.correspond_to_2pi)
-    original_size_unwrapped_mask = cl.expand_phase_mask(unwrapped_mask, args.subdomain_size)
+    original_size_unwrapped_mask = wfc.expand_phase_mask(unwrapped_mask, args.subdomain_size)
     blurred_unwrapped_mask = circular_box_blur(original_size_unwrapped_mask, args.subdomain_size // 2)
     time_name = time.strftime("%Y-%m-%d_%H-%M-%S")
     save_smoothed_mask_unwrapped(copy.deepcopy(blurred_unwrapped_mask), args.phase_mask_name, time_name)

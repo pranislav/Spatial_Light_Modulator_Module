@@ -8,10 +8,8 @@ import constants as c
 import argparse
 import os
 import imageio
-import wavefront_correction_lib as cl
-import time
 import help_messages_wfc
-import wavefront_correction_lib as wfc
+import wavefront_correction as wfc
 from scipy.fft import fft2
 
 
@@ -161,7 +159,7 @@ def quarter(image: im) -> im:
 def deflect_hologram(hologram: np.array, angle: tuple):
     '''deflects hologram by angle, returns deflectd hologram
     '''
-    deflect = cl.deflect_2pi(angle)
+    deflect = wfc.deflect_2pi(angle)
     deflected_hologram = (hologram + deflect) % (2 * np.pi)
     return deflected_hologram
 
