@@ -48,7 +48,7 @@ def add_gif_image(args, expected_outcome, A, i):
         img = im.fromarray((np.angle(A) + np.pi) * args.correspond_to2pi / (2*np.pi))
     if args.gif_type == 'i':
         img = im.fromarray(expected_outcome)
-    img.convert("L").save(f"{args.gif_source_address}/{i // args.gif_skip}.png")
+    img.convert("L").save(f"{args.gif_source_dir}/{i // args.gif_skip}.png")
 
 
 def GD(demanded_output: np.array, args):
@@ -79,7 +79,7 @@ def GD(demanded_output: np.array, args):
                 img = im.fromarray(complex_to_real_phase(input/abs(input), args.correspond_to2pi))
             if args.gif_type == 'i':
                 img = im.fromarray(output)
-            img.convert("L").save(f"{args.gif_source_address}/{i // args.gif_skip}.png")
+            img.convert("L").save(f"{args.gif_source_dir}/{i // args.gif_skip}.png")
         i += 1
         if args.unsettle and i % int(round(args.max_loops / (args.unsettle + 1))) == 0:
             args.learning_rate *= 2

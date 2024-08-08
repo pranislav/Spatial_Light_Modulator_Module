@@ -197,28 +197,28 @@ def trick_function(phase_intensity_list, fun):
 
 # ---------- sample holograms ----------- #
 
-def make_sample_holograms(angle, samples_per_period, ct2pi):
-    sample = []
-    sample.append(deflect(angle, ct2pi))
-    for i in range(1, samples_per_period):
-        offset = i * ct2pi // samples_per_period
-        sample.append((sample[0] + offset) % ct2pi)
-    return sample
+# def make_sample_holograms(angle, samples_per_period, ct2pi):
+#     sample = []
+#     sample.append(deflect(angle, ct2pi))
+#     for i in range(1, samples_per_period):
+#         offset = i * ct2pi // samples_per_period
+#         sample.append((sample[0] + offset) % ct2pi)
+#     return sample
 
-def deflect(angle, ct2pi):
-    x_angle, y_angle = angle
-    hologram = np.zeros((c.slm_height, c.slm_width))
-    const = ct2pi * c.px_distance / c.wavelength
-    for i in range(c.slm_height):
-        for j in range(c.slm_width):
-            new_phase = const * (np.sin(y_angle * c.u) * i + np.sin(x_angle * c.u) * j)
-            hologram[i, j] = int(new_phase % ct2pi)
-    return hologram
+# def deflect(angle, ct2pi):
+#     x_angle, y_angle = angle
+#     hologram = np.zeros((c.slm_height, c.slm_width))
+#     const = ct2pi * c.px_distance / c.wavelength
+#     for i in range(c.slm_height):
+#         for j in range(c.slm_width):
+#             new_phase = const * (np.sin(y_angle * c.u) * i + np.sin(x_angle * c.u) * j)
+#             hologram[i, j] = int(new_phase % ct2pi)
+#     return hologram
 
 
 def make_sample_holograms_2pi(angle, phase_list):
     sample = []
-    sample.append(deflect_2pi(angle))
+    sample.append(deflect_2pi(angle)) # TODO: dont append this
     for phase in phase_list:
         sample.append((sample[0] + phase) % (2 * np.pi))
     return sample
@@ -233,10 +233,10 @@ def deflect_2pi(angle):
             hologram[i, j] = new_phase % (2 * np.pi)
     return hologram
 
-def convert_phase_holograms_to_color_holograms(sample, ct2pi):
-    return [convert_phase_hologram_to_color_hologram(hologram, ct2pi) for hologram in sample]
+def convert_2pi_holograms_to_int_holograms(sample, ct2pi):
+    return [convert_2pi_hologram_to_int_hologram(hologram, ct2pi) for hologram in sample]
 
-def convert_phase_hologram_to_color_hologram(hologram, ct2pi):
+def convert_2pi_hologram_to_int_hologram(hologram, ct2pi):
     return np.round(hologram * ct2pi / (2 * np.pi)).astype(np.uint8)
 
 

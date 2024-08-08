@@ -12,18 +12,33 @@ import wavefront_correction_lib as cl
 import time
 import help_messages_wfc
 import wavefront_correction_lib as wfc
+from scipy.fft import fft2
 
 
 def main(args):
     if args.img_name is None:
         hologram = np.zeros((c.slm_height, c.slm_width))
     else:
-        hologram, expected_outcome = make_hologram(args)
-    if args.preview:
-        im.fromarray(expected_outcome).show()
+        hologram = make_hologram(args)
     hologram = transform_hologram(hologram, args)
+    if args.preview:
+        show_hologram(hologram, args)
     save_hologram_and_gif(hologram, args)
 
+def show_hologram(hologram, args):
+    expected_outcome = fft2(np.exp(1j * hologram))
+    norm = find_out_norm(args)
+    expected_outcome_intensity = np.abs(expected_outcome) ** 2
+    expected_outcome_normed = expected_outcome_intensity / np.amax(expected_outcome_intensity) * norm
+    im.fromarray(expected_outcome_normed).show()
+
+
+def find_out_norm(args):
+    if args.img_name is None:
+        return 255
+    img = im.open(f"images/{args.img_name}").convert('L')
+    img_arr = np.array(img)
+    return np.amax(img_arr)
 
 def pad_to_square(img):
     '''Pads the image with black pixels to make it square
@@ -53,28 +68,30 @@ def pad_to_square(img):
 def make_hologram(args):
     algorithm = GS if args.algorithm == "GS" else GD
     target = prepare_target(args.img_name, args)
-    add_gif_source_address(args)
-    hologram, expected_outcome, _ = algorithm(target, args)
-    return hologram, expected_outcome
+    if args.gif:
+        add_gif_dirs(args)
+        remove_files_in_dir(args.gif_source_dir)
+    hologram, _, _ = algorithm(target, args)
+    return hologram
 
 def transform_hologram(hologram, args):
     if args.deflect is not None:
-        hologram = deflect_hologram(hologram, args.deflect, args.correspond_to2pi)
+        hologram = deflect_hologram(hologram, args.deflect)
     if args.lens:
-        hologram = add_lens(hologram, args.lens, args.correspond_to2pi)
+        hologram = add_lens(hologram, args.lens)
     return hologram
 
 
-def add_gif_source_address(args):
-    if not args.gif:
-        args.gif_dir = None
-        return
+def add_gif_dirs(args):
     if args.gif_type == "h":
-        args.gif_dir = "holograms"
+        args.gif_dest_dir = "holograms"
     elif args.gif_type == "i":
-        args.gif_dir = "images"
-    if not os.path.exists(args.gif_dir):
-        os.makedirs(args.gif_dir)
+        args.gif_dest_dir = "images"
+    if not os.path.exists(args.gif_dest_dir):
+        os.makedirs(args.gif_dest_dir)
+    args.gif_source_dir = f"{args.gif_dest_dir}/gif_source"
+    if not os.path.exists(args.gif_source_dir):
+        os.makedirs(args.gif_source_dir)
         
 
 def prepare_target(img_name, args):
@@ -93,11 +110,12 @@ def save_hologram_and_gif(hologram, args):
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
     hologram_name = make_hologram_name(args, img_name)
-    hologram_name_img = wfc.originalize_name(f"{dest_dir}/{hologram_name}.png")
-    im.fromarray(hologram).convert("L").save(hologram_name_img)
+    hologram_name_orig = wfc.originalize_name(f"{dest_dir}/{hologram_name}.npy")
+    np.save(hologram_name_orig, hologram)
+    # im.fromarray(hologram).convert("L").save(hologram_name_img)
     if args.gif:
-        hologram_name_gif = wfc.originalize_name(f"{args.gif_dir}/{hologram_name}.gif")
-        create_gif(f"{args.gif_dir}/gif_source", hologram_name_gif)
+        hologram_name_gif = wfc.originalize_name(f"{args.gif_dest_dir}/{hologram_name}.gif")
+        create_gif(args.gif_source_dir, hologram_name_gif)
 
 
 def make_hologram_name(args, img_name):
@@ -114,10 +132,9 @@ def make_hologram_name(args, img_name):
         img_transforms += "_quarter"
     if args.invert:
         img_transforms += "_inverted"
-    time_name = time.strftime("%Y-%m-%d_%H-%M-%S")
     if args.img_name is None:
         return f"{img_name}{transforms}"
-    return f"{img_name}{img_transforms}_{args.algorithm}{alg_params}__ct2pi{args.correspond_to2pi}_loops{args.max_loops}{transforms}_{time_name}"
+    return f"{img_name}{img_transforms}_{args.algorithm}{alg_params}__ct2pi{args.correspond_to2pi}_loops{args.max_loops}{transforms}"
 
 
 def args_to_string(args):
@@ -141,17 +158,17 @@ def quarter(image: im) -> im:
     return ground
 
 
-def deflect_hologram(hologram: np.array, angle: tuple, correspond_to2pi: int=256):
+def deflect_hologram(hologram: np.array, angle: tuple):
     '''deflects hologram by angle, returns deflectd hologram
     '''
-    deflect = cl.deflect(angle, correspond_to2pi)
-    deflectd_hologram = (hologram + deflect) % correspond_to2pi
-    return deflectd_hologram
+    deflect = cl.deflect_2pi(angle)
+    deflected_hologram = (hologram + deflect) % (2 * np.pi)
+    return deflected_hologram
 
-def add_lens(hologram: np.array, focal_len: float, correspond_to2pi: int=256):
-    return (hologram + lens(focal_len, correspond_to2pi, hologram.shape)) % correspond_to2pi
+def add_lens(hologram: np.array, focal_len: float):
+    return (hologram + lens(focal_len, hologram.shape)) % (2 * np.pi)
 
-def lens(focal_length, correspond_to2pi, shape):
+def lens(focal_length, shape):
     '''simulates lens with focal length 'focal_length' in meters
     '''
     h, w = shape
@@ -161,7 +178,7 @@ def lens(focal_length, correspond_to2pi, shape):
             r = c.px_distance * np.sqrt((i - h / 2) ** 2 + (j - w / 2) ** 2)
             phase_shift = 2 * np.pi * focal_length / c.wavelength * \
                 (1 - np.sqrt(1 + r ** 2 / focal_length ** 2))
-            hologram[i, j] = (phase_shift * correspond_to2pi / (2 * np.pi)) % correspond_to2pi
+            hologram[i, j] = phase_shift % (2 * np.pi)
     return hologram
     
 
@@ -182,7 +199,7 @@ def remove_files_in_dir(dir_name):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="Generate hologram")
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="Generate hologram")
     parser.add_argument("img_name", nargs="?", default=None, type=str, help="path to the target image from images directory. Leave empty if you want to create pure deflect/lens hologram")
     parser.add_argument("-ii", "--incomming_intensity", type=str, default="uniform", help="path to the incomming intensity image from images directory or 'uniform' for uniform intensity")
     parser.add_argument("-ig", "--initial_guess", type=str, default="random", choices=["random", "fourier"], help="initial guess for the GD algorithm: random or phase from the Fourier transform of the target image")
@@ -198,7 +215,7 @@ if __name__ == "__main__":
     parser.add_argument("-wa", "--white_attention", metavar='FLOAT', default=1, type=float, help="attention to white places for GD algorithm, sets higher priority to white areas by making error on those areas white_attention-times higher")
     parser.add_argument("-u", "--unsettle", default=0, metavar='INTEGER', type=int, help="unsettle for GD algorithm; learning rate is unsettle times doubled")
     parser.add_argument("-gif", action="store_true", help="create gif from hologram computing evolution")
-    parser.add_argument("-gif_t", "--gif_type", choices=["h", "i"], help="type of gif: h for hologram, i for image (result)")
+    parser.add_argument("-gif_t", "--gif_type", choices=["h", "i"], default="i", help="type of gif: h for hologram, i for image (result)")
     parser.add_argument("-gif_skip", default=1, type=int, metavar='INTEGER', help="each gif_skip-th frame will be in gif")
     parser.add_argument("-plot_error", action="store_true", help="plot error evolution")
     parser.add_argument("-p", "--preview", action="store_true", help="show expected outcome at the end of the program run")
@@ -206,6 +223,7 @@ if __name__ == "__main__":
     parser.add_argument("-lens", default=None, type=float, metavar='FOCAL_LENGTH', help="add lens to hologram with given focal length in meters")
     args = parser.parse_args()
     args.random_seed = 42
+    args.print_info = True
     if not os.path.exists(args.destination_directory):
         os.makedirs(args.destination_directory)
 

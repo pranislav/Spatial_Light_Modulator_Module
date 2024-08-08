@@ -22,10 +22,10 @@ def generate_hologram_sequence(args):
         demanded_output = np.array(im.open(f"{source_dir_path}/{i}.png"))
         hologram, expected_target, error_evolution = GS(demanded_output, args)
         error_evolution_list.append(error_evolution)
-        im.fromarray(hologram).convert("L").save(f"{dest_dir_holograms}/{i}.png")
+        np.save(f"{dest_dir_holograms}/{i}.npy", hologram)
+        # im.fromarray(hologram).convert("L").save(f"{dest_dir_holograms}/{i}.png")
         if args.preview:
             im.fromarray(expected_target).convert("L").save(f"{dest_dir_preview}/{i}.png")
-        # if i == 20: break
     plot_error_evolution(error_evolution_list)
 
         

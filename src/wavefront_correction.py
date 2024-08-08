@@ -122,7 +122,7 @@ def initialize(args):
     print("creating sample holograms...")
     args.phase_list = [i * 2 * np.pi / args.samples_per_period for i in range(args.samples_per_period)]
     sample_list_2pi = make_sample_holograms_2pi(args.deflect, args.phase_list)
-    args.samples_list = convert_phase_holograms_to_color_holograms(sample_list_2pi, args.correspond_to2pi)
+    args.samples_list = convert_2pi_holograms_to_int_holograms(sample_list_2pi, args.correspond_to2pi)
     args.subdomain_scale_shape = get_number_of_subdomains(args.subdomain_size)
     H, W = args.subdomain_scale_shape
     rx, ry = (H // 2, W // 2) if args.reference_subdomain_coordinates is None else args.reference_subdomain_coordinates
@@ -143,7 +143,7 @@ def wavefront_correction_loop(i, j, args):
     k = 0
     nsp = args.sqrted_number_of_source_pixels
     intensity_list = []
-    while k < len(args.phase_list):
+    while k < len(args.phase_list): # TODO: <=
         args.hologram = add_subdomain(args.hologram, args.samples_list[k], (j_real, i_real), args.subdomain_size)
         display_image_on_external_screen(args.window, args.hologram) # displays hologram on an external dispaly (SLM)
         frame = args.cam.snap()

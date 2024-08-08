@@ -55,7 +55,8 @@ def plot_and_save(intensity_evolution, expo):
 
 def create_wavefront_correction_hologram(args):
     black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width), dtype=np.uint8))
-    sample = cl.deflect(args.deflect, args.correspond_to2pi)
+    sample_2pi = cl.deflect_2pi(args.deflect)
+    sample = cl.convert_2pi_hologram_to_int_hologram(sample_2pi, args.correspond_to2pi)
     reference_coordinates = read_and_expand_coords(args.reference_coordinates, args.subdomain_size)
     subdomain_coordinates = read_and_expand_coords(args.subdomain_coordinates, args.subdomain_size)
     reference_subdomain = cl.add_subdomain(black_hologram, sample, reference_coordinates, args.subdomain_size)

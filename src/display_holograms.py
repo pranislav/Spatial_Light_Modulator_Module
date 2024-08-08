@@ -8,6 +8,7 @@ import constants as c
 import time
 import keyboard
 from functools import partial
+import help_messages_wfc
 
 mask_dir = "holograms/wavefront_correction_phase_masks"
 default_hologram_dir = "holograms"
@@ -72,7 +73,7 @@ def display_holograms_in_sequence(window, dir, wait, mask_arr, ct2pi):
     display_with_mask_partial = partial(display_with_mask, window, directory=dir, mask_arr=mask_arr, ct2pi=ct2pi)
     while i < i_max:
         i += 1
-        display_with_mask_partial(f"{i}.png")
+        display_with_mask_partial(f"{i}.npy")
         start = time.time()
         while True:
             if keyboard.is_pressed("space"):
@@ -118,7 +119,8 @@ def display_instant_wavefront_correction_holograms(window):
     params = default_params()
     while True:
         get_params(params)
-        sample_hologram = cl.deflect(params["deflect"], params["correspond_to_2pi"])
+        sample_hologram_2pi = cl.deflect_2pi(params["deflect"], params["correspond_to_2pi"])
+        sample_hologram = cl.convert_2pi_hologram_to_int_hologram(sample_hologram_2pi, params["correspond_to_2pi"])
         hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width)))
         reference_position = e.real_subdomain_position(params["reference_position"], params["subdomain_size"])
         subdomain_position = e.real_subdomain_position(params["subdomain_position"], params["subdomain_size"])
@@ -172,7 +174,7 @@ def print_help():
     print("available commands:")
     print("- ct2pi <value> - change value of pixel corresponding to 2pi phase shift")
     print(f"- cd <directory> - change directory, enter {directory_help}")
-    print("- <hologram_name> - display hologram in current directory")
+    print("- <hologram_name> - display hologram in current directory.")
     print(f"- cm <mask_name> - change mask - {mask_help}")
     print("- c - enter mode for displaying instant wavefront_correction holograms")
     print("- s <directory> <wait_time> - display holograms in sequence from specified directory. wait_time is time between frames in seconds. if not specified, wait_time is 0. press space to pause, left and right to navigate, esc to quit")
@@ -180,14 +182,18 @@ def print_help():
     print("- q - quit")
 
 def set_mask(mask_name):
-    if mask_name is None or mask_name == "" or mask_name == "none":
+    if mask_name is None or mask_name == "":
         return None
     if not os.path.isfile(f"{mask_dir}/{mask_name}"):
         print("Error: specified mask does not exist")
         return None
-    mask_im = im.open(f"{mask_dir}/{mask_name}")
-    mask_arr = np.array(mask_im)
-    return mask_arr
+    if mask_name[-4:] != ".npy":
+        print("Error: mask has to be in .npy format")
+        return None
+    if np.amax(np.load(f"{mask_dir}/{mask_name}")) > 2 * np.pi:
+        print("Error: mask values have to be in range [0, 2*pi)")
+        return None
+    return np.load(f"{mask_dir}/{mask_name}")
 
 def set_dir(directory):
     if not(os.path.isdir(directory)):
@@ -197,22 +203,28 @@ def set_dir(directory):
     return directory
 
 def mask_hologram(path, mask_arr, ct2pi):
-    hologram_im = im.open(path).convert("L")
-    hologram_arr = np.array(hologram_im).astype(np.int16)
-    masked_hologram_arr = (hologram_arr + mask_arr) % ct2pi
-    masked_hologram_im = im.fromarray(masked_hologram_arr).convert("RGB")
-    return masked_hologram_im
+    base, ext = os.path.splitext(path)
+    if ext == ".npy":
+        hologram_arr_2pi = np.load(path)
+        corrected_hologram_arr_2pi = (hologram_arr_2pi + mask_arr) % (2 * np.pi)
+        corrected_hologram_arr = corrected_hologram_arr_2pi * ct2pi
+    else:
+        hologram_im = im.open(path).convert("L")
+        hologram_arr = np.array(hologram_im).astype(np.int16)
+        corrected_hologram_arr = (hologram_arr + (mask_arr * ct2pi)) % ct2pi
+    corrected_hologram_im = im.fromarray(corrected_hologram_arr).convert("L")
+    return corrected_hologram_im
 
 
 if __name__ == "__main__":
     # TODO: it actually does not need parsing now, and add ct2pi to change while run
     parser = argparse.ArgumentParser(description="Displays images from specified directory on external screen without window porter or taskbar. Images can be masked with mask of given name. There is also a mode for displaying instant wavefront_correction holograms and a mode for displaying holograms in sequence.")
 
-    mask_help = f"Type name of the mask to be added to displayed images or leave blank (or type 'none') for no mask. Mask have to be in {mask_dir}."
+    mask_help = f"Type name of the wavefront correction mask to be added to displayed holograms or leave blank for no mask. Mask has to be in .npy format in {mask_dir}. Mask values has to be in range [0, 2*pi)."
     directory_help = "path (from project root) to directory containing images to be displayed"
 
     parser.add_argument('-ct2pi', '--correspond_to2pi', metavar="INT", type=int, required=True, help=f"{help_messages_wfc.ct2pi}. you can change this parameter later by typing 'ct2pi <value>' in the console.")
-    parser.add_argument('mask_name', nargs='?', default=None, type=str, help=mask_help+" you can change mask later by typing 'cm <mask_name>' in the console.")
+    parser.add_argument('mask_name', nargs='?', default=None, type=str, help=mask_help + " you can change mask later by typing 'cm <mask_name>' in the console.")
     parser.add_argument('-d', '--directory', default=default_hologram_dir, type=str, help=directory_help+" you can change directory later by typing 'cd <directory>' in the console.")
 
     args = parser.parse_args()

@@ -12,6 +12,6 @@ def show_hologram(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, )
     parser.add_argument("hologram", help="address of the hologram")
-    parser.add_argument("correspond_to2pi", type=int, default=255, help=help_messages_wfc.ct2pi)
+    parser.add_argument("-ct2pi", "--correspond_to2pi", type=int, default=255, help=help_messages_wfc.ct2pi)
     args = parser.parse_args()
     show_hologram(args)
