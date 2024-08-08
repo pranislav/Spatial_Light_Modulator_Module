@@ -10,7 +10,7 @@ import help_messages_wfc
 
 def parse_arguments():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(description="Add a colormap to a grayscale image. Optionally, convert the image to rainbow colors.")
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="Add a colormap to a grayscale image. Optionally, convert the image to rainbow colors.")
     parser.add_argument("image_path", type=str, help="Path to the grayscale image.")
     parser.add_argument("-p", "--palette", type=str, default='greyscale', help="Color palette to apply ('greyscale' or 'hue'). Optional, default is 'greyscale'.")
     parser.add_argument("-ct2pi", type=float, required=True, help=help_messages_wfc.ct2pi)

@@ -161,7 +161,7 @@ def wavefront_correction_loop(i, j, args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="This script creates phase mask which compensates aberrations in optical path and curvature of SLM itself")
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="This script creates phase mask which compensates aberrations in optical path and curvature of SLM itself")
 
     parser.add_argument('wavefront_correction_name', type=str)
     parser.add_argument('-ss', '--subdomain_size', metavar="INT", type=int, default=32, help=help_messages_wfc.subdomain_size)

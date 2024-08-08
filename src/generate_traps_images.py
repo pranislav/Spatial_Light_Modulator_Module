@@ -51,7 +51,7 @@ def create_list_of_position_lists(parametrization: function, number_of_frames: i
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Create sequence of images with moving dots")
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="Create sequence of images with moving dots")
     parser.add_argument("name", type=str, help="name of the sequence")
     parser.add_argument("-p", "--parametrization", type=str, choices=["circulating_dot_quarterized", "two_circulating_dots_quarterized", "two_circulating_dots"], default="circulating_dot_quarterized", help="parametrization of the paths of the dots")
     parser.add_argument("-r", "--rescale_parameter", metavar="FLOAT", type=float, default=1, help="rescales parameter (faster (> 1) or slower (< 1)) motion")

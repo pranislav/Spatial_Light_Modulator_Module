@@ -95,7 +95,7 @@ def circle(dimensions, radius, i, j):
 #     return j == 3 and (i ==2 or i == 3) or j == 4 and (i == 2 or i == 3)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Script for calibrating an optical path by SLM")
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="Script for calibrating an optical path by SLM")
 
     help_ref_coord = "pseudo coordinates of reference subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size"
 

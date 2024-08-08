@@ -19,7 +19,7 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, )
     source_dir = "holograms/wavefront_correction_phase_masks"
     parser.add_argument("phase_mask_name", type=str, help=f"phase mask to remove defocus from {source_dir}")
     parser.add_argument("-s", "--subdomain_size", metavar="INT", type=int, default=32, help="subdomain size used to create the phase mask")

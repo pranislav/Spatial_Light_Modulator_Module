@@ -182,7 +182,7 @@ def remove_files_in_dir(dir_name):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="Generate hologram")
     parser.add_argument("img_name", nargs="?", default=None, type=str, help="path to the target image from images directory. Leave empty if you want to create pure deflect/lens hologram")
     parser.add_argument("-ii", "--incomming_intensity", type=str, default="uniform", help="path to the incomming intensity image from images directory or 'uniform' for uniform intensity")
     parser.add_argument("-ig", "--initial_guess", type=str, default="random", choices=["random", "fourier"], help="initial guess for the GD algorithm: random or phase from the Fourier transform of the target image")

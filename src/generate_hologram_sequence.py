@@ -38,7 +38,7 @@ def plot_error_evolution(err_evl_list):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="transforms sequence of images of traps into a sequence of holograms corresponding to those traps")
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="transforms sequence of images of traps into a sequence of holograms corresponding to those traps")
     parser.add_argument("source_dir", type=str, help="name of the directory with images of traps (has to be in images/moving_traps directory)")
     parser.add_argument("-v", "--version", type=str, help="string added to the name of the directory with holograms and preview images to distinguish between different versions of the same sequence of traps")
     parser.add_argument("-ii", "--incomming_intensity", metavar="PATH", type=str, default="uniform", help="path to the incomming intensity image from images directory or 'uniform' for uniform intensity")

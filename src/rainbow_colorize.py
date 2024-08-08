@@ -34,7 +34,7 @@ def grayscale_to_rainbow(image_path):
     print(f"Saved rainbow-colorized image as: {new_image_path}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Convert a grayscale image to a rainbow colorized image.")
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="Convert a grayscale image to a rainbow colorized image.")
     parser.add_argument("image_path", type=str, help="Path to the grayscale image.")
     
     args = parser.parse_args()

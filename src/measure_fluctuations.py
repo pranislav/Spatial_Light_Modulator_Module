@@ -68,7 +68,7 @@ def read_and_expand_coords(coords, subdomain_size):
     return int(x) * subdomain_size, int(y) * subdomain_size
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Script for measuring impact of fluctuations of the light on the wavefront_correction procedure")
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="Script for measuring impact of fluctuations of the light on the wavefront_correction procedure")
     parser.add_argument('-t', '--time', metavar="SECONDS", type=int, default=5, help="time of the measurement in seconds")
     parser.add_argument('-ss', '--subdomain_size', metavar="INT", type=int, default=32, help=help_messages_wfc.subdomain_size)
     parser.add_argument('-d', '--deflect', metavar=("X_ANGLE", "Y_ANGLE"), nargs=2, type=float, default=(0.5, 0.5), help=help_messages_wfc.deflect)

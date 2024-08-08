@@ -34,7 +34,7 @@ def save_plot(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='compare error evolution of computing hologram with GD for different learning rates') 
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description='compare error evolution of computing hologram with GD for different learning rates') 
     parser.add_argument('img_name', type=str, help='path to the image')
     parser.add_argument('-l', '--max_loops', type=int, default=10, help='max loops')
     parser.add_argument('-wa', '--white_attention', type=float, default = 1, help='white attention')

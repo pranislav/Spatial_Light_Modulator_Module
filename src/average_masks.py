@@ -29,7 +29,7 @@ def main(args):
 
 if __name__ == "__main__":
     source_dir = "holograms/wavefront_correction_phase_masks"
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, )
     parser.add_argument("output_name", type=str, help="name of the averaged mask")
     parser.add_argument("images", type=str, nargs="+", help=f"list of images to average from {source_dir}")
     parser.add_argument("-subtract", metavar="PATH_TO_IMG", type=str, help="image to subtract from the average")

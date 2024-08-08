@@ -127,7 +127,7 @@ def make_hologram_set(reference, sample_list, coords, subdomain_size):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, )
     parser.add_argument("-spp", "--samples_per_period", metavar="INT", type=int, default=32, help=help_messages_wfc.samples_per_period)
     parser.add_argument("-ss", "--subdomain_size", metavar="INT", type=int, default=64, help=help_messages_wfc.subdomain_size)
     parser.add_argument('-ct2pi', '--correspond_to2pi', metavar="INT", type=int, required=True, help=help_messages_wfc.ct2pi)

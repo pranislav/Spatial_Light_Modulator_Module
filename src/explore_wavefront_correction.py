@@ -392,7 +392,7 @@ def images_to_video(image_list, video_name, fps, output_path="."):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser("script for simulating and visualizing wavefront_correction loops")
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, decsription="script for simulating and visualizing wavefront_correction loops")
     parser.add_argument('-m', '--mode', choices=['i', 'v'], default='i', type=str, help="i for images, v for video output (saved in images/explore)")
     args = parser.parse_args()
 
