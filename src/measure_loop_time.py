@@ -1,5 +1,5 @@
 import time
-from algorithms import GS, GD
+from algorithms import gerchberg_saxton, gradient_descent
 import generate_hologram as gh
 import argparse
 
@@ -23,7 +23,7 @@ def make_some_args():
     args.quarterize = True
     args.unsettle = 0
     args.learning_rate = 0.005
-    args.algorithm = "GS"
+    args.algorithm = "gerchberg_saxton"
     args.gif = False
     args.gif_type = None
     args.gif_dir = None
@@ -32,5 +32,5 @@ def make_some_args():
     args.initial_guess = "random"
     return args
 
-for algorithm in [GS, GD]:
+for algorithm in [gerchberg_saxton, gradient_descent]:
     measure_loop_time(algorithm)

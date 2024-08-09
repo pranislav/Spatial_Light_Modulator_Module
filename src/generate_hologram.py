@@ -1,6 +1,6 @@
 # TODO: there is a problem with plotting error
 
-from algorithms import GS, GD
+from algorithms import gerchberg_saxton, gradient_descent
 import numpy as np
 from PIL import Image as im
 import PIL.ImageOps
@@ -64,7 +64,7 @@ def pad_to_square(img):
     return new_img
 
 def make_hologram(args):
-    algorithm = GS if args.algorithm == "GS" else GD
+    algorithm = gerchberg_saxton if args.algorithm == "gerchberg_saxton" else gradient_descent
     target = prepare_target(args.img_name, args)
     if args.gif:
         add_gif_dirs(args)
@@ -124,7 +124,7 @@ def make_hologram_name(args, img_name):
         transforms += f"_deflect_x{args.deflect[0]}_y{args.deflect[1]}"
     if args.lens:
         transforms += f"_lens{args.lens}"
-    if args.algorithm == "GD":
+    if args.algorithm == "gradient_descent":
         alg_params += f"_lr{args.learning_rate}_mr{args.white_attention}_unsettle{args.unsettle}"
     if args.quarterize:
         img_transforms += "_quarter"
@@ -200,18 +200,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="Generate hologram")
     parser.add_argument("img_name", nargs="?", default=None, type=str, help="path to the target image from images directory. Leave empty if you want to create pure deflect/lens hologram")
     parser.add_argument("-ii", "--incomming_intensity", type=str, default="uniform", help="path to the incomming intensity image from images directory or 'uniform' for uniform intensity")
-    parser.add_argument("-ig", "--initial_guess", type=str, default="random", choices=["random", "fourier"], help="initial guess for the GD algorithm: random or phase from the Fourier transform of the target image")
+    parser.add_argument("-ig", "--initial_guess", type=str, default="random", choices=["random", "fourier"], help="initial guess for the gradient_descent algorithm: random or phase from the Fourier transform of the target image")
     # "images/incomming_intensity_images/paper_shade_01_intensity_mask.png"
     parser.add_argument("-dest_dir", "--destination_directory", type=str, default="holograms", help="directory where the hologram will be saved")
     parser.add_argument("-q", "--quarterize", action="store_true", help="original image is reduced to quarter and pasted to black image of its original size ")
     parser.add_argument("-i", "--invert", action="store_true", help="invert colors of the target image")
-    parser.add_argument("-alg", "--algorithm", default="GS", choices=["GS", "GD"], help="algorithm to use: GS for Gerchberg-Saxton, GD for gradient descent")
+    parser.add_argument("-alg", "--algorithm", default="gerchberg_saxton", choices=["gerchberg_saxton", "gradient_descent"], help="algorithm to use for hologram generation")
     parser.add_argument("-ct2pi", "--correspond_to2pi", required=True, metavar='INTEGER', type=int, help=help_messages_wfc.ct2pi)
     parser.add_argument("-tol", "--tolerance", default=0, metavar='FLOAT', type=float, help="algorithm stops when error descends under tolerance")
     parser.add_argument("-l", "--max_loops", default=42, metavar='INTEGER', type=int, help="algorithm performs no more than max_loops loops no matter what error it is")
-    parser.add_argument("-lr", "--learning_rate", default=0.005, type=float, help="learning rate for GD algorithm (how far the solution jumps in direction of the gradient)")
-    parser.add_argument("-wa", "--white_attention", metavar='FLOAT', default=1, type=float, help="attention to white places for GD algorithm, sets higher priority to white areas by making error on those areas white_attention-times higher")
-    parser.add_argument("-u", "--unsettle", default=0, metavar='INTEGER', type=int, help="unsettle for GD algorithm; learning rate is unsettle times doubled")
+    parser.add_argument("-lr", "--learning_rate", default=0.005, type=float, help="learning rate for gradient descent algorithm (how far the solution jumps in direction of the gradient)")
+    parser.add_argument("-wa", "--white_attention", metavar='FLOAT', default=1, type=float, help="attention to white places for gradient_descent algorithm, sets higher priority to white areas by making error on those areas white_attention-times higher")
+    parser.add_argument("-u", "--unsettle", default=0, metavar='INTEGER', type=int, help="unsettle for gradient descent algorithm; learning rate is unsettle times doubled")
     parser.add_argument("-gif", action="store_true", help="create gif from hologram computing evolution")
     parser.add_argument("-gif_t", "--gif_type", choices=["h", "i"], default="i", help="type of gif: h for hologram, i for image (result)")
     parser.add_argument("-gif_skip", default=1, type=int, metavar='INTEGER', help="each gif_skip-th frame will be in gif")

@@ -1,9 +1,9 @@
 import generate_hologram as gh
-from algorithms import GD, GS
+from algorithms import gradient_descent, gerchberg_saxton
 import argparse
 import matplotlib.pyplot as plt
 import os
-import compare_error_evolution_GD_params as compare
+import compare_error_evolution_gradient_descent_params as compare
 import wavefront_correction as wfc
 
 def compare_error_evolution_algorithms(args):
@@ -11,13 +11,13 @@ def compare_error_evolution_algorithms(args):
     compare.fill_unnecessary_args(args)
     if not os.path.exists(args.dest_dir):
         os.makedirs(args.dest_dir)
-    print("GD")
-    _, _, error_evolution = GD(target, args)
+    print("gradient_descent")
+    _, _, error_evolution = gradient_descent(target, args)
     plt.figure(figsize=(10, 5))
-    plt.plot(error_evolution, label=f"GD")
-    print("GS")
-    _, _, error_evolution = GS(target, args)
-    plt.plot(error_evolution, label=f"GS")
+    plt.plot(error_evolution, label=f"gradient_descent")
+    print("gerchberg_saxton")
+    _, _, error_evolution = gerchberg_saxton(target, args)
+    plt.plot(error_evolution, label=f"gerchberg_saxton")
     plt.ylim(bottom=0)
     plt.xlabel("iteration")
     plt.ylabel("error")
@@ -34,7 +34,7 @@ def save_plot(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description='compare error evolution of computing hologram with GD for different learning rates') 
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description='compare error evolution of computing hologram with gradient_descent for different learning rates') 
     parser.add_argument('img_name', type=str, help='path to the image')
     parser.add_argument('-l', '--max_loops', type=int, default=10, help='max loops')
     parser.add_argument('-wa', '--white_attention', type=float, default = 1, help='white attention')

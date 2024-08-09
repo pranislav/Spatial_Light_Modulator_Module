@@ -7,9 +7,9 @@ from typing import Tuple
 from cmath import phase
 
 
-def GS(demanded_output, args):
-    '''classical Gerchberg-Saxton algorithm
-    produces input for SLM for creating 'demanded_output' image
+def gerchberg_saxton(demanded_output, args):
+    '''classical Gerchberg-Saxton algorithm for generating phase holograms in far field regime
+    Fourier transform of produced hologram should be close to square root of the demanded_output
     '''
 
     incomming_intensity = np.ones(demanded_output.shape) if args.incomming_intensity == "uniform" else  np.array(im.open(args.incomming_intensity))
@@ -39,8 +39,8 @@ def GS(demanded_output, args):
     if args.print_info:
         print()
         printout(error, i, error_evolution, args.plot_error)
-    # phase_for_slm = (np.angle(A) + np.pi) * args.correspond_to2pi / (2*np.pi)
-    return np.angle(A), expected_outcome, error_evolution
+    hologram = np.angle(A)
+    return hologram, expected_outcome, error_evolution
 
 
 def add_gif_image(args, expected_outcome, A, i):
@@ -51,7 +51,11 @@ def add_gif_image(args, expected_outcome, A, i):
     img.convert("L").save(f"{args.gif_source_dir}/{i // args.gif_skip}.png")
 
 
-def GD(demanded_output: np.array, args):
+def gradient_descent(demanded_output: np.array, args):
+    '''algorithm for generating phase holograms in far field regime based on gradient descent
+    Fourier transform of produced hologram should be close to square root of the demanded_output
+    "closeness" is measured by error_f function
+    '''
     
     incomming_intensity = np.ones(demanded_output.shape) if args.incomming_intensity == "uniform" else  np.array(im.open(args.incomming_intensity))
     incomming_amplitude = np.sqrt(incomming_intensity)
@@ -90,7 +94,8 @@ def GD(demanded_output: np.array, args):
         printout(error, i, error_evolution, args.plot_error)
     # phase_for_slm = complex_to_real_phase(input, args.correspond_to2pi)
     exp_tar_for_slm = output
-    return np.angle(input), exp_tar_for_slm, error_evolution
+    hologram = np.angle(input)
+    return hologram, exp_tar_for_slm, error_evolution
 
 
 def make_initial_guess(initial_guess_type, incomming_amplitude, demanded_output, seed):

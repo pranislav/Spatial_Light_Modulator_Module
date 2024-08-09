@@ -2,7 +2,7 @@ import argparse
 import os
 import matplotlib.pyplot as plt
 from PIL import Image as im
-from algorithms import GS
+from algorithms import gerchberg_saxton
 import numpy as np
 import help_messages_wfc
 
@@ -20,7 +20,7 @@ def generate_hologram_sequence(args):
     for i in range(len(files)):
         print(f"\rcreating {i}. hologram ", end='')
         demanded_output = np.array(im.open(f"{source_dir_path}/{i}.png"))
-        hologram, expected_target, error_evolution = GS(demanded_output, args)
+        hologram, expected_target, error_evolution = gerchberg_saxton(demanded_output, args)
         error_evolution_list.append(error_evolution)
         np.save(f"{dest_dir_holograms}/{i}.npy", hologram)
         # im.fromarray(hologram).convert("L").save(f"{dest_dir_holograms}/{i}.png")
