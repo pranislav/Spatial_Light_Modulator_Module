@@ -153,7 +153,7 @@ def wavefront_correction_loop(i, j, args):
     k = 0
     nsp = args.sqrted_number_of_source_pixels
     intensity_list = []
-    while k < len(args.phase_list): # TODO: <=
+    while k < len(args.phase_list):
         args.hologram = add_subdomain(args.hologram, args.samples_list[k], (j_real, i_real), args.subdomain_size)
         display_image_on_external_screen(args.window, args.hologram) # displays hologram on an external dispaly (SLM)
         frame = args.cam.snap()
@@ -186,7 +186,7 @@ def produce_phase_mask_single(phase_mask, args):
     big_phase_mask = resize_2d_array(phase_mask, (c.slm_height, c.slm_width))
     big_phase_mask_mod = big_phase_mask % (2 * np.pi)
     mask_to_save = inpaint_biharmonic(big_phase_mask_mod, np.isnan(big_phase_mask)) if args.skip_subdomains_out_of_inscribed_circle else big_phase_mask_mod
-    name = "smoothed_" + specification
+    name = "smoothed_" + save_path
     np.save(f"{args.dest_dir}/{name}.npy", mask_to_save)
     save_phase_mask(mask_to_save * args.correspond_to2pi / (2 * np.pi), args.dest_dir, name)
 

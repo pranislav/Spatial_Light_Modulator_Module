@@ -92,7 +92,7 @@ def circular_hole_inclusive(shape):
     mask = np.array([[0 if (i - i0)**2 + (j - j0)**2 < R**2 else 1 for j in range(w)] for i in range(h)])
     return mask
 
-def transform_to_color_values(phase_mask, correspond_to_2pi):
+def transform_to_color_values(phase_mask, correspond_to_2pi): # why there is no % here?
     offset = determine_offset(phase_mask.min())
     positive_phase_mask = (phase_mask + offset) * correspond_to_2pi / (2 * np.pi)
     return positive_phase_mask
