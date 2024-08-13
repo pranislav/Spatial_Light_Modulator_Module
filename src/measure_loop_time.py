@@ -1,3 +1,6 @@
+'''script for comparing the time of one loop of the Gerchberg-Saxton algorithm and the gradient descent algorithm
+'''
+
 import time
 from algorithms import gerchberg_saxton, gradient_descent
 import generate_hologram as gh

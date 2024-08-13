@@ -1,4 +1,4 @@
-'''creates phase mask for LC-SLM which compensates
+'''creates phase mask for transmissive phase-only SLM which compensates
 aberrations caused both by the modulator and whole optical path.
 This mask should be added up with any projected hologram.
 For each optical path there should be generated its own mask.
@@ -151,7 +151,6 @@ def wavefront_correction_loop(i, j, args):
     i_real = i * args.subdomain_size
     j_real = j * args.subdomain_size
     k = 0
-    nsp = args.sqrted_number_of_source_pixels
     intensity_list = []
     while k < len(args.phase_list):
         args.hologram = add_subdomain(args.hologram, args.samples_list[k], (j_real, i_real), args.subdomain_size)
@@ -661,7 +660,16 @@ def display_image_on_external_screen(window, image):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="This script creates phase mask which compensates aberrations in optical path and curvature of SLM itself")
+    description='''Create phase mask for transmissive phase-only SLM
+    which compensates aberrations in optical path
+    and curvature of SLM itself usinig Tomas Cizmar's wave front correction.
+    The mask is saved in holograms/wavefront_correction_phase_masks in three formats:
+    upscaled & smoothed .npy for use (keyword "smoothed" at the beginning of its name),
+    corresponding .png for preview and raw .npy for further processing.
+    The mask should be added up with any projected hologram.
+    For each optical path there should be generated its own mask.
+    '''
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=description)
 
     parser.add_argument('wavefront_correction_name', type=str)
     parser.add_argument('-ss', '--subdomain_size', metavar="INT", type=int, default=32, help=help_messages_wfc.subdomain_size)
@@ -673,7 +681,6 @@ if __name__ == "__main__":
     parser.add_argument("-shuffle", action="store_true", help=help_messages_wfc.shuffle)
     parser.add_argument('-ic', "--intensity_coordinates", metavar=("X_COORD", "Y_COORD"), nargs=2, type=int, default=None, help=help_messages_wfc.intensity_coordinates)
     parser.add_argument('-cp', '--choose_phase', type=str, choices=["trick", "fit"], default="trick", help=help_messages_wfc.choose_phase)
-    # parser.add_argument('-resample', type=str, choices=["bilinear", "bicubic"], default="bilinear", help="smoothing method used to upscale the unwrapped phase mask")
     parser.add_argument('-nsp', '--sqrted_number_of_source_pixels', type=int, default=1, help=help_messages_wfc.sqrted_number_of_source_pixels)
     parser.add_argument('-parallel', action="store_true", help="use parallelization")
     parser.add_argument('-rd', '--remove_defocus_compensation', action="store_true", help=help_messages_wfc.remove_defocus_compensation)

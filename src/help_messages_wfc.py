@@ -1,3 +1,6 @@
+'''Help messages for files familiar with wavefront correction procedure
+'''
+
 
 samples_per_period = "number of intensity measurements per one subdomain \
     and also number of subdomain hologram phase shifts"

@@ -26,10 +26,11 @@ def main(args):
 
 if __name__ == "__main__":
     source_dir = "holograms/wavefront_correction_phase_masks"
-    description = "average provided masks and subtract specified mask if given.\
-        Masks should be from directory holograms/wavefront_correction_phase_masks and in .npy format.\
-        All of them should be of same type - smoothed or not smoothed.\
-        The result is saved to the source directory under output_name in both .npy and .png formats."
+    description = '''Average provided masks and subtract specified mask if given.
+    Masks should be from directory holograms/wavefront_correction_phase_masks and in .npy format.
+    All of them should be of same type - smoothed or not smoothed.
+    The result is saved to the source directory under output_name in both .npy and .png formats.
+    '''
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=description)
     parser.add_argument("output_name", type=str, help="name of the average mask")
     parser.add_argument("images", type=str, nargs="+", help=f"list of images to average from {source_dir}")

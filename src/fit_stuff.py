@@ -1,3 +1,8 @@
+'''this file contains function for fitting cosine in form
+amplitude_shift + amplitude * (1/2 + cos(wavelength * x + phase_shift))
+with various combinations of fixed parameters
+'''
+
 import numpy as np
 from scipy.optimize import curve_fit
 

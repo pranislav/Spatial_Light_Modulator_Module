@@ -1,6 +1,3 @@
-'''script that experimentally determines the relationship between
-a value of a pixel in a hologram and real phase shift that SLM applies on the pixel'''
-
 import argparse
 import wavefront_correction as wfc
 from functools import partial
@@ -95,18 +92,23 @@ def circle(dimensions, radius, i, j):
 #     return j == 3 and (i ==2 or i == 3) or j == 4 and (i == 2 or i == 3)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="Script for calibrating an optical path by SLM")
-
-    help_ref_coord = "pseudo coordinates of reference subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size"
-
+    description = '''Experimentally determine the relationship between
+    a value of a pixel in a hologram and real phase shift that SLM applies on the pixel
+    (grayscale-phase response) using wavefront correction procedure.
+    The program fits the intensity values of the pixels to a cosine function
+    and then records and averages the parameters of the function.
+    The values are printed to a file in the documents directory.
+    The wavelength of the function corresponds to the correspond_to2pi value.
+    '''
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=description)
     parser.add_argument('-ss', '--subdomain_size', metavar="INT", type=int, default=64, help=help_messages_wfc.subdomain_size)
     parser.add_argument('-spp', '--samples_per_period', metavar="INT", type=int, default=16, help=help_messages_wfc.samples_per_period)
     parser.add_argument('-d', '--deflect', metavar=("X_ANGLE", "Y_ANGLE"), nargs=2, type=float, default=(0.5, 0.5), help=help_messages_wfc.deflect)
     parser.add_argument('-c', '--reference_subdomain_coordinates', metavar=("X_COORD", "Y_COORD"), nargs=2, type=int, default=None, help=help_messages_wfc.reference_subdomain_coordinates)
-    parser.add_argument('-avg', '--num_to_avg', metavar="INT", type=int, default=8, help="number of frames to average when measuring intensity")
-    parser.add_argument('-f', '--floor', action='store_true', help="when fitting, it is supposed that minimal intensity is almost zero")
+    parser.add_argument('-avg', '--num_to_avg', metavar="INT", type=int, default=8, help="number of frames to average when measuring intensity") # TODO will this be used?
+    parser.add_argument('-f', '--floor', action='store_true', help="when fitting, it is supposed that minimal intensity is zero")
     parser.add_argument('-amp', '--fix_amplitude', action='store_true', help="makes second round of fitting with fixed amplitude (determined in previous round)")
-    parser.add_argument('-ct2pi', '--correspond_to2pi', metavar="INT", required=True, default=256, help=help_messages_wfc.ct2pi)
+    # parser.add_argument('-ct2pi', '--correspond_to2pi', metavar="INT", required=True, help="first guess of the value that corresponds to 2pi") #TODO why this was here?
     args = parser.parse_args()
 
     main(args)

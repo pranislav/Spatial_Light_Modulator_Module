@@ -1,5 +1,3 @@
-# TODO: there is a problem with plotting error
-
 from algorithms import gerchberg_saxton, gradient_descent
 import numpy as np
 from PIL import Image as im
@@ -8,7 +6,6 @@ import constants as c
 import argparse
 import os
 import imageio
-import help_messages_wfc
 import wavefront_correction as wfc
 from scipy.fft import fft2
 
@@ -20,15 +17,16 @@ def main(args):
         hologram = make_hologram(args)
     hologram = transform_hologram(hologram, args)
     if args.preview:
-        show_hologram(hologram, args)
+        show_expected_outcome(hologram, args)
     save_hologram_and_gif(hologram, args)
 
-def show_hologram(hologram, args):
+def show_expected_outcome(hologram, args):
     expected_outcome = fft2(np.exp(1j * hologram))
     norm = find_out_norm(args)
     expected_outcome_intensity = np.abs(expected_outcome) ** 2
     expected_outcome_normed = expected_outcome_intensity / np.amax(expected_outcome_intensity) * norm
-    im.fromarray(expected_outcome_normed).show()
+    square_prev_image = im.fromarray(expected_outcome_normed).resize((c.slm_height, c.slm_height))
+    square_prev_image.show()
 
 
 def find_out_norm(args):
@@ -132,7 +130,7 @@ def make_hologram_name(args, img_name):
         img_transforms += "_inverted"
     if args.img_name is None:
         return f"{img_name}{transforms}"
-    return f"{img_name}{img_transforms}_{args.algorithm}{alg_params}__ct2pi{args.correspond_to2pi}_loops{args.max_loops}{transforms}"
+    return f"{img_name}{img_transforms}_{args.algorithm}{alg_params}_loops{args.max_loops}{transforms}"
 
 
 def args_to_string(args):
@@ -197,16 +195,22 @@ def remove_files_in_dir(dir_name):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="Generate hologram")
+    description = '''Generate phase hologram for transmissive SLM.
+    When displayed on SLM, the hologram will create image on the Fourier plane.
+    Provide path to image to be reconstructed or leave empty to create pure deflect/lens hologram.
+    The image should be in images directory.
+    Image is padded with black pixels to make it square so proportions of the reconstructed image are preserved.
+    Given image plus specified deflection results in image shifted by given angle on the Fourier plane.
+    Holograms are saved in holograms directory as .npy files.
+    '''
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=description)
     parser.add_argument("img_name", nargs="?", default=None, type=str, help="path to the target image from images directory. Leave empty if you want to create pure deflect/lens hologram")
     parser.add_argument("-ii", "--incomming_intensity", type=str, default="uniform", help="path to the incomming intensity image from images directory or 'uniform' for uniform intensity")
     parser.add_argument("-ig", "--initial_guess", type=str, default="random", choices=["random", "fourier"], help="initial guess for the gradient_descent algorithm: random or phase from the Fourier transform of the target image")
-    # "images/incomming_intensity_images/paper_shade_01_intensity_mask.png"
     parser.add_argument("-dest_dir", "--destination_directory", type=str, default="holograms", help="directory where the hologram will be saved")
     parser.add_argument("-q", "--quarterize", action="store_true", help="original image is reduced to quarter and pasted to black image of its original size ")
     parser.add_argument("-i", "--invert", action="store_true", help="invert colors of the target image")
     parser.add_argument("-alg", "--algorithm", default="gerchberg_saxton", choices=["gerchberg_saxton", "gradient_descent"], help="algorithm to use for hologram generation")
-    parser.add_argument("-ct2pi", "--correspond_to2pi", required=True, metavar='INTEGER', type=int, help=help_messages_wfc.ct2pi)
     parser.add_argument("-tol", "--tolerance", default=0, metavar='FLOAT', type=float, help="algorithm stops when error descends under tolerance")
     parser.add_argument("-l", "--max_loops", default=42, metavar='INTEGER', type=int, help="algorithm performs no more than max_loops loops no matter what error it is")
     parser.add_argument("-lr", "--learning_rate", default=0.005, type=float, help="learning rate for gradient descent algorithm (how far the solution jumps in direction of the gradient)")

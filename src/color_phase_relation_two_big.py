@@ -1,10 +1,3 @@
-'''script that experimentally determines the relationship between
-a value of a pixel in a hologram and real phase shift that SLM applies on the pixel
-in contrast to the other one, here there are just two subdomains placed in a way
-that intensity is equally divided between them
-subdomains are significantly big'''
-
-
 import explore_wavefront_correction as e
 import wavefront_correction as wfc
 import color_phase_relation as cp
@@ -127,7 +120,18 @@ def make_hologram_set(reference, sample_list, coords, subdomain_size):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, )
+    description =  '''Experimentally determine the relationship between
+    a value of a pixel in a hologram and real phase shift that SLM applies on the pixel
+    (grayscale-phase response) using wavefront correction procedure.
+    The program fits the intensity values of the pixels to a cosine function
+    and then records and averages the parameters of the function.
+    The values are printed to a file in the documents directory.
+    The wavelength of the function corresponds to the correspond_to2pi value.
+    In contrast to the other file, here there are just two subdomains placed in a way
+    that intensity is equally divided between them and measurement is repeated many times and then averaged.
+    '''
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=description)
+
     parser.add_argument("-spp", "--samples_per_period", metavar="INT", type=int, default=32, help=help_messages_wfc.samples_per_period)
     parser.add_argument("-ss", "--subdomain_size", metavar="INT", type=int, default=64, help=help_messages_wfc.subdomain_size)
     parser.add_argument('-ct2pi', '--correspond_to2pi', metavar="INT", type=int, required=True, help=help_messages_wfc.ct2pi)

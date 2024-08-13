@@ -3,7 +3,7 @@ from algorithms import gradient_descent, gerchberg_saxton
 import argparse
 import matplotlib.pyplot as plt
 import os
-import compare_error_evolution_gradient_descent_params as compare
+import compare_error_evolution_GD_params as compare
 import wavefront_correction as wfc
 
 def compare_error_evolution_algorithms(args):
@@ -34,7 +34,12 @@ def save_plot(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description='compare error evolution of computing hologram with gradient_descent for different learning rates') 
+    description = '''Compare error evolution of computing hologram with two algorithms
+    (the algorithm based on gradient descent and Gerchberg-Saxton algorithm).
+    There should be specified a path to an input image and parameters of the gradient descent algorithm.
+    Plot with results is saved in images/compare_error_evolution_algorithms.
+    '''
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=description) 
     parser.add_argument('img_name', type=str, help='path to the image')
     parser.add_argument('-l', '--max_loops', type=int, default=10, help='max loops')
     parser.add_argument('-wa', '--white_attention', type=float, default = 1, help='white attention')

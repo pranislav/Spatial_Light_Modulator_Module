@@ -85,7 +85,12 @@ def fill_unnecessary_args(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description='compare error evolution of computing hologram with gradient_descent for different learning rates') 
+    description = '''Compare error evolution of computing hologram with the algorithm based on gradient descent
+    for different values of chosen parameter.
+    There should be specified path to input image, parameter to vary and values of the rest of the parameters.
+    Plot with results is saved in images/compare_error_evolution_GD_params.
+    '''
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=description) 
     parser.add_argument('img_name', type=str, help='path to the image')
     parser.add_argument('-l', '--max_loops', type=int, default=10, help='max loops')
     parser.add_argument('-wa', '--white_attention', type=float, default = 1, help='white attention')
@@ -99,7 +104,7 @@ if __name__ == "__main__":
     parser.add_argument('values', nargs='*', type=float, help='values to vary')
     parser.add_argument('-s', '--show', action='store_true', help='show the plot')
     args = parser.parse_args()
-    args.dest_dir = "images/compare_error_evolution_gradient_descent_params"
+    args.dest_dir = "images/compare_error_evolution_GD_params"
     if args.vary == 'ig':
         args.values = ["random", "fourier", "unnormed", "zeros", "ones", "old"]
 

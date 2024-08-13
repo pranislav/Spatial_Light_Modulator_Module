@@ -53,10 +53,13 @@ def make_specification_map(args):
     return f"ss{args.subdomain_size}_spp{args.samples_per_period}_defl_{args.deflect[0]}_{args.deflect[1]}_ref{args.reference_subdomain_coordinates[0]}_{args.reference_subdomain_coordinates[1]}"
     
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="Script for calibrating an optical path by SLM")
-
-    help_ref_coord = "pseudo coordinates of reference subdomain. use form: x_y, multiply by subdomain_size to find out real coordinates of reference subdomain. maximal allowed coords: (slm_width // ss, slm_height // ss) where ss is subdomain size"
-
+    description = '''perform wavefront correction procedure,
+    intensity values are fitted to a cosine function
+    and all four parameters are recorded (not just phase shift).
+    Something like the phase mask is created for each parameter
+    and saved as .png file in the directory holograms/fit_maps.
+    '''
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=description)
     parser.add_argument('wavefront_correction_name', type=str)
     parser.add_argument('-ss', '--subdomain_size', metavar="INT", type=int, default=32, help=help_messages_wfc.subdomain_size)
     parser.add_argument('-spp', '--samples_per_period', metavar="INT", type=int, default=8, help=help_messages_wfc.samples_per_period)

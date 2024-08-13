@@ -1,23 +1,5 @@
-'''script which interacts with the experiment and provides
-an insight into the experiment response to variaous parameters change
-it displays a wavefront_correction hologram specified by user on the SLM
-and then shows the hologram, an image from camera and
-evolution of intensity with respect to phase shift of current subdomain
-fitted with cosine and prints out fitted parameters
-
-main goal is to help the user to estimate optimal configuration for
-wavefront_correction and color-phase relation search
-
-parameters to be changed:
-- subdomain size
-- position of subdomain
-- position of reference subdomain
-- deflecting angle
-- nuber of phase shifts
-- number of frames to average to supress the fluctuation
-'''
-
 # TODO: subdomain_position degeneration (real & input one)
+# TODO: find out what the upper one means
 
 import constants as c
 import display_holograms as dh
@@ -391,7 +373,28 @@ def images_to_video(image_list, video_name, fps, output_path="."):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, decsription="script for simulating and visualizing wavefront_correction loops")
+    description = '''This is a program for simulating and visualizing wavefront_correction loops.
+    It interacts with the experiment and provides
+    an insight into the experiment response to variaous parameters change.
+    It displays a specified wavefront correction hologram on the SLM
+    and then shows the hologram, an image from camera and
+    evolution of intensity with respect to phase shift of current subdomain
+    fitted with cosine and prints out fitted parameters.
+    In image mode it just shows the image described above, in video mode
+    it saves video into images/explore directory
+
+    Main goal is to help the user to estimate optimal configuration for
+    wavefront_correction and color-phase relation search.
+
+    Parameters to be changed:
+    subdomain size, 
+    position of subdomain, 
+    position of reference subdomain, 
+    deflecting angle, 
+    nuber of phase shifts, 
+    number of frames to average to supress the fluctuation.
+    '''
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=description)
     parser.add_argument('-m', '--mode', choices=['i', 'v'], default='i', type=str, help="i for images, v for video output (saved in images/explore)")
     args = parser.parse_args()
 

@@ -91,13 +91,10 @@ def process_key(coords, flags, args, height_border, width_border):
     if flags["last_key"] == "up":
         coords[flags["which"]][0] = (coords[flags["which"]][0] - step) % height_border
         return
+    
     if flags["last_key"] == "m":
         flags["mask"] = not flags["mask"]
         return
-
-    # if flags["last_key"] == "c":
-    #     time.sleep(0.1)
-    #     args.correspond_to2pi = int(input("Enter new value of pixel corresponding to 2pi phase shift: "))
     if flags["last_key"] == "esc":
         flags["quit"] = True
         return
@@ -128,16 +125,21 @@ def display_hologram(window, hologram, mask, mask_flag, ct2pi):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, )
+    description = '''controll position of one or two optical traps through SLM with keyboard.
+    The SLM should be part of optical tweezers setup in a way that the traps are on its Fourier plane.
+    Use arrow keys to move the trap, 'm' to toggle mask, 's' (split) to toggle between one and two traps, 'ctrl' to switch between the traps.
+    When collapsing back to one trap, the active one is preserved. When splitting traps, both of them are on the same position.
+    Starting position is at zeroth diffraction maximum. 
+    Allways there is displayed just one trap at the time, when there are two traps,
+    there is quickly switched between them.
+    '''
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=description)
     parser.add_argument("mask_name", help="name of the mask file")
     parser.add_argument("-ct2pi", "--correspond_to2pi", type=int, required=True, help=help_messages_wfc.ct2pi)
     parser.add_argument("-bs", "--big_step", type=int, default=20, help="big step size")
     parser.add_argument("-m", "--mirror", action="store_true", help="mirrors left-right and up-down")
     args = parser.parse_args()
 
-    # holograms_dir = "holograms/single_trap_grid_holograms"
-    # if not os.path.exists(holograms_dir):
-    #     subprocess.run(['python', 'src/make_single_trap_grid_holograms.py', holograms_dir], capture_output=True, text=True, check=True)
     args.holograms_dir = "holograms/single_trap_grid_holograms"
     
 

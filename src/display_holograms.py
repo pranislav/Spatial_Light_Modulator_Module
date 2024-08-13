@@ -218,7 +218,12 @@ def mask_hologram(path, mask_arr, ct2pi):
 
 if __name__ == "__main__":
     # TODO: it actually does not need parsing now, and add ct2pi to change while run
-    parser = argparse.ArgumentParser(description="Displays images from specified directory on external screen without window porter or taskbar. Images can be masked with mask of given name. There is also a mode for displaying instant wavefront_correction holograms and a mode for displaying holograms in sequence.")
+    description = '''Displays images from specified directory on external screen
+    without window porter or taskbar. Images can be masked with mask of given name.
+    There is also a mode for displaying instant wavefront_correction holograms
+    and a mode for displaying holograms in sequence.
+    '''
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=description)
 
     mask_help = f"Type name of the wavefront correction mask to be added to displayed holograms or leave blank for no mask. Mask has to be in .npy format in {mask_dir}. Mask values has to be in range [0, 2*pi)."
     directory_help = "path (from project root) to directory containing images to be displayed"
