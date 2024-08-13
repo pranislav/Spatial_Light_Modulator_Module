@@ -214,11 +214,11 @@ def mask_hologram(path, mask_arr, ct2pi):
     if ext == ".npy":
         hologram_arr_2pi = np.load(path)
         corrected_hologram_arr_2pi = (hologram_arr_2pi + mask_arr) % (2 * np.pi)
-        corrected_hologram_arr = corrected_hologram_arr_2pi * ct2pi
+        corrected_hologram_arr = corrected_hologram_arr_2pi/(2*np.pi) * ct2pi
     else:
         hologram_im = im.open(path).convert("L")
         hologram_arr = np.array(hologram_im).astype(np.int16)
-        corrected_hologram_arr = (hologram_arr + (mask_arr * ct2pi)) % ct2pi
+        corrected_hologram_arr = (hologram_arr + (mask_arr/(2*np.pi) * ct2pi)) % ct2pi
     corrected_hologram_im = im.fromarray(corrected_hologram_arr).convert("L")
     return corrected_hologram_im
 
