@@ -356,9 +356,9 @@ def trick_function(phase_intensity_list, fun):
 
 def make_sample_holograms_2pi(angle, phase_list):
     sample = []
-    sample.append(deflect_2pi(angle)) # TODO: dont append this
+    base = deflect_2pi(angle)
     for phase in phase_list:
-        sample.append((sample[0] + phase) % (2 * np.pi))
+        sample.append((base + phase) % (2 * np.pi))
     return sample
 
 def deflect_2pi(angle):
