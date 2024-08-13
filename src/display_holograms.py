@@ -163,7 +163,8 @@ def display_with_mask(window, name, directory, mask_arr, ct2pi):
         return
     if path[-4:] == ".npy":
         hologram_arr = np.load(path)
-        hologram_im = im.fromarray(hologram_arr).convert("L")
+        hologram_arr_int = wfc.convert_2pi_hologram_to_int_hologram(hologram_arr, ct2pi)
+        hologram_im = im.fromarray(hologram_arr_int).convert("L")
     else:
         hologram_im = im.open(path).convert("L")
     wfc.display_image_on_external_screen(window, hologram_im)
