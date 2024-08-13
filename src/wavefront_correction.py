@@ -22,7 +22,7 @@ from scipy.ndimage import zoom
 from skimage.restoration.inpaint import inpaint_biharmonic
 import argparse
 from pylablib.devices import uc480
-from time import time
+from time import time, sleep
 import fit_stuff as f
 from queue import Queue
 from threading import Thread
@@ -655,7 +655,7 @@ def display_image_on_external_screen(window, image):
     # Update the window to display the new image
     window.update()
 
-    time.sleep(0.017) # cca 1/60 s which is the refresh rate of the SLM
+    sleep(0.017) # cca 1/60 s which is the refresh rate of the SLM
 
 
 
