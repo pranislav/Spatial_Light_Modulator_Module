@@ -180,14 +180,12 @@ def produce_phase_mask_single(phase_mask, args):
         array_to_save = phase_mask
     save_path = originalize_name(f"{args.dest_dir}/{specification}.npy")
     np.save(save_path, array_to_save)
-    big_phase_mask = expand_phase_mask((array_to_save % (2 * np.pi)) * args.correspond_to2pi / (2 * np.pi), args.subdomain_size)
-    save_phase_mask(big_phase_mask, args.dest_dir, specification)
     big_phase_mask = resize_2d_array(phase_mask, (c.slm_height, c.slm_width))
     big_phase_mask_mod = big_phase_mask % (2 * np.pi)
     mask_to_save = inpaint_biharmonic(big_phase_mask_mod, np.isnan(big_phase_mask)) if args.skip_subdomains_out_of_inscribed_circle else big_phase_mask_mod
-    name = "smoothed_" + save_path
-    np.save(f"{args.dest_dir}/{name}.npy", mask_to_save)
-    save_phase_mask(mask_to_save * args.correspond_to2pi / (2 * np.pi), args.dest_dir, name)
+    save_path = originalize_name(f"{args.dest_dir}/smoothed_{specification}.npy")
+    np.save(save_path, mask_to_save)
+    save_phase_mask(mask_to_save * args.correspond_to2pi / (2 * np.pi), args.dest_dir, "smoothed_" + specification)
 
 
 def combine_phase_masks(phase_masks):
