@@ -10,7 +10,7 @@ import wavefront_correction as wfc
 def main(args):
     masks = [np.load(f"{source_dir}/{image}") for image in args.images]
     if args.subtract:
-        subtract_mask = np.array(im.open(f"{source_dir}/{args.subtract}"))
+        subtract_mask = np.load(f"{source_dir}/{args.subtract}")
     average_mask = np.zeros(masks[0].shape)
     for mask in masks:
         average_mask += unwrap_phase(mask - np.pi)
@@ -19,11 +19,12 @@ def main(args):
         average_mask -= unwrap_phase(subtract_mask - np.pi)
     average_mask = wfc.resize_2d_array(average_mask, (c.slm_height, c.slm_width))
     average_mask_wrapped = average_mask % (2 * np.pi)
-    save_name = args.source_dir + args.name
-    np.save(save_name, average_mask_wrapped)
-    im.fromarray(average_mask_wrapped * args.correspond_to2pi / (2 * np.pi)).save(
-        save_name + ".png"
-    )
+    average_mask_resized = wfc.resize_2d_array(average_mask_wrapped, (c.slm_height, c.slm_width))
+    save_name = args.source_dir + "/" + args.output_name
+    np.save(save_name, average_mask_resized)
+    int_mask = wfc.convert_2pi_hologram_to_int_hologram(average_mask_resized, args.correspond_to2pi)
+    im.fromarray(int_mask).convert("L").save(save_name + ".png")
+    print(f"Resulting mask saved as {save_name}.npy and {save_name}.png")
 
 
 if __name__ == "__main__":
@@ -56,18 +57,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-ct2pi",
+        "--correspond_to2pi",
         metavar="INT",
         type=int,
-        required=True,
+        default=256,
         help="value of pixel corresponding to 2pi phase shift",
     )
-    parser.add_argument(
-        "-ss",
-        "--subdomain_size",
-        metavar="INT",
-        type=int,
-        required=True,
-        help="subdomain size used to create the phase mask",
-    )
     args = parser.parse_args()
+    args.source_dir = source_dir
     main(args)
