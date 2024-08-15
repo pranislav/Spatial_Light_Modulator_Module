@@ -6,6 +6,7 @@ import os
 from matplotlib.ticker import MaxNLocator
 import wavefront_correction as wfc
 
+
 def compare_error_evolution(args):
     target = gh.prepare_target(args.img_name, args)
     fill_unnecessary_args(args)
@@ -26,38 +27,40 @@ def compare_error_evolution(args):
     if args.show:
         plt.show()
 
+
 def set_argument(args, value):
-    if args.vary == 'wa':
+    if args.vary == "wa":
         args.white_attention = value
-    elif args.vary == 'lr':
+    elif args.vary == "lr":
         args.learning_rate = value
-    elif args.vary == 'u':
+    elif args.vary == "u":
         args.unsettle = value
-    elif args.vary == 'ig':
+    elif args.vary == "ig":
         args.initial_guess = value
-    elif args.vary == 'rs':
+    elif args.vary == "rs":
         args.random_seed = value
-        
+
 
 def choose_name_of_vary(args):
-    if args.vary == 'wa':
+    if args.vary == "wa":
         return "white_attention"
-    elif args.vary == 'lr':
+    elif args.vary == "lr":
         return "learning_rate"
-    elif args.vary == 'u':
+    elif args.vary == "u":
         return "unsettle"
-    elif args.vary == 'ig':
+    elif args.vary == "ig":
         return "initial_guess"
-    elif args.vary == 'rs':
+    elif args.vary == "rs":
         return "random_seed"
     else:
         return "unknown"
+
 
 def save_plot(args):
     img_name, specification = create_name(args)
     values = "_".join(map(str, args.values))
     name_to_be = f"{args.dest_dir}/{img_name}_varying_{choose_name_of_vary(args)}_values_{values}_{specification}.png"
-    plt.savefig(wfc.originalize_name(name_to_be), bbox_inches='tight')
+    plt.savefig(wfc.originalize_name(name_to_be), bbox_inches="tight")
 
 
 def create_name(args):
@@ -82,31 +85,97 @@ def fill_unnecessary_args(args):
     args.tolerance = 0
 
 
-
-
 if __name__ == "__main__":
-    description = '''Compare error evolution of computing hologram with the algorithm based on gradient descent
+    dest_dir = "images/compare_error_evolution_GD_params"
+    description = f"""Compare error evolution of computing hologram with the algorithm based on gradient descent
     for different values of chosen parameter.
     There should be specified path to input image, parameter to vary and values of the rest of the parameters.
-    Plot with results is saved in images/compare_error_evolution_GD_params.
-    '''
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=description) 
-    parser.add_argument('img_name', type=str, help='path to the image')
-    parser.add_argument('-l', '--max_loops', type=int, default=10, help='max loops')
-    parser.add_argument('-wa', '--white_attention', type=float, default = 1, help='white attention')
-    parser.add_argument('-i', '--invert', action='store_true', help='invert image')
-    parser.add_argument('-q', '--quarterize', action='store_true', help='quarterize')
-    parser.add_argument('-u', '--unsettle', type=int, default=0, help='unsettle')
-    parser.add_argument('-lr', '--learning_rate', default=0.005, type=float, help='learning rates')
-    parser.add_argument('-ig', '--initial_guess', default="random", choices=["random", "fourier", "unnormed", "zeros", "ones", "old"], help='initial input')
-    parser.add_argument('-rs', '--random_seed', type=int, default=42, help='random seed')
-    parser.add_argument('-v', '--vary', choices=['wa', 'lr', 'u', 'ig', 'n', 'rs'], help='vary white attention, learning rate, unsettle, initial guess or random seed')
-    parser.add_argument('values', nargs='*', type=float, help='values to vary')
-    parser.add_argument('-s', '--show', action='store_true', help='show the plot')
+    Plot with results is saved in {dest_dir}.
+    """
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description=description
+    )
+    parser.add_argument(
+        "img_name",
+        type=str,
+        help="path to the image"
+    )
+    parser.add_argument(
+        "-l",
+        "--max_loops",
+        type=int,
+        default=10,
+        help="max loops"
+    )
+    parser.add_argument(
+        "-wa",
+        "--white_attention",
+        type=float,
+        default=1,
+        help="white attention"
+    )
+    parser.add_argument(
+        "-i",
+        "--invert",
+        action="store_true",
+        help="invert image"
+    )
+    parser.add_argument(
+        "-q",
+        "--quarterize",
+        action="store_true",
+        help="quarterize"
+    )
+    parser.add_argument(
+        "-u",
+        "--unsettle",
+        type=int,
+        default=0,
+        help="unsettle"
+    )
+    parser.add_argument(
+        "-lr",
+        "--learning_rate",
+        default=0.005,
+        type=float,
+        help="learning rates"
+    )
+    parser.add_argument(
+        "-ig",
+        "--initial_guess",
+        default="random",
+        choices=["random", "fourier", "unnormed", "zeros", "ones", "old"],
+        help="initial input",
+    )
+    parser.add_argument(
+        "-rs",
+        "--random_seed",
+        type=int,
+        default=42,
+        help="random seed"
+    )
+    parser.add_argument(
+        "-v",
+        "--vary",
+        choices=["wa", "lr", "u", "ig", "n", "rs"],
+        help="vary white attention, learning rate, unsettle, initial guess or random seed",
+    )
+    parser.add_argument(
+        "values",
+        nargs="*",
+        type=float,
+        help="values to vary"
+    )
+    parser.add_argument(
+        "-s",
+        "--show",
+        action="store_true",
+        help="show the plot"
+    )
     args = parser.parse_args()
-    args.dest_dir = "images/compare_error_evolution_GD_params"
-    if args.vary == 'ig':
+    args.dest_dir = dest_dir
+    if args.vary == "ig":
         args.values = ["random", "fourier", "unnormed", "zeros", "ones", "old"]
 
     compare_error_evolution(args)
-    

@@ -21,21 +21,53 @@ def main(args):
     average_mask_wrapped = average_mask % (2 * np.pi)
     save_name = args.source_dir + args.name
     np.save(save_name, average_mask_wrapped)
-    im.fromarray(average_mask_wrapped * args.correspond_to2pi / (2 * np.pi)).save(save_name + ".png")
+    im.fromarray(average_mask_wrapped * args.correspond_to2pi / (2 * np.pi)).save(
+        save_name + ".png"
+    )
 
 
 if __name__ == "__main__":
     source_dir = "holograms/wavefront_correction_phase_masks"
-    description = '''Average provided masks and subtract specified mask if given.
-    Masks should be from directory holograms/wavefront_correction_phase_masks and in .npy format.
+    description = f"""Average provided masks and subtract specified mask if given.
+    Masks should be from directory {source_dir} and in .npy format.
     All of them should be of same type - smoothed or not smoothed.
     The result is saved to the source directory under output_name in both .npy and .png formats.
-    '''
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=description)
-    parser.add_argument("output_name", type=str, help="name of the average mask")
-    parser.add_argument("images", type=str, nargs="+", help=f"list of images to average from {source_dir}")
-    parser.add_argument("-subtract", metavar="PATH", type=str, help="image to subtract from the average")
-    parser.add_argument("-ct2pi", metavar="INT", type=int, required=True, help="value of pixel corresponding to 2pi phase shift")
-    parser.add_argument("-ss", "--subdomain_size", metavar="INT", type=int, required=True, help="subdomain size used to create the phase mask")
+    """
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description=description
+    )
+    parser.add_argument(
+        "output_name",
+        type=str,
+        help="name of the average mask"
+    )
+    parser.add_argument(
+        "images",
+        type=str,
+        nargs="+",
+        help=f"list of images to average from {source_dir}",
+    )
+    parser.add_argument(
+        "-subtract",
+        metavar="PATH",
+        type=str,
+        help="image to subtract from the average"
+    )
+    parser.add_argument(
+        "-ct2pi",
+        metavar="INT",
+        type=int,
+        required=True,
+        help="value of pixel corresponding to 2pi phase shift",
+    )
+    parser.add_argument(
+        "-ss",
+        "--subdomain_size",
+        metavar="INT",
+        type=int,
+        required=True,
+        help="subdomain size used to create the phase mask",
+    )
     args = parser.parse_args()
     main(args)

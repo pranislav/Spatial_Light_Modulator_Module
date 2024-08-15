@@ -9,6 +9,7 @@ from scipy.fft import ifft2
 import threading
 import help_messages_wfc
 
+
 def main(args):
     window = wfc.create_tk_window()
     mask = np.load(f"holograms/wavefront_correction_phase_masks/{args.mask_name}")
@@ -16,14 +17,30 @@ def main(args):
     height_border = c.slm_height // 2
     width_border = c.slm_width // 2
     coords = [[0, 0], [0, 0]]
-    flags = {"mask": True, "quit": False, "which": 0, "split": False, "key_change": False, "last_key": "", "is_pressed": False, "shift": False}
-    read_key_thread = threading.Thread(target=last_pressed_key, args=(flags,), daemon=True)
+    flags = {
+        "mask": True,
+        "quit": False,
+        "which": 0,
+        "split": False,
+        "key_change": False,
+        "last_key": "",
+        "is_pressed": False,
+        "shift": False,
+    }
+    read_key_thread = threading.Thread(
+        target=last_pressed_key, args=(flags,), daemon=True
+    )
     read_key_thread.start()
-    holograms = [update_hologram(black_image, coords, 0), update_hologram(black_image, coords, 1)]
+    holograms = [
+        update_hologram(black_image, coords, 0),
+        update_hologram(black_image, coords, 1),
+    ]
     i = 0
     while True:
         while True:
-            display_hologram(window, holograms[i%2], mask, flags["mask"], args.correspond_to2pi)
+            display_hologram(
+                window, holograms[i % 2], mask, flags["mask"], args.correspond_to2pi
+            )
             if not flags["split"]:
                 wait_for_key(flags)
                 break
@@ -55,7 +72,7 @@ def wait_for_key(flags):
     while not (flags["is_pressed"] or flags["key_change"]):
         time.sleep(0.1)
     return
-    
+
 
 def process_key(coords, flags, args, height_border, width_border):
     if not (flags["key_change"] or flags["is_pressed"]):
@@ -69,7 +86,8 @@ def process_key(coords, flags, args, height_border, width_border):
     if flags["last_key"] == "s":
         time.sleep(0.1)
         flags["split"] = not flags["split"]
-        if flags["split"]: coords[(flags["which"] + 1) % 2] = coords[flags["which"]].copy()
+        if flags["split"]:
+            coords[(flags["which"] + 1) % 2] = coords[flags["which"]].copy()
         return
 
     if flags["shift"]:
@@ -77,8 +95,8 @@ def process_key(coords, flags, args, height_border, width_border):
     else:
         step = 1
     if args.mirror:
-        step = - step
-    
+        step = -step
+
     if flags["last_key"] == "left":
         coords[flags["which"]][1] = (coords[flags["which"]][1] - step) % width_border
         return
@@ -91,7 +109,7 @@ def process_key(coords, flags, args, height_border, width_border):
     if flags["last_key"] == "up":
         coords[flags["which"]][0] = (coords[flags["which"]][0] - step) % height_border
         return
-    
+
     if flags["last_key"] == "m":
         flags["mask"] = not flags["mask"]
         return
@@ -114,7 +132,6 @@ def last_pressed_key(flags):
             flags["is_pressed"] = False
 
 
-
 def display_hologram(window, hologram, mask, mask_flag, ct2pi):
     if mask_flag:
         hologram = hologram + mask
@@ -123,25 +140,43 @@ def display_hologram(window, hologram, mask, mask_flag, ct2pi):
     wfc.display_image_on_external_screen(window, hologram_img)
 
 
-
 if __name__ == "__main__":
-    description = '''controll position of one or two optical traps through SLM with keyboard.
+    description = """controll position of one or two optical traps through SLM with keyboard.
     The SLM should be part of optical tweezers setup in a way that the traps are on its Fourier plane.
     Use arrow keys to move the trap, 'm' to toggle mask, 's' (split) to toggle between one and two traps, 'ctrl' to switch between the traps.
     When collapsing back to one trap, the active one is preserved. When splitting traps, both of them are on the same position.
     Starting position is at zeroth diffraction maximum. 
     Allways there is displayed just one trap at the time, when there are two traps,
     there is quickly switched between them.
-    '''
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=description)
-    parser.add_argument("mask_name", help="name of the mask file")
-    parser.add_argument("-ct2pi", "--correspond_to2pi", type=int, required=True, help=help_messages_wfc.ct2pi)
-    parser.add_argument("-bs", "--big_step", type=int, default=20, help="big step size")
-    parser.add_argument("-m", "--mirror", action="store_true", help="mirrors left-right and up-down")
+    """
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description=description
+    )
+    parser.add_argument(
+        "mask_name",
+        help="name of the mask file"
+    )
+    parser.add_argument(
+        "-ct2pi",
+        "--correspond_to2pi",
+        type=int,
+        required=True,
+        help=help_messages_wfc.ct2pi,
+    )
+    parser.add_argument(
+        "-bs",
+        "--big_step",
+        type=int,
+        default=20,
+        help="big step size"
+    )
+    parser.add_argument(
+        "-m",
+        "--mirror",
+        action="store_true",
+        help="swap left-right and up-down"
+    )
     args = parser.parse_args()
 
-    args.holograms_dir = "holograms/single_trap_grid_holograms"
-    
-
     main(args)
-

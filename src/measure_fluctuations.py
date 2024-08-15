@@ -11,7 +11,6 @@ import help_messages_wfc
 import wavefront_correction as wfc
 
 
-
 def measure_fluctuations(args):
     cam = uc480.UC480Camera()
     window = wfc.create_tk_window()
@@ -20,7 +19,9 @@ def measure_fluctuations(args):
         cam.set_exposure(args.exposure)
     else:
         wfc.set_exposure_wrt_reference_img(cam, window, (210, 240), hologram, 1)
-    intensity_coords = wfc.get_highest_intensity_coordinates_img(cam, window, hologram, 1)
+    intensity_coords = wfc.get_highest_intensity_coordinates_img(
+        cam, window, hologram, 1
+    )
     wfc.display_image_on_external_screen(window, hologram)
     intensity_evolution = {"time": [], "intensity": []}
     start = time.time()
@@ -44,34 +45,100 @@ def plot_and_save(intensity_evolution, expo):
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
     path = f"{dest_dir}/fluctuations.png"
-    plt.savefig(wfc.originalize_name(path), bbox_inches='tight')
+    plt.savefig(wfc.originalize_name(path), bbox_inches="tight")
 
 
 def create_wavefront_correction_hologram(args):
     black_hologram = im.fromarray(np.zeros((c.slm_height, c.slm_width), dtype=np.uint8))
     sample_2pi = wfc.deflect_2pi(args.deflect)
     sample = wfc.convert_2pi_hologram_to_int_hologram(sample_2pi, args.correspond_to2pi)
-    reference_coordinates = read_and_expand_coords(args.reference_coordinates, args.subdomain_size)
-    subdomain_coordinates = read_and_expand_coords(args.subdomain_coordinates, args.subdomain_size)
-    reference_subdomain = wfc.add_subdomain(black_hologram, sample, reference_coordinates, args.subdomain_size)
-    second_subdomain = wfc.add_subdomain(reference_subdomain, sample, subdomain_coordinates, args.subdomain_size)
+    reference_coordinates = read_and_expand_coords(
+        args.reference_coordinates, args.subdomain_size
+    )
+    subdomain_coordinates = read_and_expand_coords(
+        args.subdomain_coordinates, args.subdomain_size
+    )
+    reference_subdomain = wfc.add_subdomain(
+        black_hologram, sample, reference_coordinates, args.subdomain_size
+    )
+    second_subdomain = wfc.add_subdomain(
+        reference_subdomain, sample, subdomain_coordinates, args.subdomain_size
+    )
     return second_subdomain
+
 
 def read_and_expand_coords(coords, subdomain_size):
     H, W = wfc.get_number_of_subdomains(subdomain_size)
     x, y = (H // 2, W // 2) if coords is None else coords
     return int(x) * subdomain_size, int(y) * subdomain_size
 
+
 if __name__ == "__main__":
-    description = '''measure intensity fluctuation on holograms used in wavefront correction procedure
-    '''
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=description)
-    parser.add_argument('-t', '--time', metavar="SECONDS", type=int, default=5, help="time of the measurement in seconds")
-    parser.add_argument('-ss', '--subdomain_size', metavar="INT", type=int, default=32, help=help_messages_wfc.subdomain_size)
-    parser.add_argument('-d', '--deflect', metavar=("X_ANGLE", "Y_ANGLE"), nargs=2, type=float, default=(0.5, 0.5), help=help_messages_wfc.deflect)
-    parser.add_argument('-c', '--reference_coordinates', metavar=("X_COORD", "y_COORD"), nargs=2, type=int, default=None, help=help_messages_wfc.reference_subdomain_coordinates)
-    parser.add_argument('-sc', '--subdomain_coordinates', metavar=("X_COORD", "y_COORD"), nargs=2, type=int, default=(0, 0), help="subdomain-scale coordinates of second subdomain")
-    parser.add_argument('-e', '--exposure', metavar="SECONDS", type=float, default=None, help="exposure time in seconds")
-    parser.add_argument('-ct2pi', '--correspond_to2pi', metavar="INT", type=int, requird=True, help=help_messages_wfc.ct2pi)
+    description = """Measure intensity fluctuation on holograms
+    used in wavefront correction procedure.
+    """
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description=description
+    )
+    parser.add_argument(
+        "-t",
+        "--time",
+        metavar="SECONDS",
+        type=int,
+        default=5,
+        help="time of the measurement in seconds",
+    )
+    parser.add_argument(
+        "-ss",
+        "--subdomain_size",
+        metavar="INT",
+        type=int,
+        default=32,
+        help=help_messages_wfc.subdomain_size,
+    )
+    parser.add_argument(
+        "-d",
+        "--deflect",
+        metavar=("X_ANGLE", "Y_ANGLE"),
+        nargs=2,
+        type=float,
+        default=(0.5, 0.5),
+        help=help_messages_wfc.deflect,
+    )
+    parser.add_argument(
+        "-c",
+        "--reference_coordinates",
+        metavar=("X_COORD", "y_COORD"),
+        nargs=2,
+        type=int,
+        default=None,
+        help=help_messages_wfc.reference_subdomain_coordinates,
+    )
+    parser.add_argument(
+        "-sc",
+        "--subdomain_coordinates",
+        metavar=("X_COORD", "y_COORD"),
+        nargs=2,
+        type=int,
+        default=(0, 0),
+        help="subdomain-scale coordinates of second subdomain",
+    )
+    parser.add_argument(
+        "-e",
+        "--exposure",
+        metavar="SECONDS",
+        type=float,
+        default=None,
+        help="exposure time in seconds",
+    )
+    parser.add_argument(
+        "-ct2pi",
+        "--correspond_to2pi",
+        metavar="INT",
+        type=int,
+        requird=True,
+        help=help_messages_wfc.ct2pi,
+    )
     args = parser.parse_args()
     measure_fluctuations(args)

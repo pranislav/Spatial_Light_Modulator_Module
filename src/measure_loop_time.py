@@ -1,5 +1,5 @@
-'''script for comparing the time of one loop of the Gerchberg-Saxton algorithm and the gradient descent algorithm
-'''
+"""script for comparing the time of one loop of the Gerchberg-Saxton algorithm and the gradient descent algorithm
+"""
 
 import time
 from algorithms import gerchberg_saxton, gradient_descent
@@ -16,6 +16,7 @@ def measure_loop_time(algorithm):
     end_time = time.time()
     loop_time = (end_time - start_time) / args.max_loops
     print(f"Time for one loop: {loop_time} seconds")
+
 
 def make_some_args():
     args = argparse.Namespace()
@@ -34,6 +35,7 @@ def make_some_args():
     args.correspond_to2pi = 256
     args.initial_guess = "random"
     return args
+
 
 for algorithm in [gerchberg_saxton, gradient_descent]:
     measure_loop_time(algorithm)

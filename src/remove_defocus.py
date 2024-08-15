@@ -1,4 +1,4 @@
-#TODO redo to work with 2pi representation of phase mask
+# TODO adapt for work with 2pi representation of phase mask
 
 import argparse
 import numpy as np
@@ -15,19 +15,41 @@ def main(args):
     phase_mask = pms.shrink_phase_mask(phase_mask, args.subdomain_size)
     unwrapped_mask = pms.unwrap_phase_picture(phase_mask, args.correspond_to2pi)
     corrected_mask = wfc.fit_and_subtract(unwrapped_mask, wfc.quadratic_func, [0, 0])
-    upscaled_mask = im.fromarray(corrected_mask % args.correspond_to2pi).resize((c.slm_width, c.slm_height), resample=im.BILINEAR)
+    upscaled_mask = im.fromarray(corrected_mask % args.correspond_to2pi).resize(
+        (c.slm_width, c.slm_height), resample=im.BILINEAR
+    )
     base, ext = os.path.splitext(args.phase_mask_name)
     upscaled_mask.convert("L").save(f"{args.source_dir}/{base}_removed_defocus{ext}")
 
 
 if __name__ == "__main__":
-    description = '''
-    '''
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=description)
+    description = """TODO: adapt for work with 2pi representation of phase mask
+    """
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=description
+    )
     source_dir = "holograms/wavefront_correction_phase_masks"
-    parser.add_argument("phase_mask_name", type=str, help=f"phase mask to remove defocus from {source_dir}")
-    parser.add_argument("-s", "--subdomain_size", metavar="INT", type=int, default=32, help="subdomain size used to create the phase mask")
-    parser.add_argument("-ct2pi", "--correspond_to2pi", metavar="INT", type=int, required=True, help=help_messages_wfc.ct2pi)
+    parser.add_argument(
+        "phase_mask_name",
+        type=str,
+        help=f"phase mask to remove defocus from {source_dir}",
+    )
+    parser.add_argument(
+        "-s",
+        "--subdomain_size",
+        metavar="INT",
+        type=int,
+        default=32,
+        help="subdomain size used to create the phase mask",
+    )
+    parser.add_argument(
+        "-ct2pi",
+        "--correspond_to2pi",
+        metavar="INT",
+        type=int,
+        required=True,
+        help=help_messages_wfc.ct2pi,
+    )
     args = parser.parse_args()
     args.source_dir = source_dir
     main(args)

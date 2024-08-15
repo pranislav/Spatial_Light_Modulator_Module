@@ -6,6 +6,7 @@ import os
 import compare_error_evolution_GD_params as compare
 import wavefront_correction as wfc
 
+
 def compare_error_evolution_algorithms(args):
     target = gh.prepare_target(args.img_name, args)
     compare.fill_unnecessary_args(args)
@@ -26,31 +27,90 @@ def compare_error_evolution_algorithms(args):
     if args.show:
         plt.show()
 
+
 def save_plot(args):
     img_name, specification = compare.create_name(args)
     name = f"{args.dest_dir}/{img_name}_{specification}.png"
-    plt.savefig(wfc.originalize_name(name), bbox_inches='tight')
-
+    plt.savefig(wfc.originalize_name(name), bbox_inches="tight")
 
 
 if __name__ == "__main__":
-    description = '''Compare error evolution of computing hologram with two algorithms
+    dest_dir = "images/compare_error_evolution_algorithms"
+    description = f"""Compare error evolution of computing hologram with two algorithms
     (the algorithm based on gradient descent and Gerchberg-Saxton algorithm).
     There should be specified a path to an input image and parameters of the gradient descent algorithm.
-    Plot with results is saved in images/compare_error_evolution_algorithms.
-    '''
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=description) 
-    parser.add_argument('img_name', type=str, help='path to the image')
-    parser.add_argument('-l', '--max_loops', type=int, default=10, help='max loops')
-    parser.add_argument('-wa', '--white_attention', type=float, default = 1, help='white attention')
-    parser.add_argument('-i', '--invert', action='store_true', help='invert image')
-    parser.add_argument('-q', '--quarterize', action='store_true', help='quarterize')
-    parser.add_argument('-u', '--unsettle', type=int, default=0, help='unsettle')
-    parser.add_argument('-lr', '--learning_rate', type=float, default=0.005, help='learning rate')
-    parser.add_argument('-ig', '--initial_guess', type=str, choices={"random", "fourier"}, default="random", help='initial guess')
-    parser.add_argument('-rs', '--random_seed', type=int, default=42, help='random seed')
-    parser.add_argument('-show', action='store_true', help='show plot')
+    Plot with results is saved in {dest_dir}.
+    """
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description=description
+    )
+    parser.add_argument(
+        "img_name",
+        type=str,
+        help="path to the image"
+    )
+    parser.add_argument(
+        "-l",
+        "--max_loops",
+        type=int,
+        default=10,
+        help="max loops"
+    )
+    parser.add_argument(
+        "-wa",
+        "--white_attention",
+        type=float,
+        default=1,
+        help="white attention"
+    )
+    parser.add_argument(
+        "-i",
+        "--invert",
+        action="store_true",
+        help="invert image"
+    )
+    parser.add_argument(
+        "-q",
+        "--quarterize",
+        action="store_true",
+        help="quarterize"
+    )
+    parser.add_argument(
+        "-u",
+        "--unsettle",
+        type=int,
+        default=0,
+        help="unsettle"
+    )
+    parser.add_argument(
+        "-lr",
+        "--learning_rate",
+        type=float,
+        default=0.005,
+        help="learning rate"
+    )
+    parser.add_argument(
+        "-ig",
+        "--initial_guess",
+        type=str,
+        choices={"random", "fourier"},
+        default="random",
+        help="initial guess",
+    )
+    parser.add_argument(
+        "-rs",
+        "--random_seed",
+        type=int,
+        default=42,
+        help="random seed"
+    )
+    parser.add_argument(
+        "-show",
+        action="store_true",
+        help="show plot"
+    )
     args = parser.parse_args()
-    args.dest_dir = "images/compare_error_evolution_algorithms"
+    args.dest_dir = dest_dir
 
     compare_error_evolution_algorithms(args)

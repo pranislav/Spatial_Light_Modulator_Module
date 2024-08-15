@@ -4,9 +4,10 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import os
 
+
 def grayscale_to_rainbow(image_path):
     # Load the grayscale image
-    img = Image.open(image_path).convert('L')  # 'L' mode is for grayscale
+    img = Image.open(image_path).convert("L")  # 'L' mode is for grayscale
 
     # Convert the grayscale image to a numpy array
     grayscale_array = np.array(img)
@@ -15,7 +16,7 @@ def grayscale_to_rainbow(image_path):
     normalized_array = grayscale_array / 255.0
 
     # Get the rainbow colormap from matplotlib
-    cmap = plt.get_cmap('hsv')
+    cmap = plt.get_cmap("hsv")
 
     # Apply the colormap to the normalized grayscale values
     colorized_array = cmap(normalized_array)
@@ -33,10 +34,14 @@ def grayscale_to_rainbow(image_path):
 
     print(f"Saved rainbow-colorized image as: {new_image_path}")
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter, description="Convert a grayscale image to a rainbow colorized image.")
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description="Convert a grayscale image to a rainbow colorized image.",
+    )
     parser.add_argument("image_path", type=str, help="Path to the grayscale image.")
-    
+
     args = parser.parse_args()
-    
+
     grayscale_to_rainbow(args.image_path)

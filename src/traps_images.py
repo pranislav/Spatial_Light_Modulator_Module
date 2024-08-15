@@ -6,16 +6,21 @@ import os
 
 white = 255
 
-def make_traps_image(coordinates: list[tuple], object: function, size_x: float=1, size_y: float=1) -> im:
-    img = im.new('L', (c.slm_width, c.slm_height))
+
+def make_traps_image(
+    coordinates: list[tuple], object: function, size_x: float = 1, size_y: float = 1
+) -> im:
+    img = im.new("L", (c.slm_width, c.slm_height))
     for point in coordinates:
         object(img, point, size_x, size_y, white)
     return img
 
 
-'''creates a sequence of images of multiple moving points
+"""creates a sequence of images of multiple moving points
 from given lists of coordinates
-and saves them into a file'''
+and saves them into a file"""
+
+
 def create_sequence_dots(list_of_position_lists: list[list[tuple]], name: str):
     if not os.path.exists(f"images/moving_traps/{name}"):
         os.makedirs(f"images/moving_traps/{name}")
@@ -25,6 +30,7 @@ def create_sequence_dots(list_of_position_lists: list[list[tuple]], name: str):
 
 
 # coordinate generators --------------------------------------------
+
 
 def grating(x_num: int, y_num: int) -> list[tuple]:
     coordinates = []
@@ -37,11 +43,14 @@ def grating(x_num: int, y_num: int) -> list[tuple]:
             coordinates.append((x, y))
     return coordinates
 
+
 def fract_position(x_fract, y_fract):
     return [(int(c.slm_width / x_fract), int(c.slm_height / y_fract))]
 
+
 def dec_position(x_dec, y_dec):
     return [(int(c.slm_width * x_dec), int(c.slm_height * y_dec))]
+
 
 def user_defined(x, y):
     pass
@@ -49,24 +58,31 @@ def user_defined(x, y):
 
 # objects --------------------------------------------
 
-def ellipse_arr(target_img: im, coor: tuple[int], x_d: float, y_d: float, color: int) -> None:
+
+def ellipse_arr(
+    target_img: im, coor: tuple[int], x_d: float, y_d: float, color: int
+) -> None:
     x_coor, y_coor = coor
     w, h = target_img.size
     target_arr = np.array(target_img)
     for i in range(w):
         for j in range(h):
-            if ((i - x_coor) / x_d)**2 + ((j - y_coor) / y_d)**2 < 1:
+            if ((i - x_coor) / x_d) ** 2 + ((j - y_coor) / y_d) ** 2 < 1:
                 target_arr[j, i] = color
     return im.fromarray(target_arr)
 
-def ellipse(target_img: im, coor: tuple[int], x_d: float, y_d: float, color: int) -> None:
+
+def ellipse(
+    target_img: im, coor: tuple[int], x_d: float, y_d: float, color: int
+) -> None:
     x_coor, y_coor = coor
     w, h = target_img.size
     for i in range(w):
         for j in range(h):
-            if ((i - x_coor) / x_d)**2 + ((j - y_coor) / y_d)**2 < 1:
+            if ((i - x_coor) / x_d) ** 2 + ((j - y_coor) / y_d) ** 2 < 1:
                 target_img.putpixel((i, j), color)
     return target_img
+
 
 def dot(target_img: im, coords: tuple[int], ___, __, color: int) -> None:
     x_coor = round(coords[0])
@@ -75,9 +91,13 @@ def dot(target_img: im, coords: tuple[int], ___, __, color: int) -> None:
     return target_img
 
 
-def rectangle(target_img: im, coor: tuple[int], side_x: float, side_y: float, color: int):
+def rectangle(
+    target_img: im, coor: tuple[int], side_x: float, side_y: float, color: int
+):
     x_coor, y_coor = coor
-    w, h = target_img.size # naopak to tu bolo!! a kto vie, kde este je | nie, daco ine muselo byt zle, lebo pri centrovani som nemohol vyjst z rangeu pri prehodenych suradniciach
+    w, h = (
+        target_img.size
+    )  # naopak to tu bolo!! a kto vie, kde este je | nie, daco ine muselo byt zle, lebo pri centrovani som nemohol vyjst z rangeu pri prehodenych suradniciach
     for i in range(w):
         for j in range(h):
             x_cond = (x_coor - side_x // 2) < i <= (x_coor + side_x // 2) or i == x_coor
@@ -86,5 +106,9 @@ def rectangle(target_img: im, coor: tuple[int], side_x: float, side_y: float, co
                 target_img.putpixel((i, j), color)
     return target_img
 
+
 def random_coordinates_list(num: int) -> list[tuple]:
-    return [(np.random.randint(0, c.slm_width), np.random.randint(0, c.slm_height)) for _ in range(num)]
+    return [
+        (np.random.randint(0, c.slm_width), np.random.randint(0, c.slm_height))
+        for _ in range(num)
+    ]
