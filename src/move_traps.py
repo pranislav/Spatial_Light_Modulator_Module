@@ -145,8 +145,9 @@ if __name__ == "__main__":
     The SLM should be part of optical tweezers setup in a way that the traps are on its Fourier plane.
     Use arrow keys to move the trap, 'm' to toggle mask, 's' (split) to toggle between one and two traps, 'ctrl' to switch between the traps.
     When collapsing back to one trap, the active one is preserved. When splitting traps, both of them are on the same position.
-    Starting position is at zeroth diffraction maximum. 
-    Allways there is displayed just one trap at the time, when there are two traps,
+    Starting position is at zeroth diffraction maximum.
+    Traps are moving within one quadrant of the area between zeroth and first diffraction maximum because of alliases.
+    There is allways displayed just one trap at the time, when there are two traps,
     there is quickly switched between them.
     """
     parser = argparse.ArgumentParser(

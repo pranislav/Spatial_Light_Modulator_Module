@@ -736,10 +736,14 @@ if __name__ == "__main__":
     For each optical path there should be generated its own mask.
     """
     parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter, description=description
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description=description
     )
 
-    parser.add_argument("wavefront_correction_name", type=str)
+    parser.add_argument(
+        "wavefront_correction_name",
+        type=str
+    )
     parser.add_argument(
         "-ss",
         "--subdomain_size",
@@ -788,7 +792,11 @@ if __name__ == "__main__":
         action="store_true",
         help=help_messages_wfc.skip_subdomains_out_of_inscribed_circle,
     )
-    parser.add_argument("-shuffle", action="store_true", help=help_messages_wfc.shuffle)
+    parser.add_argument(
+        "-shuffle",
+        action="store_true",
+        help=help_messages_wfc.shuffle
+    )
     parser.add_argument(
         "-ic",
         "--intensity_coordinates",
@@ -813,7 +821,13 @@ if __name__ == "__main__":
         default=1,
         help=help_messages_wfc.sqrted_number_of_source_pixels,
     )
-    parser.add_argument("-parallel", action="store_true", help="use parallelization")
+    parser.add_argument(
+        "-parallel",
+        action="store_true",
+        help="run capturing of photos and computation of optimal phase offset in parallel.\
+            It is recommended to use this option when the number of subdomains is high\
+            and optimal phase is chosen by fit."
+    )
     parser.add_argument(
         "-rd",
         "--remove_defocus_compensation",

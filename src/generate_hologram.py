@@ -265,7 +265,9 @@ if __name__ == "__main__":
         "-q",
         "--quarterize",
         action="store_true",
-        help="original image is reduced to quarter and pasted to black image of its original size ",
+        help="the original image is pasted to one quadrant of a black image\
+            before passed to hologram generating to make sure there\
+            will be no overlaps between various aliases of displayed image.",
     )
     parser.add_argument(
         "-i",
