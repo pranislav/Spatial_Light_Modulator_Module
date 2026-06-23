@@ -1,6 +1,6 @@
 # Spatial Light Modulator Module
 
-**A module for work with transparent phase-only spatial light modulator (SLM). Contains scripts for generating & displaying holograms, wave front correction and creating optical traps.**
+**A module for work with transparent phase-only spatial light modulator (SLM). Contains scripts for generating & displaying holograms, wave front correction and optical manipulation.**
 
 ## Table of Contents
 1. [Introduction](#introduction)
